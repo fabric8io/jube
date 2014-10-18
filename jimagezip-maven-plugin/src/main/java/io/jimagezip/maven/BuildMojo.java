@@ -17,6 +17,8 @@
  */
 package io.jimagezip.maven;
 
+import com.google.common.io.Closeables;
+import com.google.common.io.Files;
 import io.fabric8.common.util.Objects;
 import io.fabric8.common.util.Zips;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
@@ -34,6 +36,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.eclipse.aether.RepositorySystem;
@@ -48,10 +51,16 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static io.fabric8.common.util.PropertiesHelper.findPropertiesWithPrefix;
 
@@ -84,6 +93,24 @@ public class BuildMojo extends AbstractMojo {
      */
     @Parameter(property = "fabric8.assemblyDescriptorRef", defaultValue = "artifact-with-dependencies")
     protected String assemblyDescriptorRef;
+
+    /**
+     * Name of the generated image zip file
+     */
+    @Parameter(property = "jimagezip.outFile", defaultValue = "${project.build.directory}/${project.artifactId}-${project.version}-image.zip")
+    private File outputZipFile;
+
+    /**
+     * The artifact type for attaching the generated image zip file to the project
+     */
+    @Parameter(property = "jimagezip.zip.artifactType", defaultValue = "zip")
+    private String artifactType = "zip";
+
+    /**
+     * The artifact classifier for attaching the generated image zip file to the project
+     */
+    @Parameter(property = "jimagezip.zip.artifactClassifier", defaultValue = "image")
+    private String artifactClassifier = "image";
 
     // ==============================================================================================================
     // Parameters required from Maven when building an assembly.
@@ -118,6 +145,8 @@ public class BuildMojo extends AbstractMojo {
     @Parameter(defaultValue = "${repositorySystemSession}")
     protected RepositorySystemSession repoSession;
 
+    @Component
+    private MavenProjectHelper projectHelper;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -163,15 +192,22 @@ public class BuildMojo extends AbstractMojo {
         try {
             buildDir.mkdirs();
             unpackBaseImage(buildDir);
+            writeEnvironmentVariables(buildDir);
 
             assembly = extractAssembly(projectConfig);
             assembly.setId("docker");
             assemblyArchiver.createArchive(assembly, "maven", "dir", projectConfig, false);
 
-            File outputZip = new File(project.getBasedir(), "target/jimagezip.zip");
+            chmodScripts(buildDir);
+            File binDir = new File(buildDir, "bin");
+            if (binDir.exists()) {
+                chmodScripts(binDir);
+            }
 
-            Zips.createZipFile(LOG, buildDir, outputZip);
-            getLog().info("Created " + outputZip);
+            Zips.createZipFile(LOG, buildDir, outputZipFile);
+            getLog().info("Created image zip: " + outputZipFile);
+
+            projectHelper.attachArtifact(project, artifactType, artifactClassifier, outputZipFile);
 
         } catch (InvalidAssemblerConfigurationException e) {
             throw new MojoFailureException(assembly, "Assembly is incorrectly configured: " + assembly.getId(),
@@ -179,6 +215,45 @@ public class BuildMojo extends AbstractMojo {
                             + e.getMessage());
         } catch (Exception e) {
             throw new MojoExecutionException("Failed to create assembly for image: " + e.getMessage(), e);
+        }
+    }
+
+    protected void writeEnvironmentVariables(File buildDir) throws IOException {
+        File envScript = new File(buildDir, "env.sh");
+        PrintStream writer = new PrintStream(new FileOutputStream(envScript, true));
+        try {
+            writer.println();
+
+            Map<String, String> envMap = getEnvironmentVariables();
+            Set<Map.Entry<String, String>> entries = envMap.entrySet();
+            for (Map.Entry<String, String> entry : entries) {
+                String name = entry.getKey();
+                String value = entry.getValue();
+
+                writer.println("export " + name + "=\"" + value + "\"");
+            }
+            writer.println();
+        } finally {
+            Closeables.close(writer, false);
+        }
+    }
+
+
+    /**
+     * Lets make sure all shell scripts are executable
+     */
+    protected void chmodScripts(File dir) {
+        if (dir.exists() && dir.isDirectory()) {
+            File[] files = dir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    String name = file.getName();
+                    String extension = Files.getFileExtension(name);
+                    if (name.equals("launcher") || extension.equals("sh") || extension.equals("bat") || extension.equals("cmd")) {
+                        file.setExecutable(true);
+                    }
+                }
+            }
         }
     }
 
@@ -207,7 +282,7 @@ public class BuildMojo extends AbstractMojo {
             artifactId = artifactId.substring(0, idx);
         }
         String type = "zip";
-        String classifier = "bin";
+        String classifier = "image";
 
         String coords = groupId + ":" + artifactId + ":" + type + ":" + classifier + ":" + version;
         getLog().info("Looking up JImageZip: " + coords);

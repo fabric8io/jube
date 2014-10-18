@@ -73,9 +73,9 @@ APP_CONSOLE_CMD="${APP_BASE}/logs/cmd.log"
 APP_CONSOLE_OUT="${APP_BASE}/logs/out.log"
 APP_CONSOLE_ERR="${APP_BASE}/logs/err.log"
 
-# Add the jars in the lib dir
+# Add the jars in the maven dir
 CLASSPATH=""
-for file in "$APP_BASE"/lib/*.jar
+for file in "$APP_BASE"/maven/*.jar
 do
     if [ -z "$CLASSPATH" ]; then
         CLASSPATH="$file"
@@ -83,7 +83,7 @@ do
         CLASSPATH="$CLASSPATH:$file"
     fi
 done
-for file in "$APP_BASE"/lib/*.war
+for file in "$APP_BASE"/maven/*.war
 do
     if [ -z "$CLASSPATH" ]; then
         CLASSPATH="$file"
@@ -106,9 +106,9 @@ JAVA_AGENT="$JAVA_AGENT"
 #JVM_ARGS=jvmArgs
 JVM_ARGS="$JVM_ARGS"
 APP_ARGS="$MAIN_ARGS"
-MAIN_JAR="$APP_BASE/lib/main.jar"
-if [ -z "$MAIN_CLASS" ] ; then
-  MAIN_CLASS="$MAIN_CLASS"
+MAIN_JAR="$APP_BASE/maven/main.jar"
+if [ -z "$MAIN" ] ; then
+  MAIN="$MAIN"
 fi
 JAVA_AGENT="$JAVA_AGENT"
 SYSTEM_PROPERTIES="$SYSTEM_PROPERTIES"
@@ -170,10 +170,10 @@ start() {
     return 1
   fi
 
-  if [ -z "$MAIN_CLASS" ]; then
+  if [ -z "$MAIN" ]; then
     RUN_COMMAND="${JVM_EXEC} ${JVM_DEBUG_ARGS} ${JAVA_AGENT} ${JVM_ARGS} ${SYSTEM_PROPERTIES} -classpath ${CLASSPATH} -jar ${MAIN_JAR} ${APP_ARGS}"
   else
-    RUN_COMMAND="${JVM_EXEC} ${JVM_DEBUG_ARGS} ${JAVA_AGENT} ${JVM_ARGS} ${SYSTEM_PROPERTIES} -classpath ${CLASSPATH} ${MAIN_CLASS} ${APP_ARGS}"
+    RUN_COMMAND="${JVM_EXEC} ${JVM_DEBUG_ARGS} ${JAVA_AGENT} ${JVM_ARGS} ${SYSTEM_PROPERTIES} -classpath ${CLASSPATH} ${MAIN} ${APP_ARGS}"
   fi
 
   echo "Running:" > ${APP_CONSOLE_CMD}

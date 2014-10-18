@@ -1,3 +1,6 @@
 ## defines the default environment settings
 
-export MAIN_CLASS="TODO"
+# TODO add something like this:
+#
+# export MAIN="MyClassName"
+
