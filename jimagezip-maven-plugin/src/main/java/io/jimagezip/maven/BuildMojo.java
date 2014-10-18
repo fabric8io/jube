@@ -112,6 +112,19 @@ public class BuildMojo extends AbstractMojo {
     @Parameter(property = "jimagezip.zip.artifactClassifier", defaultValue = "image")
     private String artifactClassifier = "image";
 
+    /**
+     * Reference to an assembly descriptor included.
+     */
+    @Parameter(property = "fabric8.container.name", defaultValue = "${project.artifactId}")
+    protected String service;
+
+    /**
+     * Reference to an assembly descriptor included.
+     */
+    @Parameter(property = "fabric8.app.name", defaultValue = "${project.name}")
+    protected String serviceName;
+
+
     // ==============================================================================================================
     // Parameters required from Maven when building an assembly.
     // See also here: http://maven.40175.n5.nabble.com/Mojo-Java-1-5-Component-MavenProject-returns-null-vs-JavaDoc-parameter-expression-quot-project-quot-s-td5733805.html
@@ -170,6 +183,12 @@ public class BuildMojo extends AbstractMojo {
         }
         if (environmentVariables.isEmpty()) {
             environmentVariables = findPropertiesWithPrefix(project.getProperties(), "docker.env.");
+        }
+        if (!environmentVariables.containsKey("SERVICE")) {
+            environmentVariables.put("SERVICE", service);
+        }
+        if (!environmentVariables.containsKey("SERVICE_NAME")) {
+            environmentVariables.put("SERVICE_NAME", serviceName);
         }
         return environmentVariables;
     }
