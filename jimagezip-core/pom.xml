@@ -32,6 +32,13 @@
   <name>JImageZip :: Core</name>
 
   <properties>
+    <!-- fabric8 configuration -->
+    <docker.dataImage>${env.DOCKER_REGISTRY}/main/${project.artifactId}:${project.version}</docker.dataImage>
+    <fabric8.label.group>node</fabric8.label.group>
+
+    <!-- jimagezip properties -->
+    <docker.baseImage>fabric8/java</docker.baseImage>
+    <docker.env.MAIN>io.jimagezip.main.Main</docker.env.MAIN>
   </properties>
 
   <dependencies>
