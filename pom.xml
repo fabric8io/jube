@@ -63,11 +63,17 @@
 
   <properties>
     <fabric8.version>2.0.0-SNAPSHOT</fabric8.version>
+
+    <!-- maven plugin versions can't be reused via BOM -->
+    <cxf.plugin.version>3.0.2</cxf.plugin.version>
+    <docker.maven.plugin.version>0.9.10</docker.maven.plugin.version>
+    <exec.maven.plugin.version>1.2.1</exec.maven.plugin.version>
   </properties>
 
   <modules>
     <module>images</module>
     <module>jimagezip-maven-plugin</module>
+    <module>jimagezip-core</module>
   </modules>
 
   <dependencyManagement>
