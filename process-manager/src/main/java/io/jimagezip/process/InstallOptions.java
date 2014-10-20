@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.base.Strings;
+import io.hawt.aether.OpenMavenURL;
 
 import static com.google.common.base.Objects.firstNonNull;
 
@@ -40,12 +41,7 @@ public class InstallOptions implements Serializable {
     public static class InstallOptionsBuilder<T extends InstallOptionsBuilder> {
         private String id;
         private String name;
-        private URL url;
-        private URL controllerUrl;
-        private String controllerJson;
-        private String extractCmd = DEFAULT_EXTRACT_CMD;
-        private String[] postUnpackCmds;
-        private String[] postInstallCmds;
+        private OpenMavenURL url;
         private String groupId;
         private String artifactId;
         private String version = "LATEST";
@@ -71,43 +67,8 @@ public class InstallOptions implements Serializable {
             return (T) this;
         }
 
-        public T url(final URL url) {
+        public T url(final OpenMavenURL url) {
             this.url = url;
-            return (T) this;
-        }
-
-        public T url(final String url) throws MalformedURLException {
-            this.url = new URL(url);
-            return (T) this;
-        }
-
-        public T controllerUrl(final URL controllerUrl) {
-            this.controllerUrl = controllerUrl;
-            return (T) this;
-        }
-
-        public T controllerUrl(final String controllerUrl) throws MalformedURLException {
-            this.controllerUrl = new URL(controllerUrl);
-            return (T) this;
-        }
-
-        public T controllerJson(final String controllerJson) {
-            this.controllerJson = controllerJson;
-            return (T) this;
-        }
-
-        public T extractCmd(final String extract) {
-            this.extractCmd = extract;
-            return (T) this;
-        }
-
-        public T postUnpackCmds(final String[] commands) {
-            this.postUnpackCmds = commands;
-            return (T) this;
-        }
-
-        public T postInstallCmds(final String[] commands) {
-            this.postInstallCmds = commands;
             return (T) this;
         }
 
@@ -177,26 +138,6 @@ public class InstallOptions implements Serializable {
 
         public String getId() {
             return id;
-        }
-
-        public URL getControllerUrl() {
-            return controllerUrl;
-        }
-
-        public String getControllerJson() {
-            return controllerJson;
-        }
-
-        public String getExtractCmd() {
-            return extractCmd;
-        }
-
-        public String[] getPostUnpackCmds() {
-            return postUnpackCmds;
-        }
-
-        public String[] getPostInstallCmds() {
-            return postInstallCmds;
         }
 
         public String getGroupId() {
@@ -271,47 +212,8 @@ public class InstallOptions implements Serializable {
             return this;
         }
 
-        public URL getUrl() throws MalformedURLException {
-            if (url != null) {
-                return url;
-            }
-
-            StringBuilder sb = new StringBuilder();
-            sb.append("mvn:");
-            boolean invalid = false;
-            //Required: groupId
-            if (groupId != null) {
-                sb.append(groupId).append("/");
-            } else {
-                invalid = true;
-            }
-            //Required: artifactId
-            if (artifactId != null) {
-                sb.append(artifactId).append("/");
-            } else {
-                invalid = true;
-            }
-            //Required: version
-            if (version != null) {
-                sb.append(version);
-            } else {
-                invalid = true;
-            }
-            //Optiona: extention
-            if (extension != null) {
-                sb.append("/").append(extension);
-            }
-
-            //Optiona: extention
-            if (classifier != null) {
-                sb.append("/").append(classifier);
-            }
-
-            if (invalid) {
-                return null;
-            }
-
-            return new URL(sb.toString());
+        public OpenMavenURL getUrl() {
+            return url;
         }
 
         public String getName() {
@@ -325,7 +227,7 @@ public class InstallOptions implements Serializable {
         }
 
         public InstallOptions build() throws MalformedURLException {
-                return new InstallOptions(id, getName(), getUrl(), controllerUrl, controllerJson, extractCmd, postUnpackCmds, postInstallCmds, offline, optionalDependencyPatterns, excludeDependencyFilterPatterns, mainClass, properties, environment, jvmOptions, jarFiles, downloadStrategy);
+                return new InstallOptions(id, getName(), getUrl(),  offline, optionalDependencyPatterns, excludeDependencyFilterPatterns, properties, environment, jvmOptions, jarFiles, downloadStrategy);
         }
 
         public Map<String, File> getJarFiles() {
@@ -340,16 +242,10 @@ public class InstallOptions implements Serializable {
 
     private final String id;
     private final String name;
-    private final URL url;
-    private final URL controllerUrl;
-    private final String controllerJson;
-    private final String extractCmd;
-    private final String[] postUnpackCmds;
-    private final String[] postInstallCmds;
+    private final OpenMavenURL url;
     private final boolean offline;
     private final String[] optionalDependencyPatterns;
     private final String[] excludeDependencyFilterPatterns;
-    private final String mainClass;
     private final Map<String, Object> properties;
     private final Map<String, String> environment;
     private final String[] jvmOptions;
@@ -357,19 +253,13 @@ public class InstallOptions implements Serializable {
     private final DownloadStrategy downloadStrategy;
 
 
-    public InstallOptions(String id, String name, URL url, URL controllerUrl, String controllerJson, String extractCmd, String[] postUnpackCmds, String[] postInstallCmds, boolean offline, String[] optionalDependencyPatterns, String[] excludeDependencyFilterPatterns, String mainClass, Map<String, Object> properties, Map<String, String> environment, String[] jvmOptions, Map<String, File> jarFiles, DownloadStrategy downloadStrategy) {
+    public InstallOptions(String id, String name, OpenMavenURL url, boolean offline, String[] optionalDependencyPatterns, String[] excludeDependencyFilterPatterns, Map<String, Object> properties, Map<String, String> environment, String[] jvmOptions, Map<String, File> jarFiles, DownloadStrategy downloadStrategy) {
         this.id = id;
         this.name = name;
         this.url = url;
-        this.controllerUrl = controllerUrl;
-        this.controllerJson = controllerJson;
-        this.extractCmd = extractCmd;
-        this.postUnpackCmds = postUnpackCmds;
-        this.postInstallCmds = postInstallCmds;
         this.offline = offline;
         this.optionalDependencyPatterns = optionalDependencyPatterns;
         this.excludeDependencyFilterPatterns = excludeDependencyFilterPatterns;
-        this.mainClass = mainClass;
         this.properties = properties;
         this.environment = environment;
         this.jvmOptions = jvmOptions;
@@ -382,7 +272,6 @@ public class InstallOptions implements Serializable {
         return "InstallOptions{" +
                 "id='" + id + '\'' +
                 ", url=" + url +
-                ", mainClass='" + mainClass + '\'' +
                 ", properties=" + properties +
                 ", environment=" + environment +
                 ", jvmOptions=" + Arrays.toString(jvmOptions) +
@@ -398,17 +287,11 @@ public class InstallOptions implements Serializable {
         InstallOptions that = (InstallOptions) o;
 
         if (offline != that.offline) return false;
-        if (controllerJson != null ? !controllerJson.equals(that.controllerJson) : that.controllerJson != null)
-            return false;
-        if (controllerUrl != null ? !controllerUrl.equals(that.controllerUrl) : that.controllerUrl != null)
-            return false;
         if (environment != null ? !environment.equals(that.environment) : that.environment != null) return false;
         if (!Arrays.equals(excludeDependencyFilterPatterns, that.excludeDependencyFilterPatterns)) return false;
-        if (extractCmd != null ? !extractCmd.equals(that.extractCmd) : that.extractCmd != null) return false;
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (jarFiles != null ? !jarFiles.equals(that.jarFiles) : that.jarFiles != null) return false;
         if (!Arrays.equals(jvmOptions, that.jvmOptions)) return false;
-        if (mainClass != null ? !mainClass.equals(that.mainClass) : that.mainClass != null) return false;
         if (name != null ? !name.equals(that.name) : that.name != null) return false;
         if (!Arrays.equals(optionalDependencyPatterns, that.optionalDependencyPatterns)) return false;
         if (properties != null ? !properties.equals(that.properties) : that.properties != null) return false;
@@ -422,13 +305,9 @@ public class InstallOptions implements Serializable {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (url != null ? url.hashCode() : 0);
-        result = 31 * result + (controllerUrl != null ? controllerUrl.hashCode() : 0);
-        result = 31 * result + (controllerJson != null ? controllerJson.hashCode() : 0);
-        result = 31 * result + (extractCmd != null ? extractCmd.hashCode() : 0);
         result = 31 * result + (offline ? 1 : 0);
         result = 31 * result + (optionalDependencyPatterns != null ? Arrays.hashCode(optionalDependencyPatterns) : 0);
         result = 31 * result + (excludeDependencyFilterPatterns != null ? Arrays.hashCode(excludeDependencyFilterPatterns) : 0);
-        result = 31 * result + (mainClass != null ? mainClass.hashCode() : 0);
         result = 31 * result + (properties != null ? properties.hashCode() : 0);
         result = 31 * result + (environment != null ? environment.hashCode() : 0);
         result = 31 * result + (jvmOptions != null ? Arrays.hashCode(jvmOptions) : 0);
@@ -444,28 +323,8 @@ public class InstallOptions implements Serializable {
         return name;
     }
 
-    public URL getUrl() {
+    public OpenMavenURL getUrl() {
         return url;
-    }
-
-    public URL getControllerUrl() {
-        return controllerUrl;
-    }
-
-    public String getControllerJson() {
-        return controllerJson;
-    }
-
-    public String getExtractCmd() {
-        return extractCmd;
-    }
-
-    public String[] getPostUnpackCmds() {
-        return postUnpackCmds;
-    }
-
-    public String[] getPostInstallCmds() {
-        return postInstallCmds;
     }
 
     public boolean isOffline() {
@@ -478,10 +337,6 @@ public class InstallOptions implements Serializable {
 
     public String[] getOptionalDependencyPatterns() {
         return optionalDependencyPatterns;
-    }
-
-    public String getMainClass() {
-        return mainClass;
     }
 
     public Map<String, Object> getProperties() {

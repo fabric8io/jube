@@ -16,6 +16,7 @@
 package io.jimagezip.process;
 
 import io.fabric8.common.util.Processes;
+import io.hawt.aether.OpenMavenURL;
 import io.jimagezip.process.config.ProcessConfig;
 
 import java.io.File;
@@ -31,13 +32,13 @@ public class Installation implements Serializable {
 
     private static final long serialVersionUID = 5127636210465637719L;
 
-    private final URL url;
+    private final OpenMavenURL url;
     private final String id;
     private final File installDir;
     private final ProcessController controller;
     private final ProcessConfig config;
 
-    public Installation(URL url, String id, File installDir, ProcessController controller, ProcessConfig config) {
+    public Installation(OpenMavenURL url, String id, File installDir, ProcessController controller, ProcessConfig config) {
         this.url = url;
         this.id = id;
         this.installDir = installDir;
@@ -54,7 +55,7 @@ public class Installation implements Serializable {
         return controller;
     }
 
-    public URL getUrl() {
+    public OpenMavenURL getUrl() {
         return url;
     }
 

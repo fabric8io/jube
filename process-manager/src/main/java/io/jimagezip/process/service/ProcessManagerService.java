@@ -16,6 +16,7 @@
 package io.jimagezip.process.service;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -39,6 +40,8 @@ import com.google.common.io.Files;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.fabric8.common.util.Objects;
 import io.fabric8.common.util.Strings;
+import io.fabric8.common.util.Zips;
+import io.hawt.aether.OpenMavenURL;
 import io.jimagezip.process.DownloadStrategy;
 import io.jimagezip.process.InstallContext;
 import io.jimagezip.process.Installation;
@@ -51,6 +54,7 @@ import io.jimagezip.process.InstallTask;
 import io.jimagezip.process.ProcessController;
 import io.jimagezip.process.support.DefaultProcessController;
 import io.jimagezip.process.support.FileUtils;
+import io.jimagezip.util.InstallHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,7 +147,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
                         }
                     }
                     // TODO: we do not have the url this installation was created from
-                    URL url = null;
+                    OpenMavenURL url = null;
                     ProcessConfig config = ConfigHelper.loadProcessConfig(file);
                     createInstallation(url, name, findInstallDir(file), config);
                 }
@@ -185,43 +189,12 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
                     archive = new File(installDir, INSTALLED_BINARY);
                 }
                 File nestedProcessDirectory = null;
-                if (options.getExtractCmd() != null && archive.exists()) {
-                    String extractCmd = options.getExtractCmd();
-                    FileUtils.extractArchive(archive, installDir, extractCmd, untarTimeout, executor);
+                if (archive.exists()) {
+                    Zips.unzip(new FileInputStream(archive), installDir);
+
+                    InstallHelper.chmodAllScripts(installDir);
                     nestedProcessDirectory = findInstallDir(installDir);
                     exportInstallDirEnvVar(options, nestedProcessDirectory);
-                    String[] postUnpackCmds = options.getPostUnpackCmds();
-                    if (postUnpackCmds != null) {
-                        for (String postUnpackCmd : postUnpackCmds) {
-                            if (Strings.isNotBlank(postUnpackCmd)) {
-                                String[] args = FileUtils.splitCommands(postUnpackCmd);
-                                LOGGER.info("Running post unpack command " + Arrays.asList(args) + " in folder " + nestedProcessDirectory);
-                                new Command(args)
-                                        .addEnvironment(options.getEnvironment())
-                                        .setDirectory(nestedProcessDirectory)
-                                        .setTimeLimit(postUnpackTimeout)
-                                        .execute(executor);
-                            }
-                        }
-                    }
-                    writeJvmConfig(new File(nestedProcessDirectory, "etc"), options.getJvmOptions());
-                }
-                if (postInstall != null) {
-                    postInstall.install(installContext, config, id, installDir);
-                }
-                String[] postInstallCmds = options.getPostInstallCmds();
-                if (postInstallCmds != null) {
-                    for (String postInstallCmd : postInstallCmds) {
-                        if (Strings.isNotBlank(postInstallCmd)) {
-                            String[] args = FileUtils.splitCommands(postInstallCmd);
-                            LOGGER.info("Running post install command " + Arrays.asList(args) + " in folder " + nestedProcessDirectory);
-                            new Command(args)
-                                    .addEnvironment(options.getEnvironment())
-                                    .setDirectory(nestedProcessDirectory)
-                                    .setTimeLimit(postInstallTimeout)
-                                    .execute(executor);
-                        }
-                    }
                 }
             }
         };
@@ -245,30 +218,6 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     public void uninstall(Installation installation) {
         installation.getController().uninstall();
         installations.remove(installation.getId());
-    }
-
-    private void writeJvmConfig(File etc, String[] jvmOptions) throws IOException {
-        File jvmConfigFile = new File(etc, "jvm.config");
-        if (jvmConfigFile.exists() && jvmConfigFile.length() > 0) {
-            LOGGER.debug("Non empty {} file exists. Skipping writing of the following jvmOptions: {}", jvmConfigFile, Arrays.toString(jvmOptions));
-        } else {
-            if (etc.exists() && etc.isDirectory()) {
-                LOGGER.debug("Writing the following jvmOptions to the {} file: {}", jvmConfigFile, Arrays.toString(jvmOptions));
-                Files.write(generateJvmConfig(jvmOptions), jvmConfigFile, Charsets.UTF_8);
-            } else {
-                LOGGER.debug("No etc directory exists at {} so not writing jvm.config", etc);
-            }
-        }
-    }
-
-    private String generateJvmConfig(String[] jvmOptions) {
-        StringBuilder jvmConfig = new StringBuilder();
-        if (jvmOptions != null) {
-            for (String jvmOption : jvmOptions) {
-                jvmConfig.append(jvmOption).append(" ");
-            }
-        }
-        return jvmConfig.toString();
     }
 
     @Override
@@ -324,11 +273,11 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     protected DownloadStrategy createDeafultDownloadStrategy() {
         return new DownloadStrategy() {
             @Override
-            public File downloadContent(final URL sourceUrl, final File installDir) throws IOException {
+            public File downloadContent(final OpenMavenURL sourceUrl, final File installDir) throws IOException {
                 Objects.notNull(sourceUrl, "sourceUrl");
                 // copy the URL to the install dir
                 File archive = new File(installDir, INSTALLED_BINARY);
-                InputStream from = sourceUrl.openStream();
+                InputStream from = sourceUrl.getInputStream();
                 if (from == null) {
                     throw new FileNotFoundException("Could not open URL: " + sourceUrl);
                 }
@@ -369,7 +318,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     }
 
 
-    protected Installation createInstallation(URL url, String id, File rootDir, ProcessConfig config) {
+    protected Installation createInstallation(OpenMavenURL url, String id, File rootDir, ProcessConfig config) {
         // TODO we should support different kinds of controller based on the kind of installation
         // we could maybe discover a descriptor file to describe how to control the process?
         // or generate this file on installation time?

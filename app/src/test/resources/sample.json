@@ -1,0 +1,23 @@
+{
+  "id": "myapp",
+  "kind": "Pod",
+  "apiVersion": "v1beta1",
+  "desiredState": {
+    "manifest": {
+      "version": "v1beta1",
+      "id": "mythingy",
+      "containers": [{
+        "name": "cxf-cdi",
+        "image": "examples/cxf-cdi",
+        "ports": [{
+          "containerPort": 8585,
+          "hostPort": 8686
+        }]
+      }]
+    }
+  },
+  "labels": {
+    "name": "foo"
+  }
+}
+

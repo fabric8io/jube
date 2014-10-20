@@ -18,9 +18,10 @@
 package io.jimagezip.maven;
 
 import com.google.common.io.Closeables;
-import com.google.common.io.Files;
 import io.fabric8.common.util.Objects;
 import io.fabric8.common.util.Zips;
+import io.jimagezip.util.ImageMavenCoords;
+import io.jimagezip.util.InstallHelper;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -52,10 +53,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -217,11 +216,7 @@ public class BuildMojo extends AbstractMojo {
             assembly.setId("docker");
             assemblyArchiver.createArchive(assembly, "maven", "dir", projectConfig, false);
 
-            chmodScripts(buildDir);
-            File binDir = new File(buildDir, "bin");
-            if (binDir.exists()) {
-                chmodScripts(binDir);
-            }
+            InstallHelper.chmodAllScripts(buildDir);
 
             Zips.createZipFile(LOG, buildDir, outputZipFile);
             getLog().info("Created image zip: " + outputZipFile);
@@ -258,52 +253,12 @@ public class BuildMojo extends AbstractMojo {
     }
 
 
-    /**
-     * Lets make sure all shell scripts are executable
-     */
-    protected void chmodScripts(File dir) {
-        if (dir.exists() && dir.isDirectory()) {
-            File[] files = dir.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    String name = file.getName();
-                    String extension = Files.getFileExtension(name);
-                    if (name.equals("launcher") || extension.equals("sh") || extension.equals("bat") || extension.equals("cmd")) {
-                        file.setExecutable(true);
-                    }
-                }
-            }
-        }
-    }
-
     protected void unpackBaseImage(File buildDir) throws Exception {
         String imageName = project.getProperties().getProperty(DOCKER_BASE_IMAGE_PROPERTY);
         Objects.notNull(imageName, DOCKER_BASE_IMAGE_PROPERTY);
 
-        String[] split = imageName.split("/");
-        String groupId = "io.jimagezip.images";
-        String artifactId = null;
-        String version = project.getVersion();
-        if (split == null || split.length == 0) {
-            throw new IllegalArgumentException("Invalid docker image name '" + imageName + "'");
-        }
-        switch (split.length) {
-            case 1:
-                artifactId = split[0];
-                break;
-            default:
-                groupId += "." + split[split.length - 2];
-                artifactId = split[split.length - 1];
-        }
-        int idx = artifactId.indexOf(':');
-        if (idx > 0) {
-            version = artifactId.substring(idx + 1);
-            artifactId = artifactId.substring(0, idx);
-        }
-        String type = "zip";
-        String classifier = "image";
-
-        String coords = groupId + ":" + artifactId + ":" + type + ":" + classifier + ":" + version;
+        ImageMavenCoords mavenUrl = ImageMavenCoords.parse(imageName);
+        String coords = mavenUrl.getAetherCoords();
         getLog().info("Looking up JImageZip: " + coords);
         Artifact artifact = new DefaultArtifact(coords);
 

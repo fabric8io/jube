@@ -17,10 +17,12 @@ package io.jimagezip.main;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import io.jimagezip.local.LocalNodeController;
+import io.jimagezip.process.ProcessManager;
+import io.jimagezip.process.service.ProcessManagerService;
 import org.apache.cxf.feature.LoggingFeature;
 
 import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
+import javax.management.MalformedObjectNameException;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 import java.util.Arrays;
@@ -29,14 +31,27 @@ import java.util.Set;
 
 @ApplicationPath("/")
 public class JImageZipApplication extends Application {
+/*
     @Inject
     private LocalNodeController localNodeController;
+*/
 
     @Produces
     private JacksonJsonProvider jacksonJsonProvider = new JacksonJsonProvider();
 
+    @Produces
+    public ProcessManager createProcessManager() throws MalformedObjectNameException {
+        return new ProcessManagerService();
+    }
+
     @Override
     public Set<Object> getSingletons() {
+        LocalNodeController localNodeController = null;
+        try {
+            localNodeController = new LocalNodeController(createProcessManager());
+        } catch (MalformedObjectNameException e) {
+            throw new RuntimeException("Failed to create LocalNodecontroller: " + e, e);
+        }
         return new HashSet<Object>(
                 Arrays.asList(
                         localNodeController,

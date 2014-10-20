@@ -16,6 +16,7 @@
 package io.jimagezip.process;
 
 import com.google.common.io.Files;
+import io.hawt.aether.OpenMavenURL;
 import io.jimagezip.process.InstallOptions;
 import io.jimagezip.process.InstallTask;
 import io.jimagezip.process.service.ProcessManagerService;
@@ -56,7 +57,7 @@ public class ProcessManagerServiceTest {
 
         installOptions = new InstallOptions.InstallOptionsBuilder().
                 jvmOptions(firstJvmOption, secondJvmOption).
-                url("mvn:io.jimagezip.images.examples/cxf-cdi/2.0.0-SNAPSHOT/zip/image").build();
+                url(new OpenMavenURL("io.jimagezip.images.examples/cxf-cdi/2.0.0-SNAPSHOT/zip/image")).build();
     }
 
     @After

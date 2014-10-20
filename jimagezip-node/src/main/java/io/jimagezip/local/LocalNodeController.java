@@ -17,24 +17,42 @@
  */
 package io.jimagezip.local;
 
+import io.fabric8.common.util.Objects;
 import io.fabric8.kubernetes.api.Kubernetes;
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.CurrentState;
+import io.fabric8.kubernetes.api.model.DesiredState;
+import io.fabric8.kubernetes.api.model.ManifestContainer;
 import io.fabric8.kubernetes.api.model.PodListSchema;
 import io.fabric8.kubernetes.api.model.PodSchema;
 import io.fabric8.kubernetes.api.model.ReplicationControllerListSchema;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
 import io.fabric8.kubernetes.api.model.ServiceListSchema;
 import io.fabric8.kubernetes.api.model.ServiceSchema;
+import io.hawt.util.Strings;
+import io.jimagezip.process.ProcessManager;
 
+import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Path;
+import java.util.List;
 import java.util.Map;
+
+import static io.jimagezip.local.NodeHelper.getOrCreateCurrentState;
 
 /**
  * Implements the local node controller
  */
 @Path("api/v1beta1")
 public class LocalNodeController implements Kubernetes {
+    private final ProcessManager processManager;
+    private final LocalNodeModel model = new LocalNodeModel();
+
+    @Inject
+    public LocalNodeController(ProcessManager processManager) {
+        this.processManager = processManager;
+    }
+
     @Override
     public PodListSchema getPods() {
         PodListSchema answer = new PodListSchema();
@@ -49,20 +67,33 @@ public class LocalNodeController implements Kubernetes {
     }
 
     @Override
-    public String createPod(PodSchema entity) throws Exception {
-        // TODO
-        return null;
+    public String createPod(PodSchema pod) throws Exception {
+        String id = pod.getId();
+        if (Strings.isBlank(id)) {
+            id = model.createID("Pod");
+            pod.setId(id);
+        }
+        return updatePod(id, pod);
     }
 
+
     @Override
-    public String updatePod(@NotNull String podId, PodSchema entity) throws Exception {
-        // TODO
-        return null;
+    public String updatePod(@NotNull String podId, PodSchema pod) throws Exception {
+        System.out.println("Updating pod " + pod);
+        DesiredState desiredState = pod.getDesiredState();
+        Objects.notNull(desiredState, "desiredState");
+
+        CurrentState currentState = getOrCreateCurrentState(pod);
+        List<ManifestContainer> containers = KubernetesHelper.getContainers(pod);
+        return NodeHelper.createMissingContainers(processManager, pod, currentState, containers);
     }
 
     @Override
     public String deletePod(@NotNull String podId) throws Exception {
-        // TODO
+        PodSchema pod = model.getPod(podId);
+        if (pod != null) {
+            // TODO delete containers
+        }
         return null;
     }
 
@@ -111,13 +142,17 @@ public class LocalNodeController implements Kubernetes {
     }
 
     @Override
-    public String createReplicationController(ReplicationControllerSchema entity) throws Exception {
-        // TODO
-        return null;
+    public String createReplicationController(ReplicationControllerSchema replicationController) throws Exception {
+        String id = replicationController.getId();
+        if (Strings.isBlank(id)) {
+            id = model.createID("ReplicationController");
+            replicationController.setId(id);
+        }
+        return updateReplicationController(id, replicationController);
     }
 
     @Override
-    public String updateReplicationController(@NotNull String controllerId, ReplicationControllerSchema entity) throws Exception {
+    public String updateReplicationController(@NotNull String controllerId, ReplicationControllerSchema replicationController) throws Exception {
         // TODO
         return null;
     }

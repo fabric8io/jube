@@ -15,6 +15,8 @@
  */
 package io.jimagezip.process;
 
+import io.hawt.aether.OpenMavenURL;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -26,5 +28,5 @@ public interface DownloadStrategy {
     /**
      * Returns the newly created File inside the installDir for the given sourceUrl
      */
-    File downloadContent(URL sourceUrl, File installDir) throws IOException;
+    File downloadContent(OpenMavenURL sourceUrl, File installDir) throws IOException;
 }

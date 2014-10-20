@@ -25,6 +25,7 @@ import org.jboss.weld.environment.servlet.Listener;
 public class Main {
 
     public static void main(final String[] args) throws Exception {
+        System.setProperty("java.protocol.handler.pkgs", "sun.net.www.protocol");
 
         String port = System.getenv("HTTP_PORT");
         if (port == null) {
@@ -35,12 +36,17 @@ public class Main {
         }
         Integer num = Integer.parseInt(port);
 
+        // lets install the thread context class loader
+        ClassLoader classLoader = Main.class.getClassLoader();
+        Thread.currentThread().setContextClassLoader(classLoader);
+
         System.out.println("Starting REST server on port: " + port);
         final Server server = new Server(num);
 
         // Register and map the dispatcher servlet
         final ServletHolder servletHolder = new ServletHolder(new CXFCdiServlet());
         final ServletContextHandler context = new ServletContextHandler();
+        context.setClassLoader(classLoader);
         context.setContextPath("/");
         context.addEventListener(new Listener());
         context.addEventListener(new BeanManagerResourceBindingListener());
