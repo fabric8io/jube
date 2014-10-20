@@ -23,7 +23,9 @@ import io.fabric8.kubernetes.api.Kubernetes;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.CurrentState;
 import io.fabric8.kubernetes.api.model.ManifestContainer;
+import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
 import io.fabric8.kubernetes.api.model.PodSchema;
+import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
 import io.hawt.aether.OpenMavenURL;
 import io.jimagezip.process.InstallOptions;
 import io.jimagezip.process.Installation;
@@ -34,6 +36,7 @@ import io.jimagezip.util.ImageMavenCoords;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A set of helper functions for implementing the local node
@@ -53,7 +56,7 @@ public class NodeHelper {
      * Creates any missing containers; updating the currentState with the new values.
      */
     public static String createMissingContainers(ProcessManager processManager, PodSchema pod, CurrentState currentState, List<ManifestContainer> containers) throws Exception {
-        List<ManifestContainer> currentContainers = KubernetesHelper.getCurrentContainers(currentState);
+        Map<String, PodCurrentContainerInfo> currentContainers = KubernetesHelper.getCurrentContainers(currentState);
 
         for (ManifestContainer container : containers) {
             // TODO check if we already have a working container
@@ -62,10 +65,17 @@ public class NodeHelper {
         return null;
     }
 
-    /**
-     * Creates the given container on the process manager
-     */
-    protected static void createContainer(ProcessManager processManager, ManifestContainer container, CurrentState currentState) throws Exception {
+    public static String createMissingContainers(ProcessManager processManager, ReplicationControllerSchema replicationController) throws Exception {
+        List<ManifestContainer> currentContainers = KubernetesHelper.getCurrentContainers(replicationController);
+
+        List<ManifestContainer> containers = KubernetesHelper.getContainers(replicationController);
+        for (ManifestContainer container : containers) {
+            createContainer(processManager, container);
+        }
+        return null;
+    }
+
+    protected static void createContainer(ProcessManager processManager, ManifestContainer container) throws Exception {
         String name = container.getName();
         String image = container.getImage();
         Strings.notEmpty(image);
@@ -90,4 +100,12 @@ public class NodeHelper {
 
         System.out.println("Started the process!");
     }
+
+    /**
+     * Creates the given container on the process manager
+     */
+    protected static void createContainer(ProcessManager processManager, ManifestContainer container, CurrentState currentState) throws Exception {
+        createContainer(processManager, container);
+    }
+
 }

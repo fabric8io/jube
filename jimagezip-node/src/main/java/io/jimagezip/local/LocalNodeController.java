@@ -20,6 +20,7 @@ package io.jimagezip.local;
 import io.fabric8.common.util.Objects;
 import io.fabric8.kubernetes.api.Kubernetes;
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.ControllerDesiredState;
 import io.fabric8.kubernetes.api.model.CurrentState;
 import io.fabric8.kubernetes.api.model.DesiredState;
 import io.fabric8.kubernetes.api.model.ManifestContainer;
@@ -153,8 +154,8 @@ public class LocalNodeController implements Kubernetes {
 
     @Override
     public String updateReplicationController(@NotNull String controllerId, ReplicationControllerSchema replicationController) throws Exception {
-        // TODO
-        return null;
+        System.out.println("Updating pod " + controllerId);
+        return NodeHelper.createMissingContainers(processManager, replicationController);
     }
 
     @Override
