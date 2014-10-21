@@ -55,6 +55,7 @@ public class ProcessConfig implements Serializable {
         restartCommand = toCommand("restart");
         statusCommand = toCommand("status");
         killCommand = toCommand("kill");
+        pidFile = "process.pid";
     }
 
     /**

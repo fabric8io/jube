@@ -53,7 +53,6 @@ public class ProcessManagerServiceTest {
         System.out.println("Installing processes to " + installDir.getAbsolutePath());
 
         processManagerService = new ProcessManagerService(installDir);
-        processManagerService.init();
 
         installOptions = new InstallOptions.InstallOptionsBuilder().
                 jvmOptions(firstJvmOption, secondJvmOption).

@@ -17,6 +17,10 @@
  */
 package io.jimagezip.local;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import io.jimagezip.process.Installation;
+import io.jimagezip.process.ProcessManager;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,40 +28,58 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.io.IOException;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * Monitors the status of the current replication controllers and pods and chooses to start new pods if there are not enough replicas
+ * Monitors the current local processes and updates the local model to indicate started or stopped processes
  */
 @Singleton
-public class AutoScaler {
+public class ProcessMonitor {
     private static final transient Logger LOG = LoggerFactory.getLogger(AutoScaler.class);
 
     private final LocalNodeModel model;
+    private final ProcessManager processManager;
     private final long pollTime;
     private Timer timer = new Timer();
 
     @Inject
-    public AutoScaler(LocalNodeModel model,
-                      @ConfigProperty(name = "autoScaler_pollTime", defaultValue = "2000")
-                      long pollTime) {
+    public ProcessMonitor(LocalNodeModel model,
+                          ProcessManager processManager,
+                          @ConfigProperty(name = "processMonitor_pollTime", defaultValue = "2000")
+                          long pollTime) {
         this.model = model;
+        this.processManager = processManager;
         this.pollTime = pollTime;
 
-        System.out.println("========= Starting the auto scaler with poll time: " + pollTime);
+        System.out.println("========= Starting the process monitor with poll time: " + pollTime);
 
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                LOG.debug("autoscale timer");
-                autoScale();
+                LOG.debug("process monitor timer");
+                processMonitor();
             }
         };
         timer.schedule(timerTask, pollTime, pollTime);
     }
 
-    protected void autoScale() {
+    protected void processMonitor() {
+        ImmutableMap<String, Installation> map = processManager.listInstallationMap();
+        ImmutableSet<Map.Entry<String, Installation>> entries = map.entrySet();
+        for (Map.Entry<String, Installation> entry : entries) {
+            String id = entry.getKey();
+            Installation installation = entry.getValue();
+            Long pid = null;
+            try {
+                pid = installation.getActivePid();
+            } catch (IOException e) {
+                LOG.warn("Failed to access pid for " + id + ". " + e, e);
+            }
+            System.out.println("Process " + id + " has pid " + pid);
+        }
     }
 
     @PreDestroy

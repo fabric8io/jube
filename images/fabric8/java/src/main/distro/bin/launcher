@@ -66,7 +66,9 @@ fi
 
 source ${APP_BASE}/env.sh
 
-PID_FILE="${APP_BASE}/var/${SERVICE}.pid"
+PID_FILE="${APP_BASE}/process.pid"
+
+#PID_FILE="${APP_BASE}/var/${SERVICE}.pid"
 
 # Redirect process output to log files
 APP_CONSOLE_CMD="${APP_BASE}/logs/cmd.log"

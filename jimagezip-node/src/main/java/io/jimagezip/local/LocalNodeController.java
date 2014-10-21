@@ -51,12 +51,14 @@ public class LocalNodeController implements Kubernetes {
     private final ProcessManager processManager;
     private final LocalNodeModel model;
     private final AutoScaler autoScaler;
+    private final ProcessMonitor processMonitor;
 
     @Inject
-    public LocalNodeController(ProcessManager processManager, LocalNodeModel model, AutoScaler autoScaler) {
+    public LocalNodeController(ProcessManager processManager, LocalNodeModel model, AutoScaler autoScaler, ProcessMonitor processMonitor) {
         this.processManager = processManager;
         this.model = model;
         this.autoScaler = autoScaler;
+        this.processMonitor = processMonitor;
     }
 
     @Override

@@ -23,11 +23,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -56,12 +59,17 @@ import io.jimagezip.process.ProcessController;
 import io.jimagezip.process.support.DefaultProcessController;
 import io.jimagezip.process.support.FileUtils;
 import io.jimagezip.util.InstallHelper;
+import org.apache.deltaspike.core.api.config.ConfigProperty;
+import org.apache.deltaspike.core.api.jmx.JmxManaged;
+import org.apache.deltaspike.core.api.jmx.MBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.google.common.io.ByteStreams.copy;
 import static io.jimagezip.process.support.ProcessUtils.findInstallDir;
 
+@Singleton
+@MBean(objectName = "io.jimagezip:type=LocalProcesses", description = "Manages local processes on this node")
 public class ProcessManagerService implements ProcessManagerServiceMBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcessManagerService.class);
@@ -74,66 +82,17 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     private final Duration postUnpackTimeout = Duration.valueOf("1h");
     private final Duration postInstallTimeout = Duration.valueOf("1h");
     private SortedMap<String, Installation> installations = Maps.newTreeMap();
-    private final ObjectName objectName;
 
     private MBeanServer mbeanServer;
 
-    public ProcessManagerService() throws MalformedObjectNameException {
-        this(getDefaultProcessFolder());
+    @Inject
+    public ProcessManagerService(@ConfigProperty(name = "process_dir", defaultValue = "./processes")  String storageLocation) throws MalformedObjectNameException, IOException {
+        this(new File(storageLocation));
     }
 
-    // TODO replace with CDI injection
-    protected static File getDefaultProcessFolder() {
-        String dirText = Systems.getEnvVarOrSystemProperty("PROCESS_DIR", "process.dir", "processes");
-        File answer = new File(dirText);
-        answer.mkdirs();
-        return answer;
-    }
-
-    public ProcessManagerService(File storageLocation) throws MalformedObjectNameException {
+    public ProcessManagerService(File storageLocation) throws MalformedObjectNameException, IOException {
         this.storageLocation = storageLocation;
-        this.objectName = new ObjectName("io.fabric8:type=LocalProcesses");
-    }
 
-    public void bindMBeanServer(MBeanServer mbeanServer) {
-        unbindMBeanServer(this.mbeanServer);
-        this.mbeanServer = mbeanServer;
-        if (mbeanServer != null) {
-            registerMBeanServer(mbeanServer);
-        }
-    }
-
-    public void unbindMBeanServer(MBeanServer mbeanServer) {
-        if (mbeanServer != null) {
-            unregisterMBeanServer(mbeanServer);
-            this.mbeanServer = null;
-        }
-    }
-
-    public void registerMBeanServer(MBeanServer mbeanServer) {
-        try {
-            if (!mbeanServer.isRegistered(objectName)) {
-                mbeanServer.registerMBean(this, objectName);
-            }
-        } catch (Exception e) {
-            LOGGER.warn("An error occurred during mbean server registration: " + e, e);
-        }
-    }
-
-    public void unregisterMBeanServer(MBeanServer mbeanServer) {
-        if (mbeanServer != null) {
-            try {
-                ObjectName name = objectName;
-                if (mbeanServer.isRegistered(name)) {
-                    mbeanServer.unregisterMBean(name);
-                }
-            } catch (Exception e) {
-                LOGGER.warn("An error occurred during mbean server registration: " + e, e);
-            }
-        }
-    }
-
-    public void init() throws Exception {
         // lets find the largest number in the current directory as we are on startup
         lastId = 0;
         File[] files = storageLocation.listFiles();
@@ -162,7 +121,6 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
                 }
             }
         }
-
     }
 
 
@@ -184,6 +142,16 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     @Override
     public Installation getInstallation(String id) {
         return installations.get(id);
+    }
+
+    @JmxManaged(description = "Returns the set of installed processes")
+    public String getInstallationIds() {
+        return listInstallationMap().keySet().toString();
+    }
+
+    @JmxManaged(description = "Returns the number of installed processes")
+    public int getInstallationCount() {
+        return listInstallationMap().keySet().size();
     }
 
     @Override
