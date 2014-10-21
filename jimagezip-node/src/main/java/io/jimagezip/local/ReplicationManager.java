@@ -31,17 +31,17 @@ import java.util.TimerTask;
  * Monitors the status of the current replication controllers and pods and chooses to start new pods if there are not enough replicas
  */
 @Singleton
-public class AutoScaler {
-    private static final transient Logger LOG = LoggerFactory.getLogger(AutoScaler.class);
+public class ReplicationManager {
+    private static final transient Logger LOG = LoggerFactory.getLogger(ReplicationManager.class);
 
     private final LocalNodeModel model;
     private final long pollTime;
     private Timer timer = new Timer();
 
     @Inject
-    public AutoScaler(LocalNodeModel model,
-                      @ConfigProperty(name = "autoScaler_pollTime", defaultValue = "2000")
-                      long pollTime) {
+    public ReplicationManager(LocalNodeModel model,
+                              @ConfigProperty(name = "autoScaler_pollTime", defaultValue = "2000")
+                              long pollTime) {
         this.model = model;
         this.pollTime = pollTime;
 

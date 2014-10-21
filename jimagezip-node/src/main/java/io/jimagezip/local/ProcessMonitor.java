@@ -19,7 +19,6 @@ package io.jimagezip.local;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import io.fabric8.kubernetes.api.model.PodSchema;
 import io.jimagezip.process.Installation;
 import io.jimagezip.process.ProcessManager;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
@@ -39,7 +38,7 @@ import java.util.TimerTask;
  */
 @Singleton
 public class ProcessMonitor {
-    private static final transient Logger LOG = LoggerFactory.getLogger(AutoScaler.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(ReplicationManager.class);
 
     private final LocalNodeModel model;
     private final ProcessManager processManager;

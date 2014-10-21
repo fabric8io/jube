@@ -70,10 +70,12 @@ public class PodCurrentContainer {
         } else {
             currentState.setStatus("Waiting");
         }
+        State state = NodeHelper.getOrCreateContainerState(pod, id);
         if (alive) {
-            State state = NodeHelper.getOrCreateContainerState(pod, id);
             Running running = new Running();
             state.setRunning(running);
+        } else {
+            state.setRunning(null);
         }
     }
 }

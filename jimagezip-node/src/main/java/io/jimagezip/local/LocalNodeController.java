@@ -20,7 +20,6 @@ package io.jimagezip.local;
 import io.fabric8.common.util.Objects;
 import io.fabric8.kubernetes.api.Kubernetes;
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.ControllerDesiredState;
 import io.fabric8.kubernetes.api.model.CurrentState;
 import io.fabric8.kubernetes.api.model.DesiredState;
 import io.fabric8.kubernetes.api.model.ManifestContainer;
@@ -50,14 +49,14 @@ import static io.jimagezip.local.NodeHelper.getOrCreateCurrentState;
 public class LocalNodeController implements Kubernetes {
     private final ProcessManager processManager;
     private final LocalNodeModel model;
-    private final AutoScaler autoScaler;
+    private final ReplicationManager replicationManager;
     private final ProcessMonitor processMonitor;
 
     @Inject
-    public LocalNodeController(ProcessManager processManager, LocalNodeModel model, AutoScaler autoScaler, ProcessMonitor processMonitor) {
+    public LocalNodeController(ProcessManager processManager, LocalNodeModel model, ReplicationManager replicationManager, ProcessMonitor processMonitor) {
         this.processManager = processManager;
         this.model = model;
-        this.autoScaler = autoScaler;
+        this.replicationManager = replicationManager;
         this.processMonitor = processMonitor;
     }
 
