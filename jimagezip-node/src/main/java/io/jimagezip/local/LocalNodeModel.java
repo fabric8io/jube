@@ -20,7 +20,10 @@ package io.jimagezip.local;
 import io.fabric8.kubernetes.api.model.PodSchema;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
 import io.fabric8.kubernetes.api.model.ServiceSchema;
+import io.hawt.util.Strings;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -30,10 +33,15 @@ import static java.util.UUID.randomUUID;
 
 /**
  */
+@Singleton
 public class LocalNodeModel {
     private Map<String, PodSchema> podMap = new ConcurrentHashMap<>();
     private Map<String, ReplicationControllerSchema> replicationControllerSchemaMap = new ConcurrentHashMap<>();
     private Map<String, ServiceSchema> serviceMap = new ConcurrentHashMap<>();
+
+    @Inject
+    public LocalNodeModel() {
+    }
 
     public PodSchema getPod(String id) {
         return podMap.get(id);
@@ -52,5 +60,12 @@ public class LocalNodeModel {
      */
     public String createID(String kind) {
         return kind + "-" + randomUUID().toString();
+    }
+
+    public void updateReplicationController(String controllerId, ReplicationControllerSchema replicationController) {
+        if (Strings.isBlank(controllerId)) {
+            controllerId = createID("ReplicationController");
+        }
+        replicationControllerSchemaMap.put(controllerId, replicationController);
     }
 }

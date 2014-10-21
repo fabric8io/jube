@@ -163,4 +163,23 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>weldse</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>${exec.maven.plugin.version}</version>
+            <configuration>
+              <mainClass>org.jboss.weld.environment.se.StartMain</mainClass>
+              <includePluginDependencies>false</includePluginDependencies>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

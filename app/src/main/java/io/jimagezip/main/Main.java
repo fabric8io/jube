@@ -22,39 +22,61 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.jboss.weld.environment.servlet.BeanManagerResourceBindingListener;
 import org.jboss.weld.environment.servlet.Listener;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class Main {
 
     public static void main(final String[] args) throws Exception {
-        System.setProperty("java.protocol.handler.pkgs", "sun.net.www.protocol");
+        try {
+            String port = System.getenv("HTTP_PORT");
+            if (port == null) {
+                port = System.getProperty("http.port");
+            }
+            if (port == null) {
+                port = "8585";
+            }
+            Integer num = Integer.parseInt(port);
 
-        String port = System.getenv("HTTP_PORT");
-        if (port == null) {
-            port = System.getProperty("http.port");
+            // lets install the thread context class loader
+            ClassLoader classLoader = Main.class.getClassLoader();
+            Thread.currentThread().setContextClassLoader(classLoader);
+
+            System.out.println("Starting REST server on port: " + port);
+            final Server server = new Server(num);
+
+            // Register and map the dispatcher servlet
+            final ServletHolder servletHolder = new ServletHolder(new CXFCdiServlet());
+            final ServletContextHandler context = new ServletContextHandler();
+            context.setClassLoader(classLoader);
+            context.setContextPath("/");
+            context.addEventListener(new Listener());
+            context.addEventListener(new BeanManagerResourceBindingListener());
+            context.addServlet(servletHolder, "/*");
+
+            server.setHandler(context);
+            server.start();
+            server.join();
+        } catch (Exception e) {
+            Set<Throwable> exceptions = new HashSet<>();
+            exceptions.add(e);
+            System.out.println(e);
+            e.printStackTrace();
+
+            // show all causes
+            Throwable t = e;
+            while (true) {
+                Throwable cause = t.getCause();
+                if (cause != null && exceptions.add(cause)) {
+                    System.out.println();
+                    System.out.println("Caused by: " + cause);
+                    cause.printStackTrace();
+                    t = cause;
+                } else {
+                    break;
+                }
+            }
         }
-        if (port == null) {
-            port = "8585";
-        }
-        Integer num = Integer.parseInt(port);
-
-        // lets install the thread context class loader
-        ClassLoader classLoader = Main.class.getClassLoader();
-        Thread.currentThread().setContextClassLoader(classLoader);
-
-        System.out.println("Starting REST server on port: " + port);
-        final Server server = new Server(num);
-
-        // Register and map the dispatcher servlet
-        final ServletHolder servletHolder = new ServletHolder(new CXFCdiServlet());
-        final ServletContextHandler context = new ServletContextHandler();
-        context.setClassLoader(classLoader);
-        context.setContextPath("/");
-        context.addEventListener(new Listener());
-        context.addEventListener(new BeanManagerResourceBindingListener());
-        context.addServlet(servletHolder, "/*");
-
-        server.setHandler(context);
-        server.start();
-        server.join();
     }
 
 }

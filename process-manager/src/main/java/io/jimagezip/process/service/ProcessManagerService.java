@@ -40,6 +40,7 @@ import com.google.common.io.Files;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.fabric8.common.util.Objects;
 import io.fabric8.common.util.Strings;
+import io.fabric8.common.util.Systems;
 import io.fabric8.common.util.Zips;
 import io.hawt.aether.OpenMavenURL;
 import io.jimagezip.process.DownloadStrategy;
@@ -78,7 +79,15 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     private MBeanServer mbeanServer;
 
     public ProcessManagerService() throws MalformedObjectNameException {
-        this(new File(System.getProperty("karaf.processes", System.getProperty("karaf.base") + File.separatorChar + "processes")));
+        this(getDefaultProcessFolder());
+    }
+
+    // TODO replace with CDI injection
+    protected static File getDefaultProcessFolder() {
+        String dirText = Systems.getEnvVarOrSystemProperty("PROCESS_DIR", "process.dir", "processes");
+        File answer = new File(dirText);
+        answer.mkdirs();
+        return answer;
     }
 
     public ProcessManagerService(File storageLocation) throws MalformedObjectNameException {

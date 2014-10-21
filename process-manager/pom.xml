@@ -52,6 +52,14 @@
       <artifactId>hawtio-aether</artifactId>
       <version>${hawtio.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.deltaspike.core</groupId>
+      <artifactId>deltaspike-core-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.deltaspike.core</groupId>
+      <artifactId>deltaspike-core-impl</artifactId>
+    </dependency>
 
     <!-- testing -->
     <dependency>

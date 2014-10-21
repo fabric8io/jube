@@ -34,6 +34,7 @@ import io.hawt.util.Strings;
 import io.jimagezip.process.ProcessManager;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Path;
 import java.util.List;
@@ -44,14 +45,18 @@ import static io.jimagezip.local.NodeHelper.getOrCreateCurrentState;
 /**
  * Implements the local node controller
  */
+@Singleton
 @Path("api/v1beta1")
 public class LocalNodeController implements Kubernetes {
     private final ProcessManager processManager;
-    private final LocalNodeModel model = new LocalNodeModel();
+    private final LocalNodeModel model;
+    private final AutoScaler autoScaler;
 
     @Inject
-    public LocalNodeController(ProcessManager processManager) {
+    public LocalNodeController(ProcessManager processManager, LocalNodeModel model, AutoScaler autoScaler) {
         this.processManager = processManager;
+        this.model = model;
+        this.autoScaler = autoScaler;
     }
 
     @Override
@@ -155,7 +160,8 @@ public class LocalNodeController implements Kubernetes {
     @Override
     public String updateReplicationController(@NotNull String controllerId, ReplicationControllerSchema replicationController) throws Exception {
         System.out.println("Updating pod " + controllerId);
-        return NodeHelper.createMissingContainers(processManager, replicationController);
+        model.updateReplicationController(controllerId, replicationController);
+        return null;
     }
 
     @Override
