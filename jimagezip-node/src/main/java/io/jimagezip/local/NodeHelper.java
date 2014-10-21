@@ -26,6 +26,7 @@ import io.fabric8.kubernetes.api.model.ManifestContainer;
 import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
 import io.fabric8.kubernetes.api.model.PodSchema;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
+import io.fabric8.kubernetes.api.model.State;
 import io.hawt.aether.OpenMavenURL;
 import io.jimagezip.process.InstallOptions;
 import io.jimagezip.process.Installation;
@@ -35,6 +36,7 @@ import io.jimagezip.util.ImageMavenCoords;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +44,10 @@ import java.util.Map;
  * A set of helper functions for implementing the local node
  */
 public class NodeHelper {
+
+    /**
+     * Returns the current state of the given pod; lazily creating one if required
+     */
     public static CurrentState getOrCreateCurrentState(PodSchema pod) {
         Objects.notNull(pod, "pod");
         CurrentState currentState = pod.getCurrentState();
@@ -50,6 +56,45 @@ public class NodeHelper {
             pod.setCurrentState(currentState);
         }
         return currentState;
+    }
+
+    /**
+     * Returns the current container map for the current pod state; lazily creating if required
+     */
+    public static Map<String, PodCurrentContainerInfo> getOrCreateCurrentContainerInfo(PodSchema pod) {
+        CurrentState currentState = getOrCreateCurrentState(pod);
+        Map<String, PodCurrentContainerInfo> info = currentState.getInfo();
+        if (info == null) {
+            info = new HashMap<>();
+            currentState.setInfo(info);
+        }
+        return info;
+    }
+
+    /**
+     * Returns the containers state, lazily creating any objects if required.
+     */
+    public static State getOrCreateContainerState(PodSchema pod, String containerName) {
+        PodCurrentContainerInfo containerInfo = getOrCreateContainerInfo(pod, containerName);
+        State state = containerInfo.getState();
+        if (state == null) {
+            state = new State();
+            containerInfo.setState(state);
+        }
+        return state;
+    }
+
+    /**
+     * Returns the container information for the given pod and container name, lazily creating as required
+     */
+    public static PodCurrentContainerInfo getOrCreateContainerInfo(PodSchema pod, String containerName) {
+        Map<String, PodCurrentContainerInfo> map = getOrCreateCurrentContainerInfo(pod);
+        PodCurrentContainerInfo containerInfo = map.get(containerName);
+        if (containerInfo == null) {
+            containerInfo = new PodCurrentContainerInfo();
+            map.put(containerName, containerInfo);
+        }
+        return containerInfo;
     }
 
     /**

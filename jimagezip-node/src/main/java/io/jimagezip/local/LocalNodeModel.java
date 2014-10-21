@@ -17,16 +17,25 @@
  */
 package io.jimagezip.local;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.CurrentState;
+import io.fabric8.kubernetes.api.model.ManifestContainer;
+import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
+import io.fabric8.kubernetes.api.model.PodListSchema;
 import io.fabric8.kubernetes.api.model.PodSchema;
+import io.fabric8.kubernetes.api.model.ReplicationControllerListSchema;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
+import io.fabric8.kubernetes.api.model.ServiceListSchema;
 import io.fabric8.kubernetes.api.model.ServiceSchema;
 import io.hawt.util.Strings;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.util.UUID.randomUUID;
@@ -36,11 +45,62 @@ import static java.util.UUID.randomUUID;
 @Singleton
 public class LocalNodeModel {
     private Map<String, PodSchema> podMap = new ConcurrentHashMap<>();
-    private Map<String, ReplicationControllerSchema> replicationControllerSchemaMap = new ConcurrentHashMap<>();
+    private Map<String, ReplicationControllerSchema> replicationControllerMap = new ConcurrentHashMap<>();
     private Map<String, ServiceSchema> serviceMap = new ConcurrentHashMap<>();
 
     @Inject
     public LocalNodeModel() {
+    }
+
+    public ImmutableMap<String, PodSchema> getPodMap() {
+        return ImmutableMap.copyOf(podMap);
+    }
+
+
+    public PodListSchema getPods() {
+        PodListSchema answer = new PodListSchema();
+        answer.setItems(Lists.newArrayList(podMap.values()));
+        return answer;
+    }
+
+    public ServiceListSchema getServices() {
+        ServiceListSchema answer = new ServiceListSchema();
+        answer.setItems(Lists.newArrayList(serviceMap.values()));
+        return answer;
+    }
+
+    public ReplicationControllerListSchema getReplicationControllers() {
+        ReplicationControllerListSchema answer = new ReplicationControllerListSchema();
+        answer.setItems(Lists.newArrayList(replicationControllerMap.values()));
+        return answer;
+    }
+
+    public ImmutableMap<String, ReplicationControllerSchema> getReplicationControllerMap() {
+        return ImmutableMap.copyOf(replicationControllerMap);
+    }
+
+    public ImmutableMap<String, ServiceSchema> getServiceMap() {
+        return ImmutableMap.copyOf(serviceMap);
+    }
+
+
+    /**
+     * Returns all the current containers and their pods
+     */
+    public ImmutableMap<String, PodCurrentContainer> getPodRunningContainers() {
+        Map<String, PodCurrentContainer> answer = new HashMap<>();
+        for (Map.Entry<String, PodSchema> entry : podMap.entrySet()) {
+            String podId = entry.getKey();
+            PodSchema podSchema = entry.getValue();
+            Map<String, PodCurrentContainerInfo> currentContainers = KubernetesHelper.getCurrentContainers(podSchema);
+            for (Map.Entry<String, PodCurrentContainerInfo> containerEntry : currentContainers.entrySet()) {
+                String containerId = containerEntry.getKey();
+                PodCurrentContainerInfo currentContainer = containerEntry.getValue();
+                PodCurrentContainer podCurrentContainer = new PodCurrentContainer(this, podId, podSchema, containerId, currentContainer);
+                answer.put(containerId, podCurrentContainer);
+            }
+        }
+        return ImmutableMap.copyOf(answer);
     }
 
     public PodSchema getPod(String id) {
@@ -48,7 +108,7 @@ public class LocalNodeModel {
     }
 
     public ReplicationControllerSchema getReplicationController(String id) {
-        return replicationControllerSchemaMap.get(id);
+        return replicationControllerMap.get(id);
     }
 
     public ServiceSchema getService(String id) {
@@ -62,10 +122,34 @@ public class LocalNodeModel {
         return kind + "-" + randomUUID().toString();
     }
 
-    public void updateReplicationController(String controllerId, ReplicationControllerSchema replicationController) {
-        if (Strings.isBlank(controllerId)) {
-            controllerId = createID("ReplicationController");
+    public void updateReplicationController(String id, ReplicationControllerSchema replicationController) {
+        if (Strings.isBlank(id)) {
+            id = createID("ReplicationController");
         }
-        replicationControllerSchemaMap.put(controllerId, replicationController);
+        replicationControllerMap.put(id, replicationController);
+    }
+
+    public void updatePod(String id, PodSchema pod) {
+        if (Strings.isBlank(id)) {
+            id = createID("Pod");
+        }
+        // lets make sure that for each container we have a current container created
+        Map<String, PodCurrentContainerInfo> info = NodeHelper.getOrCreateCurrentContainerInfo(pod);
+
+        List<ManifestContainer> containers = KubernetesHelper.getContainers(pod);
+        for (ManifestContainer container : containers) {
+            String name = container.getName();
+            if (Strings.isBlank(name)) {
+                // lets generate a container id
+                name = createID("Container");
+                container.setName(name);
+            }
+            PodCurrentContainerInfo containerInfo = info.get(name);
+            if (containerInfo == null) {
+                containerInfo = new PodCurrentContainerInfo();
+                info.put(name, containerInfo);
+            }
+        }
+        podMap.put(id, pod);
     }
 }

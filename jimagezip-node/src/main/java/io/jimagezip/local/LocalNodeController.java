@@ -63,14 +63,12 @@ public class LocalNodeController implements Kubernetes {
 
     @Override
     public PodListSchema getPods() {
-        PodListSchema answer = new PodListSchema();
-        // TODO
-        return answer;
+        return model.getPods();
     }
 
     @Override
     public PodSchema getPod(@NotNull String podId) {
-        Map<String, PodSchema> map = KubernetesHelper.getPodMap(this);
+        Map<String, PodSchema> map = model.getPodMap();
         return map.get(podId);
     }
 
@@ -93,6 +91,7 @@ public class LocalNodeController implements Kubernetes {
 
         CurrentState currentState = getOrCreateCurrentState(pod);
         List<ManifestContainer> containers = KubernetesHelper.getContainers(pod);
+        model.updatePod(podId, pod);
         return NodeHelper.createMissingContainers(processManager, pod, currentState, containers);
     }
 
@@ -107,14 +106,12 @@ public class LocalNodeController implements Kubernetes {
 
     @Override
     public ServiceListSchema getServices() {
-        ServiceListSchema answer = new ServiceListSchema();
-        // TODO
-        return answer;
+        return model.getServices();
     }
 
     @Override
     public ServiceSchema getService(@NotNull String serviceId) {
-        Map<String, ServiceSchema> map = KubernetesHelper.getServiceMap(this);
+        Map<String, ServiceSchema> map = model.getServiceMap();
         return map.get(serviceId);
     }
 
@@ -138,9 +135,7 @@ public class LocalNodeController implements Kubernetes {
 
     @Override
     public ReplicationControllerListSchema getReplicationControllers() {
-        ReplicationControllerListSchema answer = new ReplicationControllerListSchema();
-        // TODO
-        return answer;
+        return model.getReplicationControllers();
     }
 
     @Override

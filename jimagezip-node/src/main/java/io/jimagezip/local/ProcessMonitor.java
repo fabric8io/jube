@@ -19,6 +19,7 @@ package io.jimagezip.local;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import io.fabric8.kubernetes.api.model.PodSchema;
 import io.jimagezip.process.Installation;
 import io.jimagezip.process.ProcessManager;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
@@ -69,6 +70,8 @@ public class ProcessMonitor {
     protected void processMonitor() {
         ImmutableMap<String, Installation> map = processManager.listInstallationMap();
         ImmutableSet<Map.Entry<String, Installation>> entries = map.entrySet();
+        ImmutableMap<String, PodCurrentContainer> podRunningContainers = model.getPodRunningContainers();
+
         for (Map.Entry<String, Installation> entry : entries) {
             String id = entry.getKey();
             Installation installation = entry.getValue();
@@ -78,7 +81,15 @@ public class ProcessMonitor {
             } catch (IOException e) {
                 LOG.warn("Failed to access pid for " + id + ". " + e, e);
             }
-            System.out.println("Process " + id + " has pid " + pid);
+            boolean alive = pid != null && pid.longValue() > 0;
+
+            PodCurrentContainer podCurrentContainer = podRunningContainers.get(id);
+            if (podCurrentContainer == null) {
+                System.out.println("No pod container for id: " + id + " so lets create one!");
+            } else {
+                // lets mark the container as running or not...
+                podCurrentContainer.containerAlive(id, alive);
+            }
         }
     }
 
