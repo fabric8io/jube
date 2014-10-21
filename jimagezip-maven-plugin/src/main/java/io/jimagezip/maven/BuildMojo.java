@@ -23,6 +23,8 @@ import io.fabric8.common.util.Zips;
 import io.jimagezip.util.ImageMavenCoords;
 import io.jimagezip.util.InstallHelper;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
+import org.apache.maven.artifact.handler.ArtifactHandler;
+import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -38,6 +40,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+import org.apache.maven.project.artifact.AttachedArtifact;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.eclipse.aether.RepositorySystem;
@@ -160,6 +163,10 @@ public class BuildMojo extends AbstractMojo {
     @Component
     private MavenProjectHelper projectHelper;
 
+    @Component
+    private ArtifactHandlerManager artifactHandlerManager;
+
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         getLog().info("Generating JImageZip image " + image + " from base image " + baseImage);
@@ -221,7 +228,7 @@ public class BuildMojo extends AbstractMojo {
             Zips.createZipFile(LOG, buildDir, outputZipFile);
             getLog().info("Created image zip: " + outputZipFile);
 
-            projectHelper.attachArtifact(project, artifactType, artifactClassifier, outputZipFile);
+            attachArtifactToBuild();
 
         } catch (InvalidAssemblerConfigurationException e) {
             throw new MojoFailureException(assembly, "Assembly is incorrectly configured: " + assembly.getId(),
@@ -230,6 +237,43 @@ public class BuildMojo extends AbstractMojo {
         } catch (Exception e) {
             throw new MojoExecutionException("Failed to create assembly for image: " + e.getMessage(), e);
         }
+    }
+
+    protected void attachArtifactToBuild() {
+        // projectHelper.attachArtifact(project, artifactType, artifactClassifier, outputZipFile);
+
+        String imageName = project.getProperties().getProperty(DOCKER_IMAGE_PROPERTY);
+        Objects.notNull(imageName, DOCKER_IMAGE_PROPERTY);
+
+        ImageMavenCoords mavenCoords = ImageMavenCoords.parse(imageName);
+
+        getLog().info("Attaching image zip to maven coords: " + mavenCoords.getMavenCoords());
+
+        Objects.notNull(artifactHandlerManager, "artifactHandlerManager");
+
+        String type = artifactType;
+        ArtifactHandler handler = null;
+
+        if ( type != null ) {
+            handler = artifactHandlerManager.getArtifactHandler( artifactType );
+        }
+        if ( handler == null ) {
+            handler = artifactHandlerManager.getArtifactHandler( "jar" );
+        }
+
+        org.apache.maven.artifact.Artifact imageArtifact = new org.apache.maven.artifact.DefaultArtifact(
+                mavenCoords.getGroupId(), mavenCoords.getArtifactId(), mavenCoords.getVersion(),
+        mavenCoords.getScope(), mavenCoords.getType(), mavenCoords.getClassifier(), handler);
+
+/*
+        org.apache.maven.artifact.Artifact artifact = new AttachedArtifact(imageArtifact, artifactType, artifactClassifier, handler );
+*/
+
+        org.apache.maven.artifact.Artifact artifact = imageArtifact;
+        artifact.setFile( outputZipFile );
+        artifact.setResolved( true );
+
+        project.addAttachedArtifact(artifact);
     }
 
     protected void writeEnvironmentVariables(File buildDir) throws IOException {
@@ -252,13 +296,12 @@ public class BuildMojo extends AbstractMojo {
         }
     }
 
-
     protected void unpackBaseImage(File buildDir) throws Exception {
         String imageName = project.getProperties().getProperty(DOCKER_BASE_IMAGE_PROPERTY);
         Objects.notNull(imageName, DOCKER_BASE_IMAGE_PROPERTY);
 
-        ImageMavenCoords mavenUrl = ImageMavenCoords.parse(imageName);
-        String coords = mavenUrl.getAetherCoords();
+        ImageMavenCoords baseImageCoords = ImageMavenCoords.parse(imageName);
+        String coords = baseImageCoords.getAetherCoords();
         getLog().info("Looking up JImageZip: " + coords);
         Artifact artifact = new DefaultArtifact(coords);
 

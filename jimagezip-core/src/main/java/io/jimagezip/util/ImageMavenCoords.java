@@ -41,6 +41,7 @@ public class ImageMavenCoords {
     private final String version;
     private final String type;
     private final String classifier;
+    private String scope = "runtime";
 
     /**
      * Parses the given docker image name of the form "name", or "user/name" or "registry/user/name" and return a set of maven coordinates to download the corresponding jimagezip.
@@ -164,5 +165,9 @@ public class ImageMavenCoords {
 
     public String getClassifier() {
         return classifier;
+    }
+
+    public String getScope() {
+        return scope;
     }
 }
