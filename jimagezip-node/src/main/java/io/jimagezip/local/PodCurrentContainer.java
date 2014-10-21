@@ -64,18 +64,6 @@ public class PodCurrentContainer {
     }
 
     public void containerAlive(String id, boolean alive) {
-        CurrentState currentState = NodeHelper.getOrCreateCurrentState(pod);
-        if (alive) {
-            currentState.setStatus("Running");
-        } else {
-            currentState.setStatus("Waiting");
-        }
-        State state = NodeHelper.getOrCreateContainerState(pod, id);
-        if (alive) {
-            Running running = new Running();
-            state.setRunning(running);
-        } else {
-            state.setRunning(null);
-        }
+        NodeHelper.containerAlive(pod, id, alive);
     }
 }

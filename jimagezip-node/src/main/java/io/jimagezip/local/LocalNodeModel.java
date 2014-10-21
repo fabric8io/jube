@@ -17,8 +17,11 @@
  */
 package io.jimagezip.local;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import io.fabric8.common.util.Filter;
+import io.fabric8.common.util.Filters;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.CurrentState;
 import io.fabric8.kubernetes.api.model.ManifestContainer;
@@ -63,6 +66,14 @@ public class LocalNodeModel {
         return answer;
     }
 
+    public ImmutableList<PodSchema> getPods(Map<String, String> replicaSelector) {
+        return getPods(KubernetesHelper.createPodFilter(replicaSelector));
+    }
+
+    public ImmutableList<PodSchema> getPods(Filter<PodSchema> podFilter) {
+        return ImmutableList.copyOf(Filters.filter(getPodMap().values(), podFilter));
+    }
+
     public ServiceListSchema getServices() {
         ServiceListSchema answer = new ServiceListSchema();
         answer.setItems(Lists.newArrayList(serviceMap.values()));
@@ -96,11 +107,15 @@ public class LocalNodeModel {
             for (Map.Entry<String, PodCurrentContainerInfo> containerEntry : currentContainers.entrySet()) {
                 String containerId = containerEntry.getKey();
                 PodCurrentContainerInfo currentContainer = containerEntry.getValue();
-                PodCurrentContainer podCurrentContainer = new PodCurrentContainer(this, podId, podSchema, containerId, currentContainer);
+                PodCurrentContainer podCurrentContainer = createPodCurrentContainer(podId, podSchema, containerId, currentContainer);
                 answer.put(containerId, podCurrentContainer);
             }
         }
         return ImmutableMap.copyOf(answer);
+    }
+
+    public PodCurrentContainer createPodCurrentContainer(String podId, PodSchema podSchema, String containerId, PodCurrentContainerInfo currentContainer) {
+        return new PodCurrentContainer(this, podId, podSchema, containerId, currentContainer);
     }
 
     public PodSchema getPod(String id) {
@@ -152,4 +167,5 @@ public class LocalNodeModel {
         }
         podMap.put(id, pod);
     }
+
 }

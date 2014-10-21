@@ -17,6 +17,19 @@
  */
 package io.jimagezip.local;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.ControllerDesiredState;
+import io.fabric8.kubernetes.api.model.Manifest;
+import io.fabric8.kubernetes.api.model.ManifestContainer;
+import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
+import io.fabric8.kubernetes.api.model.PodSchema;
+import io.fabric8.kubernetes.api.model.PodTemplate;
+import io.fabric8.kubernetes.api.model.PodTemplateDesiredState;
+import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
+import io.hawt.util.Strings;
+import io.jimagezip.process.ProcessManager;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +37,8 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -35,14 +50,17 @@ public class ReplicationManager {
     private static final transient Logger LOG = LoggerFactory.getLogger(ReplicationManager.class);
 
     private final LocalNodeModel model;
+    private final ProcessManager processManager;
     private final long pollTime;
-    private Timer timer = new Timer();
+    private final Timer timer = new Timer();
 
     @Inject
     public ReplicationManager(LocalNodeModel model,
+                              ProcessManager processManager,
                               @ConfigProperty(name = "autoScaler_pollTime", defaultValue = "2000")
                               long pollTime) {
         this.model = model;
+        this.processManager = processManager;
         this.pollTime = pollTime;
 
         System.out.println("========= Starting the auto scaler with poll time: " + pollTime);
@@ -51,13 +69,76 @@ public class ReplicationManager {
             @Override
             public void run() {
                 LOG.debug("autoscale timer");
-                autoScale();
+                try {
+                    autoScale();
+                } catch (Exception e) {
+                    System.out.println("Caught: " + e);
+                    e.printStackTrace();
+                    LOG.warn("Caught: " + e, e);
+                }
             }
         };
         timer.schedule(timerTask, pollTime, pollTime);
     }
 
-    protected void autoScale() {
+    protected void autoScale() throws Exception {
+        ImmutableSet<Map.Entry<String, ReplicationControllerSchema>> entries = model.getReplicationControllerMap().entrySet();
+        for (Map.Entry<String, ReplicationControllerSchema> entry : entries) {
+            String rcID = entry.getKey();
+            ReplicationControllerSchema replicationController = entry.getValue();
+            PodTemplateDesiredState podTemplateDesiredState = NodeHelper.getPodTemplateDesiredState(replicationController);
+            if (podTemplateDesiredState == null) {
+                LOG.warn("Cannot instantiate replication controller: " + replicationController.getId() + " due to missing PodTemplate.DesiredState!");
+                continue;
+            }
+            ControllerDesiredState desiredState = replicationController.getDesiredState();
+            if (desiredState == null) {
+                LOG.warn("Cannot instantiate replication controller: " + replicationController.getId() + " due to missing ControllerDesiredState!");
+                continue;
+            }
+            Integer replicas = desiredState.getReplicas();
+            if (replicas != null && replicas.intValue() > 0) {
+                int replicaCount = replicas.intValue();
+                Map<String, String> replicaSelector = desiredState.getReplicaSelector();
+
+                ImmutableList<PodSchema> pods = model.getPods(replicaSelector);
+
+
+                // TODO should we delete dead pods?
+                int createCount = replicaCount - pods.size();
+                if (createCount > 0) {
+                    createMissingContainers(replicationController, podTemplateDesiredState, desiredState, createCount);
+                }
+            }
+        }
+    }
+
+
+    protected void createMissingContainers(ReplicationControllerSchema replicationController, PodTemplateDesiredState podTemplateDesiredState, ControllerDesiredState desiredState, int createCount) throws Exception {
+        for (int i = 0; i < createCount; i++) {
+            PodSchema pod = new PodSchema();
+            String id = model.createID("Pod");
+            pod.setId(id);
+
+            Manifest manifest = podTemplateDesiredState.getManifest();
+            List<ManifestContainer> containers = KubernetesHelper.getContainers(podTemplateDesiredState);
+            for (ManifestContainer container : containers) {
+                String containerName = container.getName();
+                PodCurrentContainerInfo containerInfo = NodeHelper.getOrCreateContainerInfo(pod, containerName);
+                String image = container.getImage();
+                if (Strings.isBlank(image)) {
+                    LOG.warn("Missing image for " + containerName + " so cannot create it!");
+                    continue;
+                }
+                NodeHelper.addOrUpdateDesiredContainer(pod, container);
+            }
+            PodTemplate podTemplate = desiredState.getPodTemplate();
+            if (podTemplate != null) {
+                pod.setLabels(podTemplate.getLabels());
+            }
+            model.updatePod(id, pod);
+            NodeHelper.createMissingContainers(processManager, pod, NodeHelper.getOrCreateCurrentState(pod), manifest.getContainers());
+        }
     }
 
     @PreDestroy

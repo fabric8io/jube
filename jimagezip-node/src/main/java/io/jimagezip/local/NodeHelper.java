@@ -21,11 +21,17 @@ import io.fabric8.common.util.Objects;
 import io.fabric8.common.util.Strings;
 import io.fabric8.kubernetes.api.Kubernetes;
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.ControllerDesiredState;
 import io.fabric8.kubernetes.api.model.CurrentState;
+import io.fabric8.kubernetes.api.model.DesiredState;
+import io.fabric8.kubernetes.api.model.Manifest;
 import io.fabric8.kubernetes.api.model.ManifestContainer;
 import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
 import io.fabric8.kubernetes.api.model.PodSchema;
+import io.fabric8.kubernetes.api.model.PodTemplate;
+import io.fabric8.kubernetes.api.model.PodTemplateDesiredState;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
+import io.fabric8.kubernetes.api.model.Running;
 import io.fabric8.kubernetes.api.model.State;
 import io.hawt.aether.OpenMavenURL;
 import io.jimagezip.process.InstallOptions;
@@ -36,6 +42,7 @@ import io.jimagezip.util.ImageMavenCoords;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +51,19 @@ import java.util.Map;
  * A set of helper functions for implementing the local node
  */
 public class NodeHelper {
+
+    /**
+     * Returns the desired state; lazily creating one if required
+     */
+    public static DesiredState getOrCreateDesiredState(PodSchema pod) {
+        Objects.notNull(pod, "pod");
+        DesiredState desiredState = pod.getDesiredState();
+        if (desiredState == null) {
+            desiredState = new DesiredState();
+            pod.setDesiredState(desiredState);
+        }
+        return desiredState;
+    }
 
     /**
      * Returns the current state of the given pod; lazily creating one if required
@@ -56,6 +76,25 @@ public class NodeHelper {
             pod.setCurrentState(currentState);
         }
         return currentState;
+    }
+
+    public static PodTemplateDesiredState getPodTemplateDesiredState(ReplicationControllerSchema replicationController) {
+        if (replicationController != null) {
+            return getPodTemplateDesiredState(replicationController.getDesiredState());
+        }
+        return null;
+    }
+
+    public static PodTemplateDesiredState getPodTemplateDesiredState(ControllerDesiredState desiredState) {
+        PodTemplate podTemplate = null;
+        PodTemplateDesiredState podTemplateDesiredState = null;
+        if (desiredState != null) {
+            podTemplate = desiredState.getPodTemplate();
+            if (podTemplate != null) {
+                podTemplateDesiredState = podTemplate.getDesiredState();
+            }
+        }
+        return podTemplateDesiredState;
     }
 
     /**
@@ -105,23 +144,13 @@ public class NodeHelper {
 
         for (ManifestContainer container : containers) {
             // TODO check if we already have a working container
-            createContainer(processManager, container, currentState);
+            createContainer(processManager, container, pod, currentState);
         }
         return null;
     }
 
-    public static String createMissingContainers(ProcessManager processManager, ReplicationControllerSchema replicationController) throws Exception {
-        List<ManifestContainer> currentContainers = KubernetesHelper.getCurrentContainers(replicationController);
-
-        List<ManifestContainer> containers = KubernetesHelper.getContainers(replicationController);
-        for (ManifestContainer container : containers) {
-            createContainer(processManager, container);
-        }
-        return null;
-    }
-
-    protected static void createContainer(ProcessManager processManager, ManifestContainer container) throws Exception {
-        String name = container.getName();
+    protected static void createContainer(ProcessManager processManager, ManifestContainer container, PodSchema pod, CurrentState currentState) throws Exception {
+        String containerName = container.getName();
         String image = container.getImage();
         Strings.notEmpty(image);
         OpenMavenURL mavenUrl = ImageMavenCoords.dockerImageToMavenURL(image);
@@ -129,13 +158,15 @@ public class NodeHelper {
 
         System.out.println("Creating new container from: " + mavenUrl);
         InstallOptions.InstallOptionsBuilder builder = new InstallOptions.InstallOptionsBuilder().url(mavenUrl);
-        if (Strings.isNotBlank(name)) {
-            builder = builder.name(name).id(name);
+        if (Strings.isNotBlank(containerName)) {
+            builder = builder.name(containerName).id(containerName);
         }
         InstallOptions installOptions = builder.build();
 
         Installation installation = processManager.install(installOptions, null);
         File installDir = installation.getInstallDir();
+
+        PodCurrentContainerInfo containerInfo = NodeHelper.getOrCreateContainerInfo(pod, containerName);
 
         System.out.println("Installed new process at: " + installDir);
 
@@ -143,14 +174,55 @@ public class NodeHelper {
         ProcessController controller = installation.getController();
         controller.start();
 
+        Long pid = controller.getPid();
+        containerAlive(pod, containerName, pid != null && pid.longValue() > 0);
+
         System.out.println("Started the process!");
     }
 
-    /**
-     * Creates the given container on the process manager
-     */
-    protected static void createContainer(ProcessManager processManager, ManifestContainer container, CurrentState currentState) throws Exception {
-        createContainer(processManager, container);
+    public static void containerAlive(PodSchema pod, String id, boolean alive) {
+         CurrentState currentState = getOrCreateCurrentState(pod);
+         if (alive) {
+             currentState.setStatus("Running");
+         } else {
+             currentState.setStatus("Waiting");
+         }
+         State state = getOrCreateContainerState(pod, id);
+         if (alive) {
+             Running running = new Running();
+             state.setRunning(running);
+         } else {
+             state.setRunning(null);
+         }
+     }
+
+    public static ManifestContainer addOrUpdateDesiredContainer(PodSchema pod, ManifestContainer container) {
+        DesiredState podDesiredState = NodeHelper.getOrCreateDesiredState(pod);
+        Manifest manifest = podDesiredState.getManifest();
+        if (manifest == null) {
+            manifest = new Manifest();
+            podDesiredState.setManifest(manifest);
+        }
+        List<ManifestContainer> containers = manifest.getContainers();
+        if (containers == null) {
+            containers = new ArrayList<>();
+            manifest.setContainers(containers);
+        }
+        ManifestContainer oldContainer = findContainer(containers, container.getName());
+        if (oldContainer != null) {
+            // lets update it just in case something changed...
+            containers.remove(oldContainer);
+        }
+        containers.add(container);
+        return container;
     }
 
+    public static ManifestContainer findContainer(List<ManifestContainer> containers, String name) {
+        for (ManifestContainer container : containers) {
+            if (Objects.equal(container.getName(), name)) {
+                return container;
+            }
+        }
+        return null;
+    }
 }
