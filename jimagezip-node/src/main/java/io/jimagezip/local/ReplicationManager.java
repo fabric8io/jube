@@ -117,28 +117,45 @@ public class ReplicationManager {
     protected void createMissingContainers(ReplicationControllerSchema replicationController, PodTemplateDesiredState podTemplateDesiredState, ControllerDesiredState desiredState, int createCount) throws Exception {
         for (int i = 0; i < createCount; i++) {
             PodSchema pod = new PodSchema();
-            String id = model.createID("Pod");
-            pod.setId(id);
 
-            Manifest manifest = podTemplateDesiredState.getManifest();
+            createNewPod(replicationController, pod);
             List<ManifestContainer> containers = KubernetesHelper.getContainers(podTemplateDesiredState);
             for (ManifestContainer container : containers) {
-                String containerName = container.getName();
+                String containerName = pod.getId() + "-" + container.getName();
                 PodCurrentContainerInfo containerInfo = NodeHelper.getOrCreateContainerInfo(pod, containerName);
                 String image = container.getImage();
                 if (Strings.isBlank(image)) {
                     LOG.warn("Missing image for " + containerName + " so cannot create it!");
                     continue;
                 }
-                NodeHelper.addOrUpdateDesiredContainer(pod, container);
+                NodeHelper.addOrUpdateDesiredContainer(pod, containerName, container);
             }
             PodTemplate podTemplate = desiredState.getPodTemplate();
             if (podTemplate != null) {
                 pod.setLabels(podTemplate.getLabels());
             }
-            model.updatePod(id, pod);
-            NodeHelper.createMissingContainers(processManager, pod, NodeHelper.getOrCreateCurrentState(pod), manifest.getContainers());
+            // TODO should we update the pod now we've updated it?
+            List<ManifestContainer> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);
+            NodeHelper.createMissingContainers(processManager, pod, NodeHelper.getOrCreateCurrentState(pod), desiredContainers);
         }
+    }
+
+    protected String createNewPod(ReplicationControllerSchema replicationController, PodSchema pod) {
+        String id = replicationController.getId();
+        if (Strings.isNotBlank(id)) {
+            id += "-";
+            int idx = 1;
+            while (true) {
+                String anId = id + (idx++);
+                if (model.updatePodIfNotExist(anId, pod)) {
+                    pod.setId(anId);
+                    return null;
+                }
+            }
+        }
+        id = model.createID("Pod");
+        pod.setId(id);
+        return null;
     }
 
     @PreDestroy

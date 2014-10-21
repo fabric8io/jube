@@ -148,7 +148,6 @@ public class NodeHelper {
         }
         return null;
     }
-
     protected static void createContainer(ProcessManager processManager, ManifestContainer container, PodSchema pod, CurrentState currentState) throws Exception {
         String containerName = container.getName();
         String image = container.getImage();
@@ -156,7 +155,7 @@ public class NodeHelper {
         OpenMavenURL mavenUrl = ImageMavenCoords.dockerImageToMavenURL(image);
         Objects.notNull(mavenUrl, "mavenUrl");
 
-        System.out.println("Creating new container from: " + mavenUrl);
+        System.out.println("Creating new container " + containerName + " from: " + mavenUrl);
         InstallOptions.InstallOptionsBuilder builder = new InstallOptions.InstallOptionsBuilder().url(mavenUrl);
         if (Strings.isNotBlank(containerName)) {
             builder = builder.name(containerName).id(containerName);
@@ -180,6 +179,27 @@ public class NodeHelper {
         System.out.println("Started the process!");
     }
 
+    public static void deleteContainers(ProcessManager processManager, PodSchema pod, CurrentState currentState, List<ManifestContainer> desiredContainers) throws Exception {
+        for (ManifestContainer container : desiredContainers) {
+            deleteContainer(processManager, container, pod, currentState);
+        }
+    }
+
+    protected static void deleteContainer(ProcessManager processManager, ManifestContainer container, PodSchema pod, CurrentState currentState) throws Exception {
+        String containerName = container.getName();
+        Installation installation = processManager.getInstallation(containerName);
+        if (installation == null) {
+            System.out.println("No such container: " + containerName);
+            return;
+        }
+        ProcessController controller = installation.getController();
+        controller.kill();
+        controller.uninstall();
+    }
+
+
+
+
     public static void containerAlive(PodSchema pod, String id, boolean alive) {
          CurrentState currentState = getOrCreateCurrentState(pod);
          if (alive) {
@@ -196,7 +216,31 @@ public class NodeHelper {
          }
      }
 
-    public static ManifestContainer addOrUpdateDesiredContainer(PodSchema pod, ManifestContainer container) {
+    public static ManifestContainer addOrUpdateDesiredContainer(PodSchema pod, String containerName, ManifestContainer container) {
+        List<ManifestContainer> containers = getOrCreatePodDesiredContainers(pod);
+        ManifestContainer oldContainer = findContainer(containers, containerName);
+        if (oldContainer != null) {
+            // lets update it just in case something changed...
+            containers.remove(oldContainer);
+        }
+        ManifestContainer newContainer = new ManifestContainer();
+
+        // TODO we should use bean utils or something to copy properties in case we miss one!
+        newContainer.setCommand(container.getCommand());
+        newContainer.setEnv(container.getEnv());
+        newContainer.setImage(container.getImage());
+        newContainer.setPorts(container.getPorts());
+        newContainer.setVolumeMounts(container.getVolumeMounts());
+        newContainer.setWorkingDir(container.getWorkingDir());
+        newContainer.getAdditionalProperties().putAll(container.getAdditionalProperties());
+        newContainer.setName(containerName);
+        System.out.println("Added new container: " + containerName);
+
+        containers.add(newContainer);
+        return newContainer;
+    }
+
+    public static List<ManifestContainer> getOrCreatePodDesiredContainers(PodSchema pod) {
         DesiredState podDesiredState = NodeHelper.getOrCreateDesiredState(pod);
         Manifest manifest = podDesiredState.getManifest();
         if (manifest == null) {
@@ -207,14 +251,7 @@ public class NodeHelper {
         if (containers == null) {
             containers = new ArrayList<>();
             manifest.setContainers(containers);
-        }
-        ManifestContainer oldContainer = findContainer(containers, container.getName());
-        if (oldContainer != null) {
-            // lets update it just in case something changed...
-            containers.remove(oldContainer);
-        }
-        containers.add(container);
-        return container;
+        } return containers;
     }
 
     public static ManifestContainer findContainer(List<ManifestContainer> containers, String name) {
@@ -225,4 +262,5 @@ public class NodeHelper {
         }
         return null;
     }
+
 }

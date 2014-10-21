@@ -35,7 +35,10 @@ import io.jimagezip.process.ProcessManager;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +49,8 @@ import static io.jimagezip.local.NodeHelper.getOrCreateCurrentState;
  */
 @Singleton
 @Path("api/v1beta1")
+@Produces("application/json")
+@Consumes("application/json")
 public class LocalNodeController implements Kubernetes {
     private final ProcessManager processManager;
     private final LocalNodeModel model;
@@ -59,6 +64,10 @@ public class LocalNodeController implements Kubernetes {
         this.replicationManager = replicationManager;
         this.processMonitor = processMonitor;
     }
+
+    // Pods
+    //-------------------------------------------------------------------------
+
 
     @Override
     public PodListSchema getPods() {
@@ -96,41 +105,18 @@ public class LocalNodeController implements Kubernetes {
 
     @Override
     public String deletePod(@NotNull String podId) throws Exception {
-        PodSchema pod = model.getPod(podId);
+        PodSchema pod = model.deletePod(podId);
         if (pod != null) {
-            // TODO delete containers
+            List<ManifestContainer> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);
+            NodeHelper.deleteContainers(processManager, pod, NodeHelper.getOrCreateCurrentState(pod), desiredContainers);
         }
         return null;
     }
 
-    @Override
-    public ServiceListSchema getServices() {
-        return model.getServices();
-    }
 
-    @Override
-    public ServiceSchema getService(@NotNull String serviceId) {
-        Map<String, ServiceSchema> map = model.getServiceMap();
-        return map.get(serviceId);
-    }
+    // Replication Controllers
+    //-------------------------------------------------------------------------
 
-    @Override
-    public String createService(ServiceSchema entity) throws Exception {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public String updateService(@NotNull String serviceId, ServiceSchema entity) throws Exception {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public String deleteService(@NotNull String serviceId) throws Exception {
-        // TODO
-        return null;
-    }
 
     @Override
     public ReplicationControllerListSchema getReplicationControllers() {
@@ -155,14 +141,58 @@ public class LocalNodeController implements Kubernetes {
 
     @Override
     public String updateReplicationController(@NotNull String controllerId, ReplicationControllerSchema replicationController) throws Exception {
-        System.out.println("Updating pod " + controllerId);
         model.updateReplicationController(controllerId, replicationController);
         return null;
     }
 
     @Override
     public String deleteReplicationController(@NotNull String controllerId) throws Exception {
-        // TODO
+        model.deleteReplicationController(controllerId);
         return null;
     }
+
+    // Services
+    //-------------------------------------------------------------------------
+
+
+    // TODO not sure why we need to copy the annotations here?
+    @Path("services")
+    @GET
+    @Produces("application/json")
+    @Consumes("*/*")
+    @Override
+    public ServiceListSchema getServices() {
+        ServiceListSchema answer = model.getServices();
+        System.out.println("Found services: " + answer);
+        return answer;
+    }
+
+    @Override
+    public ServiceSchema getService(@NotNull String serviceId) {
+        Map<String, ServiceSchema> map = model.getServiceMap();
+        return map.get(serviceId);
+    }
+
+    @Override
+    public String createService(ServiceSchema entity) throws Exception {
+        String id = entity.getId();
+        if (Strings.isBlank(id)) {
+            id = model.createID("Service");
+            entity.setId(id);
+        }
+        return updateService(id, entity);
+    }
+
+    @Override
+    public String updateService(@NotNull String id, ServiceSchema entity) throws Exception {
+        model.updateService(id, entity);
+        return null;
+    }
+
+    @Override
+    public String deleteService(@NotNull String serviceId) throws Exception {
+        model.deleteService(serviceId);
+        return null;
+    }
+
 }
