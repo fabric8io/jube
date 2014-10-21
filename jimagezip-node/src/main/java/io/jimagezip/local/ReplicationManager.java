@@ -20,6 +20,7 @@ package io.jimagezip.local;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.ControllerCurrentState;
 import io.fabric8.kubernetes.api.model.ControllerDesiredState;
 import io.fabric8.kubernetes.api.model.Manifest;
 import io.fabric8.kubernetes.api.model.ManifestContainer;
@@ -97,8 +98,11 @@ public class ReplicationManager {
                 continue;
             }
             Integer replicas = desiredState.getReplicas();
+            ControllerCurrentState currentState = NodeHelper.getOrCreateCurrentState(replicationController);
             if (replicas != null && replicas.intValue() > 0) {
                 int replicaCount = replicas.intValue();
+                // TODO should we only show the running count?
+                currentState.setReplicas(replicaCount);
                 Map<String, String> replicaSelector = desiredState.getReplicaSelector();
 
                 ImmutableList<PodSchema> pods = model.getPods(replicaSelector);

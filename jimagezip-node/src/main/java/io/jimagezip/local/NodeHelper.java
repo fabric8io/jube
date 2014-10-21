@@ -21,6 +21,7 @@ import io.fabric8.common.util.Objects;
 import io.fabric8.common.util.Strings;
 import io.fabric8.kubernetes.api.Kubernetes;
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.ControllerCurrentState;
 import io.fabric8.kubernetes.api.model.ControllerDesiredState;
 import io.fabric8.kubernetes.api.model.CurrentState;
 import io.fabric8.kubernetes.api.model.DesiredState;
@@ -263,4 +264,12 @@ public class NodeHelper {
         return null;
     }
 
+    public static ControllerCurrentState getOrCreateCurrentState(ReplicationControllerSchema replicationController) {
+        ControllerCurrentState currentState = replicationController.getCurrentState();
+        if (currentState == null) {
+            currentState = new ControllerCurrentState();
+            replicationController.setCurrentState(currentState);
+        }
+        return currentState;
+    }
 }
