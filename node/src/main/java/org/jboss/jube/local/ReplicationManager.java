@@ -116,7 +116,7 @@ public class ReplicationManager {
             }
 
             // TODO only show the running count?
-            currentState.setReplicas(pods.size());
+            currentState.setReplicas(replicaCount);
         }
     }
 
