@@ -22,38 +22,38 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>io.jimagezip</groupId>
+    <groupId>org.jboss.jube</groupId>
     <artifactId>parent-project</artifactId>
     <version>2.0.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>app</artifactId>
 
-  <name>JImageZip :: App</name>
+  <name>Jube :: App</name>
 
   <properties>
     <!-- fabric8 configuration -->
     <docker.dataImage>${env.DOCKER_REGISTRY}/main/${project.artifactId}:${project.version}</docker.dataImage>
     <fabric8.label.group>node</fabric8.label.group>
 
-    <!-- jimagezip properties -->
+    <!-- jube properties -->
     <docker.baseImage>fabric8/java</docker.baseImage>
-    <docker.env.MAIN>io.jimagezip.main.Main</docker.env.MAIN>
+    <docker.env.MAIN>org.jboss.jube.main.Main</docker.env.MAIN>
   </properties>
 
   <dependencies>
     <dependency>
-      <groupId>io.jimagezip</groupId>
+      <groupId>org.jboss.jube</groupId>
       <artifactId>node</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.jimagezip</groupId>
+      <groupId>org.jboss.jube</groupId>
       <artifactId>core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.jimagezip</groupId>
+      <groupId>org.jboss.jube</groupId>
       <artifactId>process-manager</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -101,7 +101,7 @@
             </goals>
             <configuration>
               <classResourceNames>
-                <classResourceName>io.jimagezip.local.LocalNodeController</classResourceName>
+                <classResourceName>org.jboss.jube.local.LocalNodeController</classResourceName>
               </classResourceNames>
               <attachWadl>false</attachWadl>
             </configuration>
@@ -132,7 +132,7 @@
           <mergeData>true</mergeData>
           <assemblyDescriptorRef>artifact-with-dependencies</assemblyDescriptorRef>
           <env>
-            <MAIN>io.jimagezip.main.Main</MAIN>
+            <MAIN>org.jboss.jube.main.Main</MAIN>
           </env>
         </configuration>
       </plugin>
@@ -142,7 +142,7 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>${exec.maven.plugin.version}</version>
         <configuration>
-          <mainClass>io.jimagezip.main.Main</mainClass>
+          <mainClass>org.jboss.jube.main.Main</mainClass>
           <includePluginDependencies>false</includePluginDependencies>
         </configuration>
       </plugin>
@@ -161,8 +161,8 @@
        </plugin>
 
       <plugin>
-        <groupId>io.jimagezip</groupId>
-        <artifactId>jimagezip-maven-plugin</artifactId>
+        <groupId>org.jboss.jube</groupId>
+        <artifactId>jube-maven-plugin</artifactId>
         <version>${project.version}</version>
         <executions>
           <execution>

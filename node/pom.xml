@@ -22,26 +22,26 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>io.jimagezip</groupId>
+    <groupId>org.jboss.jube</groupId>
     <artifactId>parent-project</artifactId>
     <version>2.0.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>node</artifactId>
 
-  <name>JImageZip :: Node</name>
+  <name>Jube :: Node</name>
 
   <properties>
   </properties>
 
   <dependencies>
     <dependency>
-      <groupId>io.jimagezip</groupId>
+      <groupId>org.jboss.jube</groupId>
       <artifactId>core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.jimagezip</groupId>
+      <groupId>org.jboss.jube</groupId>
       <artifactId>process-manager</artifactId>
       <version>${project.version}</version>
     </dependency>

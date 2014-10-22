@@ -27,15 +27,15 @@
     <version>14</version>
   </parent>
 
-  <groupId>io.jimagezip</groupId>
+  <groupId>org.jboss.jube</groupId>
   <artifactId>parent-project</artifactId>
   <version>2.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>JImageZip :: Parent Project</name>
+  <name>Jube :: Parent Project</name>
   <description>Provides a pure Java implementation of a Kubernetes-like container orchestration layer.</description>
 
-  <url>http://jimagezip.io/</url>
+  <url>http://jube.io/</url>
   <inceptionYear>2014</inceptionYear>
 
   <organization>
@@ -55,9 +55,9 @@
   <developers>
     <developer>
       <id>geeks</id>
-      <name>JImageZip Development Team</name>
-      <organization>jimagezip</organization>
-      <organizationUrl>http://jimagezip.io/</organizationUrl>
+      <name>Jube Development Team</name>
+      <organization>jube</organization>
+      <organizationUrl>http://jube.io/</organizationUrl>
     </developer>
   </developers>
 
@@ -75,7 +75,7 @@
 
   <modules>
     <module>images</module>
-    <module>jimagezip-maven-plugin</module>
+    <module>jube-maven-plugin</module>
     <module>process-manager</module>
     <module>core</module>
     <module>node</module>
