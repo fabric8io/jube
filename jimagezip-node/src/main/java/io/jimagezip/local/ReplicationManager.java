@@ -101,17 +101,23 @@ public class ReplicationManager {
             ControllerCurrentState currentState = NodeHelper.getOrCreateCurrentState(replicationController);
             if (replicas != null && replicas.intValue() > 0) {
                 int replicaCount = replicas.intValue();
-                // TODO should we only show the running count?
-                currentState.setReplicas(replicaCount);
                 Map<String, String> replicaSelector = desiredState.getReplicaSelector();
 
                 ImmutableList<PodSchema> pods = model.getPods(replicaSelector);
 
 
                 // TODO should we delete dead pods?
-                int createCount = replicaCount - pods.size();
+                int currentSize = pods.size();
+                int createCount = replicaCount - currentSize;
                 if (createCount > 0) {
                     createMissingContainers(replicationController, podTemplateDesiredState, desiredState, createCount);
+                } else if (createCount < 0) {
+                    // TODO
+                    // lets pick the bets ones to delete...
+
+                } else {
+                    // TODO should we only show the running count?
+                    currentState.setReplicas(replicaCount);
                 }
             }
         }

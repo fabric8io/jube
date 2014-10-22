@@ -154,17 +154,9 @@ public class LocalNodeController implements Kubernetes {
     // Services
     //-------------------------------------------------------------------------
 
-
-    // TODO not sure why we need to copy the annotations here?
-    @Path("services")
-    @GET
-    @Produces("application/json")
-    @Consumes("*/*")
     @Override
     public ServiceListSchema getServices() {
-        ServiceListSchema answer = model.getServices();
-        System.out.println("Found services: " + answer);
-        return answer;
+        return model.getServices();
     }
 
     @Override
