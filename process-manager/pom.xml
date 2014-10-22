@@ -32,7 +32,7 @@
   <dependencies>
     <dependency>
       <groupId>io.jimagezip</groupId>
-      <artifactId>jimagezip-core</artifactId>
+      <artifactId>core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

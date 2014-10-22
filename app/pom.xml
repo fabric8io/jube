@@ -44,12 +44,12 @@
   <dependencies>
     <dependency>
       <groupId>io.jimagezip</groupId>
-      <artifactId>jimagezip-node</artifactId>
+      <artifactId>node</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>io.jimagezip</groupId>
-      <artifactId>jimagezip-core</artifactId>
+      <artifactId>core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

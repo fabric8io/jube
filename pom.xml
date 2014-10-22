@@ -77,8 +77,8 @@
     <module>images</module>
     <module>jimagezip-maven-plugin</module>
     <module>process-manager</module>
-    <module>jimagezip-core</module>
-    <module>jimagezip-node</module>
+    <module>core</module>
+    <module>node</module>
     <module>app</module>
   </modules>
 

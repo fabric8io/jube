@@ -27,7 +27,7 @@
     <version>2.0.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>jimagezip-node</artifactId>
+  <artifactId>node</artifactId>
 
   <name>JImageZip :: Node</name>
 
@@ -37,7 +37,7 @@
   <dependencies>
     <dependency>
       <groupId>io.jimagezip</groupId>
-      <artifactId>jimagezip-core</artifactId>
+      <artifactId>core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
