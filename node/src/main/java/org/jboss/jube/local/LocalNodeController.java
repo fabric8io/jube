@@ -105,11 +105,7 @@ public class LocalNodeController implements Kubernetes {
 
     @Override
     public String deletePod(@NotNull String podId) throws Exception {
-        PodSchema pod = model.deletePod(podId);
-        if (pod != null) {
-            List<ManifestContainer> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);
-            NodeHelper.deleteContainers(processManager, pod, NodeHelper.getOrCreateCurrentState(pod), desiredContainers);
-        }
+        NodeHelper.deletePod(processManager, model, podId);
         return null;
     }
 

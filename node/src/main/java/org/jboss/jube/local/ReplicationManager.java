@@ -19,6 +19,7 @@ package org.jboss.jube.local;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ControllerCurrentState;
 import io.fabric8.kubernetes.api.model.ControllerDesiredState;
@@ -38,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -64,7 +66,7 @@ public class ReplicationManager {
         this.processManager = processManager;
         this.pollTime = pollTime;
 
-        System.out.println("========= Starting the auto scaler with poll time: " + pollTime);
+        System.out.println("Starting the auto scaler with poll time: " + pollTime);
 
         TimerTask timerTask = new TimerTask() {
             @Override
@@ -92,43 +94,50 @@ public class ReplicationManager {
                 LOG.warn("Cannot instantiate replication controller: " + replicationController.getId() + " due to missing PodTemplate.DesiredState!");
                 continue;
             }
+            int replicaCount = 0;
             ControllerDesiredState desiredState = replicationController.getDesiredState();
-            if (desiredState == null) {
-                LOG.warn("Cannot instantiate replication controller: " + replicationController.getId() + " due to missing ControllerDesiredState!");
-                continue;
-            }
-            Integer replicas = desiredState.getReplicas();
-            ControllerCurrentState currentState = NodeHelper.getOrCreateCurrentState(replicationController);
-            if (replicas != null && replicas.intValue() > 0) {
-                int replicaCount = replicas.intValue();
-                Map<String, String> replicaSelector = desiredState.getReplicaSelector();
-
-                ImmutableList<PodSchema> pods = model.getPods(replicaSelector);
-
-
-                // TODO should we delete dead pods?
-                int currentSize = pods.size();
-                int createCount = replicaCount - currentSize;
-                if (createCount > 0) {
-                    createMissingContainers(replicationController, podTemplateDesiredState, desiredState, createCount);
-                } else if (createCount < 0) {
-                    // TODO
-                    // lets pick the bets ones to delete...
-
-                } else {
-                    // TODO should we only show the running count?
-                    currentState.setReplicas(replicaCount);
+            if (desiredState != null) {
+                Integer replicas = desiredState.getReplicas();
+                if (replicas != null && replicas.intValue() > 0) {
+                    replicaCount = replicas.intValue();
                 }
             }
+            ControllerCurrentState currentState = NodeHelper.getOrCreateCurrentState(replicationController);
+            Map<String, String> replicaSelector = desiredState.getReplicaSelector();
+            ImmutableList<PodSchema> pods = model.getPods(replicaSelector);
+
+            int currentSize = pods.size();
+            int createCount = replicaCount - currentSize;
+            if (createCount > 0) {
+                pods = createMissingContainers(replicationController, podTemplateDesiredState, desiredState, createCount, pods);
+            } else if (createCount < 0) {
+                int deleteCount = Math.abs(createCount);
+                pods = deleteContainers(pods, deleteCount);
+            }
+
+            // TODO only show the running count?
+            currentState.setReplicas(pods.size());
         }
     }
 
+    private ImmutableList<PodSchema> deleteContainers(ImmutableList<PodSchema> pods, int deleteCount) throws Exception {
+        List<PodSchema> list = Lists.newArrayList(pods);
+        for (int i = 1, size = list.size(); i <= deleteCount && i <= size; i++) {
+            PodSchema removePod = list.remove(size - 1);
+            NodeHelper.deletePod(processManager, model, removePod.getId());
+        }
+        return ImmutableList.copyOf(list);
+    }
 
-    protected void createMissingContainers(ReplicationControllerSchema replicationController, PodTemplateDesiredState podTemplateDesiredState, ControllerDesiredState desiredState, int createCount) throws Exception {
+
+    protected ImmutableList<PodSchema> createMissingContainers(ReplicationControllerSchema replicationController, PodTemplateDesiredState podTemplateDesiredState, ControllerDesiredState desiredState, int createCount, ImmutableList<PodSchema> pods) throws Exception {
+        List<PodSchema> list = Lists.newArrayList(pods);
         for (int i = 0; i < createCount; i++) {
             PodSchema pod = new PodSchema();
 
             createNewPod(replicationController, pod);
+            list.add(pod);
+
             List<ManifestContainer> containers = KubernetesHelper.getContainers(podTemplateDesiredState);
             for (ManifestContainer container : containers) {
                 String containerName = pod.getId() + "-" + container.getName();
@@ -148,6 +157,7 @@ public class ReplicationManager {
             List<ManifestContainer> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);
             NodeHelper.createMissingContainers(processManager, pod, NodeHelper.getOrCreateCurrentState(pod), desiredContainers);
         }
+        return ImmutableList.copyOf(list);
     }
 
     protected String createNewPod(ReplicationControllerSchema replicationController, PodSchema pod) {

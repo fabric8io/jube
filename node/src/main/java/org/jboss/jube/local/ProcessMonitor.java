@@ -54,7 +54,7 @@ public class ProcessMonitor {
         this.processManager = processManager;
         this.pollTime = pollTime;
 
-        System.out.println("========= Starting the process monitor with poll time: " + pollTime);
+        System.out.println("Starting the process monitor with poll time: " + pollTime);
 
         TimerTask timerTask = new TimerTask() {
             @Override

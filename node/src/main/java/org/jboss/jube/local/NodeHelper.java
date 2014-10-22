@@ -272,4 +272,12 @@ public class NodeHelper {
         }
         return currentState;
     }
+
+    public static void deletePod(ProcessManager processManager, LocalNodeModel model, String podId) throws Exception {
+        PodSchema pod = model.deletePod(podId);
+        if (pod != null) {
+            List<ManifestContainer> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);
+            NodeHelper.deleteContainers(processManager, pod, NodeHelper.getOrCreateCurrentState(pod), desiredContainers);
+        }
+    }
 }
