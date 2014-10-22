@@ -28,7 +28,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @ApplicationPath("/")
-public class JImageZipApplication extends Application {
+public class NodeApplication extends Application {
     @Produces
     private JacksonJsonProvider jacksonJsonProvider = new JacksonJsonProvider();
 
