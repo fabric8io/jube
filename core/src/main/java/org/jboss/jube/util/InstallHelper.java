@@ -17,10 +17,16 @@
  */
 package org.jboss.jube.util;
 
+import io.fabric8.common.util.Closeables;
 import io.fabric8.common.util.Files;
 import io.fabric8.common.util.Objects;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Map;
+import java.util.Set;
 
 /**
  */
@@ -55,6 +61,27 @@ public class InstallHelper {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Appends the environment variables to the env.sh script file
+     */
+    public static void writeEnvironmentVariables(File envScriptFile, Map<String, String> environmentVariables) throws IOException {
+        PrintStream writer = new PrintStream(new FileOutputStream(envScriptFile, true));
+        try {
+            writer.println();
+
+            Set<Map.Entry<String, String>> entries = environmentVariables.entrySet();
+            for (Map.Entry<String, String> entry : entries) {
+                String name = entry.getKey();
+                String value = entry.getValue();
+
+                writer.println("export " + name + "=\"" + value + "\"");
+            }
+            writer.println();
+        } finally {
+            Closeables.closeQuietly(writer);
         }
     }
 }

@@ -15,6 +15,7 @@
  */
 package org.jboss.jube.process.config;
 
+import org.jboss.jube.util.InstallHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,12 +35,16 @@ public class ConfigHelper {
             LOG.warn("Process configuration file " + file.getPath() + " does not exist");
             return answer;
         }
-        // TODO load the env vars from the env.sh file
+        // TODO load the env vars from the env.sh file?
         return answer;
     }
 
+    /**
+     * Writes the environment variables to the env.sh
+     */
     public static void saveProcessConfig(ProcessConfig config, File installDir) throws IOException {
-        // TODO write the env.sh
+        File file = createControllerConfigFile(installDir);
+        InstallHelper.writeEnvironmentVariables(file, config.getEnvironment());
     }
 
     public static File createControllerConfigFile(File installDir) {

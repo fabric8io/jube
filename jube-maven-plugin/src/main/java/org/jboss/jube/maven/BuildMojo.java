@@ -17,7 +17,6 @@
  */
 package org.jboss.jube.maven;
 
-import com.google.common.io.Closeables;
 import io.fabric8.common.util.Objects;
 import io.fabric8.common.util.Zips;
 import org.jboss.jube.util.ImageMavenCoords;
@@ -40,7 +39,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.apache.maven.project.artifact.AttachedArtifact;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.eclipse.aether.RepositorySystem;
@@ -55,14 +53,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static io.fabric8.common.util.PropertiesHelper.findPropertiesWithPrefix;
 
@@ -277,23 +272,9 @@ public class BuildMojo extends AbstractMojo {
     }
 
     protected void writeEnvironmentVariables(File buildDir) throws IOException {
+        Map<String, String> envMap = getEnvironmentVariables();
         File envScript = new File(buildDir, "env.sh");
-        PrintStream writer = new PrintStream(new FileOutputStream(envScript, true));
-        try {
-            writer.println();
-
-            Map<String, String> envMap = getEnvironmentVariables();
-            Set<Map.Entry<String, String>> entries = envMap.entrySet();
-            for (Map.Entry<String, String> entry : entries) {
-                String name = entry.getKey();
-                String value = entry.getValue();
-
-                writer.println("export " + name + "=\"" + value + "\"");
-            }
-            writer.println();
-        } finally {
-            Closeables.close(writer, false);
-        }
+        InstallHelper.writeEnvironmentVariables(envScript, envMap);
     }
 
     protected void unpackBaseImage(File buildDir) throws Exception {

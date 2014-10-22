@@ -25,6 +25,7 @@ import io.fabric8.kubernetes.api.model.ControllerCurrentState;
 import io.fabric8.kubernetes.api.model.ControllerDesiredState;
 import io.fabric8.kubernetes.api.model.CurrentState;
 import io.fabric8.kubernetes.api.model.DesiredState;
+import io.fabric8.kubernetes.api.model.Env;
 import io.fabric8.kubernetes.api.model.Manifest;
 import io.fabric8.kubernetes.api.model.ManifestContainer;
 import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
@@ -149,6 +150,24 @@ public class NodeHelper {
         }
         return null;
     }
+
+    /**
+     * Converts a possibly null list of Env objects into a Map of environment variables
+     */
+    public static Map<String,String> createEnvironmentVariableMap(List<Env> envList) {
+        Map<String, String> answer = new HashMap<>();
+        if (envList != null) {
+            for (Env env : envList) {
+                String name = env.getName();
+                String value = env.getValue();
+                if (Strings.isNotBlank(name)) {
+                    answer.put(name, value);
+                }
+            }
+        }
+        return answer;
+    }
+
     protected static void createContainer(ProcessManager processManager, ManifestContainer container, PodSchema pod, CurrentState currentState) throws Exception {
         String containerName = container.getName();
         String image = container.getImage();
@@ -157,7 +176,9 @@ public class NodeHelper {
         Objects.notNull(mavenUrl, "mavenUrl");
 
         System.out.println("Creating new container " + containerName + " from: " + mavenUrl);
-        InstallOptions.InstallOptionsBuilder builder = new InstallOptions.InstallOptionsBuilder().url(mavenUrl);
+        Map<String,String> envVarMap = createEnvironmentVariableMap(container.getEnv());
+        InstallOptions.InstallOptionsBuilder builder = new InstallOptions.InstallOptionsBuilder().
+                url(mavenUrl).environment(envVarMap);
         if (Strings.isNotBlank(containerName)) {
             builder = builder.name(containerName).id(containerName);
         }
