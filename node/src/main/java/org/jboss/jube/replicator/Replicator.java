@@ -38,7 +38,8 @@ import io.fabric8.zookeeper.utils.ZooKeeperMasterCache;
 import io.hawt.util.Strings;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
-import org.jboss.jube.local.LocalNodeModel;
+import org.jboss.jube.KubernetesModel;
+import org.jboss.jube.apimaster.ApiMasterKubernetesModel;
 import org.jboss.jube.local.NodeHelper;
 import org.jboss.jube.process.ProcessManager;
 import org.slf4j.Logger;
@@ -61,7 +62,7 @@ public class Replicator {
     private static final transient Logger LOG = LoggerFactory.getLogger(Replicator.class);
 
     private final CuratorFramework curator;
-    private final LocalNodeModel model;
+    private final KubernetesModel model;
     private final ProcessManager processManager;
     private final long pollTime;
     private final Timer timer = new Timer();
@@ -73,7 +74,7 @@ public class Replicator {
 
     @Inject
     public Replicator(CuratorFramework curator,
-                      LocalNodeModel model,
+                      ApiMasterKubernetesModel model,
                       ProcessManager processManager,
                       @ConfigProperty(name = "REPLICATOR_POLL_TIME", defaultValue = "2000")
                       long pollTime) {
@@ -307,7 +308,7 @@ public class Replicator {
         return pollTime;
     }
 
-    public LocalNodeModel getModel() {
+    public KubernetesModel getModel() {
         return model;
     }
 

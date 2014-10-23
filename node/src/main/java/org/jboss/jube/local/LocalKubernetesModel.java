@@ -33,6 +33,7 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
 import io.fabric8.kubernetes.api.model.ServiceListSchema;
 import io.fabric8.kubernetes.api.model.ServiceSchema;
 import io.hawt.util.Strings;
+import org.jboss.jube.KubernetesModel;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -44,44 +45,49 @@ import java.util.concurrent.ConcurrentHashMap;
 import static java.util.UUID.randomUUID;
 
 /**
+ * A pure in memory implementation of the {@link KubernetesModel}
  */
-@Singleton
-public class LocalNodeModel {
+public class LocalKubernetesModel implements KubernetesModel {
     private ConcurrentHashMap<String, PodSchema> podMap = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, ReplicationControllerSchema> replicationControllerMap = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, ServiceSchema> serviceMap = new ConcurrentHashMap<>();
 
-    @Inject
-    public LocalNodeModel() {
+    public LocalKubernetesModel() {
     }
 
     // Pods
     //-------------------------------------------------------------------------
 
+    @Override
     public ImmutableMap<String, PodSchema> getPodMap() {
         return ImmutableMap.copyOf(podMap);
     }
 
 
+    @Override
     public PodListSchema getPods() {
         PodListSchema answer = new PodListSchema();
         answer.setItems(Lists.newArrayList(podMap.values()));
         return answer;
     }
 
+    @Override
     public ImmutableList<PodSchema> getPods(Map<String, String> replicaSelector) {
         return getPods(KubernetesHelper.createPodFilter(replicaSelector));
     }
 
+    @Override
     public ImmutableList<PodSchema> getPods(Filter<PodSchema> podFilter) {
         return ImmutableList.copyOf(Filters.filter(getPodMap().values(), podFilter));
     }
 
+    @Override
     public PodSchema getPod(String id) {
         return podMap.get(id);
     }
 
 
+    @Override
     public void updatePod(String id, PodSchema pod) {
         if (Strings.isBlank(id)) {
             id = createID("Pod");
@@ -110,6 +116,7 @@ public class LocalNodeModel {
     /**
      * Updates the pod if one does not already exist
      */
+    @Override
     public boolean updatePodIfNotExist(String id, PodSchema pod) {
         PodSchema oldValue = podMap.putIfAbsent(id, pod);
         return oldValue == null;
@@ -120,6 +127,7 @@ public class LocalNodeModel {
      *
      * <b>Note</b> you should make sure to delete any container processes too!
      */
+    @Override
     public PodSchema deletePod(String podId) {
         return podMap.remove(podId);
     }
@@ -127,6 +135,7 @@ public class LocalNodeModel {
     /**
      * Returns all the current containers and their pods
      */
+    @Override
     public ImmutableMap<String, PodCurrentContainer> getPodRunningContainers() {
         Map<String, PodCurrentContainer> answer = new HashMap<>();
         for (Map.Entry<String, PodSchema> entry : podMap.entrySet()) {
@@ -143,6 +152,7 @@ public class LocalNodeModel {
         return ImmutableMap.copyOf(answer);
     }
 
+    @Override
     public PodCurrentContainer createPodCurrentContainer(String podId, PodSchema podSchema, String containerId, PodCurrentContainerInfo currentContainer) {
         return new PodCurrentContainer(this, podId, podSchema, containerId, currentContainer);
     }
@@ -151,20 +161,24 @@ public class LocalNodeModel {
     // Replication Controllers
     //-------------------------------------------------------------------------
 
+    @Override
     public ReplicationControllerSchema getReplicationController(String id) {
         return replicationControllerMap.get(id);
     }
 
+    @Override
     public ReplicationControllerListSchema getReplicationControllers() {
         ReplicationControllerListSchema answer = new ReplicationControllerListSchema();
         answer.setItems(Lists.newArrayList(replicationControllerMap.values()));
         return answer;
     }
 
+    @Override
     public ImmutableMap<String, ReplicationControllerSchema> getReplicationControllerMap() {
         return ImmutableMap.copyOf(replicationControllerMap);
     }
 
+    @Override
     public void updateReplicationController(String id, ReplicationControllerSchema replicationController) {
         if (Strings.isBlank(id)) {
             id = createID("ReplicationController");
@@ -172,6 +186,7 @@ public class LocalNodeModel {
         replicationControllerMap.put(id, replicationController);
     }
 
+    @Override
     public void deleteReplicationController(String controllerId) {
         replicationControllerMap.remove(controllerId);
         System.out.println("Deleted replicationController " + controllerId + ". Now has " + replicationControllerMap.size() + " service(s)");
@@ -181,20 +196,24 @@ public class LocalNodeModel {
     // Services
     //-------------------------------------------------------------------------
 
+    @Override
     public ServiceListSchema getServices() {
         ServiceListSchema answer = new ServiceListSchema();
         answer.setItems(Lists.newArrayList(serviceMap.values()));
         return answer;
     }
 
+    @Override
     public ServiceSchema getService(String id) {
         return serviceMap.get(id);
     }
 
+    @Override
     public ImmutableMap<String, ServiceSchema> getServiceMap() {
         return ImmutableMap.copyOf(serviceMap);
     }
 
+    @Override
     public void updateService(String id, ServiceSchema entity) {
         if (Strings.isBlank(id)) {
             id = createID("Service");
@@ -202,6 +221,7 @@ public class LocalNodeModel {
         serviceMap.put(id, entity);
     }
 
+    @Override
     public void deleteService(String serviceId) {
         serviceMap.remove(serviceId);
         System.out.println("Deleted service " + serviceId + ". Now has " + serviceMap.size() + " service(s)");
@@ -214,6 +234,7 @@ public class LocalNodeModel {
     /**
      * Creates a new ID for the given kind
      */
+    @Override
     public String createID(String kind) {
         return kind + "-" + randomUUID().toString();
     }

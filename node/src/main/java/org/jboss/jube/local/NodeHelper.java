@@ -19,7 +19,6 @@ package org.jboss.jube.local;
 
 import io.fabric8.common.util.Objects;
 import io.fabric8.common.util.Strings;
-import io.fabric8.kubernetes.api.Kubernetes;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ControllerCurrentState;
 import io.fabric8.kubernetes.api.model.ControllerDesiredState;
@@ -36,6 +35,7 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
 import io.fabric8.kubernetes.api.model.Running;
 import io.fabric8.kubernetes.api.model.State;
 import io.hawt.aether.OpenMavenURL;
+import org.jboss.jube.KubernetesModel;
 import org.jboss.jube.process.InstallOptions;
 import org.jboss.jube.process.Installation;
 import org.jboss.jube.process.ProcessController;
@@ -43,7 +43,6 @@ import org.jboss.jube.process.ProcessManager;
 import org.jboss.jube.util.ImageMavenCoords;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -294,7 +293,7 @@ public class NodeHelper {
         return currentState;
     }
 
-    public static void deletePod(ProcessManager processManager, LocalNodeModel model, String podId) throws Exception {
+    public static void deletePod(ProcessManager processManager, KubernetesModel model, String podId) throws Exception {
         PodSchema pod = model.deletePod(podId);
         if (pod != null) {
             List<ManifestContainer> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);

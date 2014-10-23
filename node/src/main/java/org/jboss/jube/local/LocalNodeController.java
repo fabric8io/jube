@@ -30,6 +30,8 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
 import io.fabric8.kubernetes.api.model.ServiceListSchema;
 import io.fabric8.kubernetes.api.model.ServiceSchema;
 import io.hawt.util.Strings;
+import org.jboss.jube.KubernetesModel;
+import org.jboss.jube.apimaster.ApiMasterKubernetesModel;
 import org.jboss.jube.process.ProcessManager;
 import org.jboss.jube.replicator.Replicator;
 
@@ -53,12 +55,12 @@ import static org.jboss.jube.local.NodeHelper.getOrCreateCurrentState;
 @Consumes("application/json")
 public class LocalNodeController implements Kubernetes {
     private final ProcessManager processManager;
-    private final LocalNodeModel model;
+    private final KubernetesModel model;
     private final Replicator replicator;
     private final ProcessMonitor processMonitor;
 
     @Inject
-    public LocalNodeController(ProcessManager processManager, LocalNodeModel model, Replicator replicator, ProcessMonitor processMonitor) {
+    public LocalNodeController(ProcessManager processManager, ApiMasterKubernetesModel model, Replicator replicator, ProcessMonitor processMonitor) {
         this.processManager = processManager;
         this.model = model;
         this.replicator = replicator;

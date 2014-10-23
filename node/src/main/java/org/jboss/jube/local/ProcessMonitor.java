@@ -19,6 +19,8 @@ package org.jboss.jube.local;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import org.jboss.jube.KubernetesModel;
+import org.jboss.jube.apimaster.ApiMasterKubernetesModel;
 import org.jboss.jube.process.Installation;
 import org.jboss.jube.process.ProcessManager;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
@@ -41,13 +43,13 @@ import java.util.TimerTask;
 public class ProcessMonitor {
     private static final transient Logger LOG = LoggerFactory.getLogger(Replicator.class);
 
-    private final LocalNodeModel model;
+    private final KubernetesModel model;
     private final ProcessManager processManager;
     private final long pollTime;
     private Timer timer = new Timer();
 
     @Inject
-    public ProcessMonitor(LocalNodeModel model,
+    public ProcessMonitor(ApiMasterKubernetesModel model,
                           ProcessManager processManager,
                           @ConfigProperty(name = "processMonitor_pollTime", defaultValue = "2000")
                           long pollTime) {
@@ -105,7 +107,7 @@ public class ProcessMonitor {
         return pollTime;
     }
 
-    public LocalNodeModel getModel() {
+    public KubernetesModel getModel() {
         return model;
     }
 }

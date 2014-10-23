@@ -17,25 +17,21 @@
  */
 package org.jboss.jube.local;
 
-import io.fabric8.kubernetes.api.model.CurrentState;
 import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
 import io.fabric8.kubernetes.api.model.PodSchema;
-import io.fabric8.kubernetes.api.model.Running;
-import io.fabric8.kubernetes.api.model.State;
-
-import java.util.Map;
+import org.jboss.jube.KubernetesModel;
 
 /**
  * Represents a container in a pod in a model
  */
 public class PodCurrentContainer {
-    private final LocalNodeModel model;
+    private final KubernetesModel model;
     private final String podId;
     private final PodSchema pod;
     private final String containerId;
     private final PodCurrentContainerInfo currentContainer;
 
-    public PodCurrentContainer(LocalNodeModel model, String podId, PodSchema pod, String containerId, PodCurrentContainerInfo currentContainer) {
+    public PodCurrentContainer(KubernetesModel model, String podId, PodSchema pod, String containerId, PodCurrentContainerInfo currentContainer) {
         this.model = model;
         this.podId = podId;
         this.pod = pod;
@@ -43,7 +39,7 @@ public class PodCurrentContainer {
         this.currentContainer = currentContainer;
     }
 
-    public LocalNodeModel getModel() {
+    public KubernetesModel getModel() {
         return model;
     }
 

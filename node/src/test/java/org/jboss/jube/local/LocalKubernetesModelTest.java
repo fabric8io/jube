@@ -26,8 +26,8 @@ import static org.junit.Assert.assertTrue;
 
 /**
  */
-public class LocalNodeModelTest {
-    protected LocalNodeModel model = new LocalNodeModel();
+public class LocalKubernetesModelTest {
+    protected LocalKubernetesModel model = new LocalKubernetesModel();
 
     @Test
     public void testUpdatePodIfNotExist() throws Exception {
