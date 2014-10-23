@@ -83,7 +83,7 @@ public class Replicator {
 
         System.out.println("Starting the replicator with poll time: " + pollTime);
 
-        group = new ZooKeeperGroup<ReplicatorNode>(curator, ZkPath.AUTO_SCALE_CLUSTER.getPath(), ReplicatorNode.class);
+        group = new ZooKeeperGroup<ReplicatorNode>(curator, ZkPath.KUBERNETES_REPLICATOR.getPath(), ReplicatorNode.class);
         groupListener = new GroupListener<ReplicatorNode>() {
 
             @Override
@@ -114,10 +114,10 @@ public class Replicator {
 
     public void enableMaster() {
         if (master.compareAndSet(false, true)) {
+            enableTimer();
             LOG.info("Replicator is the master");
             System.out.println("====== Replicator is the master");
             group.update(createState());
-            enableTimer();
         }
     }
 
@@ -126,8 +126,8 @@ public class Replicator {
             LOG.info("Replicator is not the master");
             System.out.println("====== Replicator is NOT the master");
             group.update(createState());
+            disableTimer();
         }
-        disableTimer();
     }
 
     protected void onGroupEvent(Group<ReplicatorNode> group, GroupListener.GroupEvent event) {
@@ -212,8 +212,9 @@ public class Replicator {
         List<PodSchema> list = Lists.newArrayList(pods);
         for (int i = 0; i < createCount; i++) {
             PodSchema pod = new PodSchema();
+            pod.setKind(NodeHelper.KIND_POD);
 
-            createNewPod(replicationController, pod);
+            createNewId(replicationController, pod);
             list.add(pod);
 
             List<ManifestContainer> containers = KubernetesHelper.getContainers(podTemplateDesiredState);
@@ -234,11 +235,12 @@ public class Replicator {
             // TODO should we update the pod now we've updated it?
             List<ManifestContainer> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);
             NodeHelper.createMissingContainers(processManager, pod, NodeHelper.getOrCreateCurrentState(pod), desiredContainers);
+            model.updatePod(pod.getId(), pod);
         }
         return ImmutableList.copyOf(list);
     }
 
-    protected String createNewPod(ReplicationControllerSchema replicationController, PodSchema pod) {
+    protected String createNewId(ReplicationControllerSchema replicationController, PodSchema pod) {
         String id = replicationController.getId();
         if (Strings.isNotBlank(id)) {
             id += "-";
@@ -251,7 +253,7 @@ public class Replicator {
                 }
             }
         }
-        id = model.createID("Pod");
+        id = model.createID(NodeHelper.KIND_POD);
         pod.setId(id);
         return null;
     }
@@ -276,6 +278,7 @@ public class Replicator {
     }
 
     protected void disableTimer() {
+        System.out.println("disabling the Replicator timer!");
         if (timer != null) {
             timer.cancel();
         }

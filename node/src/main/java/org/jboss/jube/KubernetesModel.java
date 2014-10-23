@@ -46,6 +46,8 @@ public interface KubernetesModel {
 
     void updatePod(String id, PodSchema pod);
 
+    String getOrCreateId(String id, String kind);
+
     boolean updatePodIfNotExist(String id, PodSchema pod);
 
     PodSchema deletePod(String podId);

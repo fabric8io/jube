@@ -85,13 +85,10 @@ public class ApiMasterService implements Kubernetes {
     }
 
     @Override
-    public String createPod(PodSchema pod) throws Exception {
-        String id = pod.getId();
-        if (Strings.isBlank(id)) {
-            id = model.createID("Pod");
-            pod.setId(id);
-        }
-        return updatePod(id, pod);
+    public String createPod(PodSchema entity) throws Exception {
+        String id = model.getOrCreateId(entity.getId(), NodeHelper.KIND_REPLICATION_CONTROLLER);
+        entity.setId(id);
+        return updatePod(id, entity);
     }
 
 
@@ -130,13 +127,10 @@ public class ApiMasterService implements Kubernetes {
     }
 
     @Override
-    public String createReplicationController(ReplicationControllerSchema replicationController) throws Exception {
-        String id = replicationController.getId();
-        if (Strings.isBlank(id)) {
-            id = model.createID("ReplicationController");
-            replicationController.setId(id);
-        }
-        return updateReplicationController(id, replicationController);
+    public String createReplicationController(ReplicationControllerSchema entity) throws Exception {
+        String id = model.getOrCreateId(entity.getId(), NodeHelper.KIND_REPLICATION_CONTROLLER);
+        entity.setId(id);
+        return updateReplicationController(id, entity);
     }
 
     @Override
@@ -167,11 +161,8 @@ public class ApiMasterService implements Kubernetes {
 
     @Override
     public String createService(ServiceSchema entity) throws Exception {
-        String id = entity.getId();
-        if (Strings.isBlank(id)) {
-            id = model.createID("Service");
-            entity.setId(id);
-        }
+        String id = model.getOrCreateId(entity.getId(), NodeHelper.KIND_SERVICE);
+        entity.setId(id);
         return updateService(id, entity);
     }
 

@@ -52,6 +52,9 @@ import java.util.Map;
  * A set of helper functions for implementing the local node
  */
 public class NodeHelper {
+    public static final String KIND_POD = "Pod";
+    public static final String KIND_REPLICATION_CONTROLLER = "ReplicationController";
+    public static final String KIND_SERVICE = "SERVICE";
 
     /**
      * Returns the desired state; lazily creating one if required

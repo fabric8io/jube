@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import io.fabric8.common.util.Filter;
 import io.fabric8.common.util.Filters;
-import io.fabric8.kubernetes.api.Kubernetes;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ManifestContainer;
 import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
@@ -35,8 +34,6 @@ import io.fabric8.kubernetes.api.model.ServiceSchema;
 import io.hawt.util.Strings;
 import org.jboss.jube.KubernetesModel;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,23 +83,17 @@ public class LocalKubernetesModel implements KubernetesModel {
         return podMap.get(id);
     }
 
-
     @Override
     public void updatePod(String id, PodSchema pod) {
-        if (Strings.isBlank(id)) {
-            id = createID("Pod");
-        }
+        id = getOrCreateId(id, NodeHelper.KIND_POD);
+
         // lets make sure that for each container we have a current container created
         Map<String, PodCurrentContainerInfo> info = NodeHelper.getOrCreateCurrentContainerInfo(pod);
 
         List<ManifestContainer> containers = KubernetesHelper.getContainers(pod);
         for (ManifestContainer container : containers) {
-            String name = container.getName();
-            if (Strings.isBlank(name)) {
-                // lets generate a container id
-                name = createID("Container");
+            String name = getOrCreateId(container.getName(), NodeHelper.KIND_POD);
                 container.setName(name);
-            }
             PodCurrentContainerInfo containerInfo = info.get(name);
             if (containerInfo == null) {
                 containerInfo = new PodCurrentContainerInfo();
@@ -110,6 +101,14 @@ public class LocalKubernetesModel implements KubernetesModel {
             }
         }
         podMap.put(id, pod);
+    }
+
+    @Override
+    public String getOrCreateId(String id, String kind) {
+        if (Strings.isBlank(id)) {
+            id = createID(kind);
+        }
+        return id;
     }
 
 
@@ -180,9 +179,7 @@ public class LocalKubernetesModel implements KubernetesModel {
 
     @Override
     public void updateReplicationController(String id, ReplicationControllerSchema replicationController) {
-        if (Strings.isBlank(id)) {
-            id = createID("ReplicationController");
-        }
+        id = getOrCreateId(id, NodeHelper.KIND_REPLICATION_CONTROLLER);
         replicationControllerMap.put(id, replicationController);
     }
 
@@ -215,9 +212,7 @@ public class LocalKubernetesModel implements KubernetesModel {
 
     @Override
     public void updateService(String id, ServiceSchema entity) {
-        if (Strings.isBlank(id)) {
-            id = createID("Service");
-        }
+        id = getOrCreateId(id, NodeHelper.KIND_SERVICE);
         serviceMap.put(id, entity);
     }
 
