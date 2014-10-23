@@ -15,76 +15,158 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.jube.local;
+package org.jboss.jube.replicator;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import io.fabric8.common.util.Closeables;
+import io.fabric8.groups.Group;
+import io.fabric8.groups.GroupListener;
+import io.fabric8.groups.internal.ZooKeeperGroup;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ControllerCurrentState;
 import io.fabric8.kubernetes.api.model.ControllerDesiredState;
-import io.fabric8.kubernetes.api.model.Manifest;
 import io.fabric8.kubernetes.api.model.ManifestContainer;
 import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
 import io.fabric8.kubernetes.api.model.PodSchema;
 import io.fabric8.kubernetes.api.model.PodTemplate;
 import io.fabric8.kubernetes.api.model.PodTemplateDesiredState;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
+import io.fabric8.zookeeper.ZkPath;
+import io.fabric8.zookeeper.utils.ZooKeeperMasterCache;
 import io.hawt.util.Strings;
-import org.jboss.jube.process.ProcessManager;
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
+import org.jboss.jube.local.LocalNodeModel;
+import org.jboss.jube.local.NodeHelper;
+import org.jboss.jube.process.ProcessManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Monitors the status of the current replication controllers and pods and chooses to start new pods if there are not enough replicas
  */
 @Singleton
-public class ReplicationManager {
-    private static final transient Logger LOG = LoggerFactory.getLogger(ReplicationManager.class);
+public class Replicator {
+    private static final transient Logger LOG = LoggerFactory.getLogger(Replicator.class);
 
+    private final CuratorFramework curator;
     private final LocalNodeModel model;
     private final ProcessManager processManager;
     private final long pollTime;
     private final Timer timer = new Timer();
+    private final GroupListener<ReplicatorNode> groupListener;
+    private ZooKeeperMasterCache zkMasterCache;
+    private ZooKeeperGroup<ReplicatorNode> group;
+    private AtomicBoolean timerEnabled = new AtomicBoolean(false);
+    private AtomicBoolean master = new AtomicBoolean(false);
 
     @Inject
-    public ReplicationManager(LocalNodeModel model,
-                              ProcessManager processManager,
-                              @ConfigProperty(name = "autoScaler_pollTime", defaultValue = "2000")
-                              long pollTime) {
+    public Replicator(CuratorFramework curator,
+                      LocalNodeModel model,
+                      ProcessManager processManager,
+                      @ConfigProperty(name = "REPLICATOR_POLL_TIME", defaultValue = "2000")
+                      long pollTime) {
+        this.curator = curator;
         this.model = model;
         this.processManager = processManager;
         this.pollTime = pollTime;
 
-        System.out.println("Starting the auto scaler with poll time: " + pollTime);
+        System.out.println("Starting the replicator with poll time: " + pollTime);
 
-        TimerTask timerTask = new TimerTask() {
+        enableMasterZkCache(curator);
+        group = new ZooKeeperGroup<ReplicatorNode>(curator, ZkPath.AUTO_SCALE_CLUSTER.getPath(), ReplicatorNode.class);
+        groupListener = new GroupListener<ReplicatorNode>() {
+
             @Override
-            public void run() {
-                LOG.debug("autoscale timer");
-                try {
-                    autoScale();
-                } catch (Exception e) {
-                    System.out.println("Caught: " + e);
-                    e.printStackTrace();
-                    LOG.warn("Caught: " + e, e);
-                }
+            public void groupEvent(Group<ReplicatorNode> group, GroupEvent event) {
+                onGroupEvent(group, event);
             }
         };
-        timer.schedule(timerTask, pollTime, pollTime);
+        group.add(groupListener);
+        group.update(createState());
+        group.start();
+
+        enableTimer();
     }
 
+
+    @PreDestroy
+    public void destroy() {
+        disableMasterZkCache();
+        disableTimer();
+        group.remove(groupListener);
+        Closeables.closeQuietly(group);
+        group = null;
+        disableTimer();
+    }
+
+    public boolean isMaster() {
+        return group.isMaster() && master.get();
+    }
+
+    public void enableMaster() {
+        if (master.compareAndSet(false, true)) {
+            enableMasterZkCache(curator);
+            LOG.info("Replicator is the master");
+            System.out.println("====== Replicator is the master");
+            group.update(createState());
+            enableTimer();
+        }
+    }
+
+    protected void disableMaster() {
+        if (master.compareAndSet(true, false)) {
+            LOG.info("Replicator is not the master");
+            System.out.println("====== Replicator is NOT the master");
+            group.update(createState());
+        }
+        disableTimer();
+        disableMasterZkCache();
+    }
+
+    protected void onGroupEvent(Group<ReplicatorNode> group, GroupListener.GroupEvent event) {
+        switch (event) {
+            case CONNECTED:
+            case CHANGED:
+                if (isValid()) {
+                    try {
+                        if (group.isMaster()) {
+                            enableMaster();
+                        } else {
+                            disableMaster();
+                        }
+                    } catch (IllegalStateException e) {
+                        // Ignore
+                    }
+                } else {
+                    LOG.info("Not valid with master: " + group.isMaster()
+                            + " curator: " + curator);
+                }
+                break;
+            case DISCONNECTED:
+        }
+    }
+
+    protected boolean isValid() {
+        return true;
+    }
+
+
     protected void autoScale() throws Exception {
+        if (!isMaster()) {
+            return;
+        }
         ImmutableSet<Map.Entry<String, ReplicationControllerSchema>> entries = model.getReplicationControllerMap().entrySet();
         for (Map.Entry<String, ReplicationControllerSchema> entry : entries) {
             String rcID = entry.getKey();
@@ -119,6 +201,7 @@ public class ReplicationManager {
             currentState.setReplicas(replicaCount);
         }
     }
+
 
     private ImmutableList<PodSchema> deleteContainers(ImmutableList<PodSchema> pods, int deleteCount) throws Exception {
         List<PodSchema> list = Lists.newArrayList(pods);
@@ -178,13 +261,47 @@ public class ReplicationManager {
         return null;
     }
 
-    @PreDestroy
-    public void destroy() {
-        if (timer != null) {
-            timer.purge();
-            timer.cancel();
+    protected void enableMasterZkCache(CuratorFramework curator) {
+        zkMasterCache = new ZooKeeperMasterCache(curator);
+    }
+
+    protected void disableMasterZkCache() {
+        if (zkMasterCache != null) {
+            zkMasterCache = null;
         }
     }
+
+    protected void enableTimer() {
+        if (timerEnabled.compareAndSet(false, true)) {
+            TimerTask timerTask = new TimerTask() {
+                @Override
+                public void run() {
+                    LOG.debug("Replicator Timer");
+                    try {
+                        autoScale();
+                    } catch (Exception e) {
+                        System.out.println("Caught: " + e);
+                        e.printStackTrace();
+                        LOG.warn("Caught: " + e, e);
+                    }
+                }
+            };
+            timer.schedule(timerTask, this.pollTime, this.pollTime);
+        }
+    }
+
+    protected void disableTimer() {
+        if (timer != null) {
+            timer.cancel();
+        }
+        timerEnabled.set(false);
+    }
+
+    private ReplicatorNode createState() {
+        ReplicatorNode state = new ReplicatorNode();
+        return state;
+    }
+
 
     public long getPollTime() {
         return pollTime;
@@ -193,4 +310,5 @@ public class ReplicationManager {
     public LocalNodeModel getModel() {
         return model;
     }
+
 }

@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableSet;
 import org.jboss.jube.process.Installation;
 import org.jboss.jube.process.ProcessManager;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
+import org.jboss.jube.replicator.Replicator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +39,7 @@ import java.util.TimerTask;
  */
 @Singleton
 public class ProcessMonitor {
-    private static final transient Logger LOG = LoggerFactory.getLogger(ReplicationManager.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(Replicator.class);
 
     private final LocalNodeModel model;
     private final ProcessManager processManager;

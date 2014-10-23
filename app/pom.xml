@@ -156,6 +156,10 @@
                <directory>processes</directory>
                <followSymlinks>false</followSymlinks>
              </fileset>
+             <fileset>
+               <directory>ensemble</directory>
+               <followSymlinks>false</followSymlinks>
+             </fileset>
            </filesets>
          </configuration>
        </plugin>
