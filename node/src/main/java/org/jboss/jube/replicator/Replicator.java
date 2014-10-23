@@ -34,7 +34,6 @@ import io.fabric8.kubernetes.api.model.PodTemplate;
 import io.fabric8.kubernetes.api.model.PodTemplateDesiredState;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
 import io.fabric8.zookeeper.ZkPath;
-import io.fabric8.zookeeper.utils.ZooKeeperMasterCache;
 import io.hawt.util.Strings;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
@@ -67,7 +66,6 @@ public class Replicator {
     private final long pollTime;
     private final Timer timer = new Timer();
     private final GroupListener<ReplicatorNode> groupListener;
-    private ZooKeeperMasterCache zkMasterCache;
     private ZooKeeperGroup<ReplicatorNode> group;
     private AtomicBoolean timerEnabled = new AtomicBoolean(false);
     private AtomicBoolean master = new AtomicBoolean(false);
@@ -85,7 +83,6 @@ public class Replicator {
 
         System.out.println("Starting the replicator with poll time: " + pollTime);
 
-        enableMasterZkCache(curator);
         group = new ZooKeeperGroup<ReplicatorNode>(curator, ZkPath.AUTO_SCALE_CLUSTER.getPath(), ReplicatorNode.class);
         groupListener = new GroupListener<ReplicatorNode>() {
 
@@ -104,7 +101,6 @@ public class Replicator {
 
     @PreDestroy
     public void destroy() {
-        disableMasterZkCache();
         disableTimer();
         group.remove(groupListener);
         Closeables.closeQuietly(group);
@@ -118,7 +114,6 @@ public class Replicator {
 
     public void enableMaster() {
         if (master.compareAndSet(false, true)) {
-            enableMasterZkCache(curator);
             LOG.info("Replicator is the master");
             System.out.println("====== Replicator is the master");
             group.update(createState());
@@ -133,7 +128,6 @@ public class Replicator {
             group.update(createState());
         }
         disableTimer();
-        disableMasterZkCache();
     }
 
     protected void onGroupEvent(Group<ReplicatorNode> group, GroupListener.GroupEvent event) {
@@ -260,16 +254,6 @@ public class Replicator {
         id = model.createID("Pod");
         pod.setId(id);
         return null;
-    }
-
-    protected void enableMasterZkCache(CuratorFramework curator) {
-        zkMasterCache = new ZooKeeperMasterCache(curator);
-    }
-
-    protected void disableMasterZkCache() {
-        if (zkMasterCache != null) {
-            zkMasterCache = null;
-        }
     }
 
     protected void enableTimer() {
