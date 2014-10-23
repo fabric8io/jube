@@ -101,7 +101,7 @@
             </goals>
             <configuration>
               <classResourceNames>
-                <classResourceName>org.jboss.jube.local.LocalNodeController</classResourceName>
+                <classResourceName>org.jboss.jube.apimaster.ApiMasterService</classResourceName>
               </classResourceNames>
               <attachWadl>false</attachWadl>
             </configuration>

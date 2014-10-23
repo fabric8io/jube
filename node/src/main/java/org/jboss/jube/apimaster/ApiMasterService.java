@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.jube.local;
+package org.jboss.jube.apimaster;
 
 import io.fabric8.common.util.Objects;
 import io.fabric8.kubernetes.api.Kubernetes;
@@ -32,6 +32,8 @@ import io.fabric8.kubernetes.api.model.ServiceSchema;
 import io.hawt.util.Strings;
 import org.jboss.jube.KubernetesModel;
 import org.jboss.jube.apimaster.ApiMasterKubernetesModel;
+import org.jboss.jube.local.NodeHelper;
+import org.jboss.jube.local.ProcessMonitor;
 import org.jboss.jube.process.ProcessManager;
 import org.jboss.jube.replicator.Replicator;
 
@@ -53,14 +55,14 @@ import static org.jboss.jube.local.NodeHelper.getOrCreateCurrentState;
 @Path("api/v1beta1")
 @Produces("application/json")
 @Consumes("application/json")
-public class LocalNodeController implements Kubernetes {
+public class ApiMasterService implements Kubernetes {
     private final ProcessManager processManager;
     private final KubernetesModel model;
     private final Replicator replicator;
     private final ProcessMonitor processMonitor;
 
     @Inject
-    public LocalNodeController(ProcessManager processManager, ApiMasterKubernetesModel model, Replicator replicator, ProcessMonitor processMonitor) {
+    public ApiMasterService(ProcessManager processManager, ApiMasterKubernetesModel model, Replicator replicator, ProcessMonitor processMonitor) {
         this.processManager = processManager;
         this.model = model;
         this.replicator = replicator;

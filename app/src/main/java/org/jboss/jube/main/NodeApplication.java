@@ -16,7 +16,8 @@
 package org.jboss.jube.main;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import org.jboss.jube.local.LocalNodeController;
+import org.jboss.jube.apimaster.ApiMasterService;
+import org.jboss.jube.apimaster.ApiMasterService;
 import org.apache.cxf.feature.LoggingFeature;
 
 import javax.enterprise.inject.Produces;
@@ -33,13 +34,13 @@ public class NodeApplication extends Application {
     private JacksonJsonProvider jacksonJsonProvider = new JacksonJsonProvider();
 
     @Inject
-    private LocalNodeController localNodeController;
+    private ApiMasterService apiMasterService;
 
     @Override
     public Set<Object> getSingletons() {
         return new HashSet<Object>(
                 Arrays.asList(
-                        localNodeController,
+                        apiMasterService,
                         jacksonJsonProvider,
 /*
     TODO
