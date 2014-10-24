@@ -37,6 +37,8 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.jboss.jube.KubernetesModel;
+import org.jboss.jube.local.EntityListener;
+import org.jboss.jube.local.EntityListenerList;
 import org.jboss.jube.local.LocalKubernetesModel;
 import org.jboss.jube.local.NodeHelper;
 import org.jboss.jube.local.PodCurrentContainer;
@@ -69,6 +71,10 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     private final TreeCache treeCache;
     private final String zkPath;
 
+    private final EntityListenerList<PodSchema> podListeners = new EntityListenerList<>();
+    private final EntityListenerList<ReplicationControllerSchema> replicationControllerListeners = new EntityListenerList<>();
+    private final EntityListenerList<ServiceSchema> serviceListeners = new EntityListenerList<>();
+
 
     @Singleton
     @Inject
@@ -80,6 +86,34 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         treeCache.getListenable().addListener(treeListener);
 
     }
+
+    // Add and remove listeners
+    //-------------------------------------------------------------------------
+
+    public void addPodListener(EntityListener<PodSchema> listener) {
+        podListeners.addListener(listener);
+    }
+
+    public void removePodListener(EntityListener<PodSchema> listener) {
+        podListeners.removeListener(listener);
+    }
+
+    public void addReplicationControllerListener(EntityListener<ReplicationControllerSchema> listener) {
+        replicationControllerListeners.addListener(listener);
+    }
+
+    public void removeReplicationControllerListener(EntityListener<ReplicationControllerSchema> listener) {
+        replicationControllerListeners.removeListener(listener);
+    }
+
+    public void addServiceListener(EntityListener<ServiceSchema> listener) {
+        serviceListeners.addListener(listener);
+    }
+
+    public void removeServiceListener(EntityListener<ServiceSchema> listener) {
+        serviceListeners.removeListener(listener);
+    }
+
 
     // Updating API which just writes to ZK and waits for ZK watches to update in memory
     // -------------------------------------------------------------------------
@@ -299,10 +333,13 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
             String id = entity.getId();
             if (Strings.isNotBlank(id)) {
                 memoryModel.deletePod(id);
+                podListeners.entityDeleted(id);
+
             }
         } else {
             String id = memoryModel.getOrCreateId(entity.getId(), NodeHelper.KIND_POD);
             memoryModel.updatePod(id, entity);
+            podListeners.entityChanged(id, entity);
         }
     }
 
@@ -311,10 +348,12 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
             String id = entity.getId();
             if (Strings.isNotBlank(id)) {
                 memoryModel.deleteReplicationController(id);
+                replicationControllerListeners.entityDeleted(id);
             }
         } else {
             String id = memoryModel.getOrCreateId(entity.getId(), NodeHelper.KIND_REPLICATION_CONTROLLER);
             memoryModel.updateReplicationController(id, entity);
+            replicationControllerListeners.entityChanged(id, entity);
         }
     }
 
@@ -323,10 +362,12 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
             String id = entity.getId();
             if (Strings.isNotBlank(id)) {
                 memoryModel.deleteService(id);
+                serviceListeners.entityDeleted(id);
             }
         } else {
             String id = memoryModel.getOrCreateId(entity.getId(), NodeHelper.KIND_SERVICE);
             memoryModel.updateService(id, entity);
+            serviceListeners.entityChanged(id, entity);
         }
     }
 

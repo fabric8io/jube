@@ -35,6 +35,7 @@ import org.jboss.jube.apimaster.ApiMasterKubernetesModel;
 import org.jboss.jube.local.NodeHelper;
 import org.jboss.jube.local.ProcessMonitor;
 import org.jboss.jube.process.ProcessManager;
+import org.jboss.jube.proxy.KubeProxy;
 import org.jboss.jube.replicator.Replicator;
 
 import javax.inject.Inject;
@@ -60,13 +61,15 @@ public class ApiMasterService implements Kubernetes {
     private final KubernetesModel model;
     private final Replicator replicator;
     private final ProcessMonitor processMonitor;
+    private final KubeProxy kubeProxy;
 
     @Inject
-    public ApiMasterService(ProcessManager processManager, ApiMasterKubernetesModel model, Replicator replicator, ProcessMonitor processMonitor) {
+    public ApiMasterService(ProcessManager processManager, ApiMasterKubernetesModel model, Replicator replicator, ProcessMonitor processMonitor, KubeProxy kubeProxy) {
         this.processManager = processManager;
         this.model = model;
         this.replicator = replicator;
         this.processMonitor = processMonitor;
+        this.kubeProxy = kubeProxy;
     }
 
     // Pods
