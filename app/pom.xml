@@ -39,6 +39,9 @@
     <!-- jube properties -->
     <docker.baseImage>fabric8/java</docker.baseImage>
     <docker.env.MAIN>org.jboss.jube.main.Main</docker.env.MAIN>
+    
+    <!-- configure hawtio -->
+    <docker.env.hawtio_authenticationEnabled>false</docker.env.hawtio_authenticationEnabled>
   </properties>
 
   <dependencies>
@@ -61,6 +64,10 @@
       <groupId>io.hawt</groupId>
       <artifactId>hawtio-aether</artifactId>
       <version>${hawtio.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-webapp</artifactId>
     </dependency>
 
     <!-- testing -->
@@ -191,11 +198,51 @@
             <version>${exec.maven.plugin.version}</version>
             <configuration>
               <mainClass>org.jboss.weld.environment.se.StartMain</mainClass>
-              <includePluginDependencies>false</includePluginDependencies>
+              <includePluginDependencies>true</includePluginDependencies>
             </configuration>
+
+            <dependencies>
+              <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>kubernetes-war</artifactId>
+                <type>war</type>
+              </dependency>
+              <dependency>
+                <groupId>io.hawt</groupId>
+                <artifactId>hawtio-default</artifactId>
+                <type>war</type>
+              </dependency>
+            </dependencies>
           </plugin>
         </plugins>
       </build>
+    </profile>
+
+    <!-- this profile disables the webapps profile making the distro nice and small for rapid development -->
+    <profile>
+      <id>tiny</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+    </profile>
+
+    <profile>
+      <id>release</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>io.fabric8</groupId>
+          <artifactId>kubernetes-war</artifactId>
+          <type>war</type>
+        </dependency>
+        <dependency>
+          <groupId>io.hawt</groupId>
+          <artifactId>hawtio-default</artifactId>
+          <type>war</type>
+        </dependency>
+      </dependencies>
     </profile>
   </profiles>
 </project>

@@ -53,7 +53,7 @@ import static org.jboss.jube.local.NodeHelper.getOrCreateCurrentState;
  * Implements the local node controller
  */
 @Singleton
-@Path("api/v1beta1")
+@Path("v1beta1")
 @Produces("application/json")
 @Consumes("application/json")
 public class ApiMasterService implements Kubernetes {
