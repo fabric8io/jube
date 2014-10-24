@@ -164,8 +164,10 @@ public class BuildMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if (isIgnoreProject()) {
+            return;
+        }
         getLog().info("Generating Jube image " + image + " from base image " + baseImage);
-
 
         getLog().info("Assembly reference: " + assemblyDescriptorRef);
 
@@ -177,6 +179,14 @@ public class BuildMojo extends AbstractMojo {
 
         createAssembly();
     }
+
+    /**
+     * Returns true if this project should be ignored
+     */
+    protected boolean isIgnoreProject() {
+        return "pom".equals(project.getPackaging());
+    }
+
 
     public Map<String, String> getEnvironmentVariables() {
         if (environmentVariables == null) {
