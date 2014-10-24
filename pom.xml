@@ -63,7 +63,7 @@
 
   <properties>
     <fabric8.version>2.0.0-SNAPSHOT</fabric8.version>
-    <hawtio.version>1.4.26</hawtio.version>
+    <hawtio.version>1.4.27</hawtio.version>
 
     <!-- maven plugin versions can't be reused via BOM -->
     <cxf.plugin.version>3.0.2</cxf.plugin.version>
