@@ -17,6 +17,7 @@
  */
 package org.jboss.jube.local;
 
+import com.google.common.collect.ImmutableSet;
 import io.fabric8.common.util.Objects;
 import io.fabric8.common.util.Strings;
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -33,9 +34,11 @@ import io.fabric8.kubernetes.api.model.PodTemplate;
 import io.fabric8.kubernetes.api.model.PodTemplateDesiredState;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
 import io.fabric8.kubernetes.api.model.Running;
+import io.fabric8.kubernetes.api.model.ServiceSchema;
 import io.fabric8.kubernetes.api.model.State;
 import io.hawt.aether.OpenMavenURL;
 import org.jboss.jube.KubernetesModel;
+import org.jboss.jube.apimaster.ApiMasterService;
 import org.jboss.jube.process.InstallOptions;
 import org.jboss.jube.process.Installation;
 import org.jboss.jube.process.ProcessController;
@@ -143,12 +146,12 @@ public class NodeHelper {
     /**
      * Creates any missing containers; updating the currentState with the new values.
      */
-    public static String createMissingContainers(ProcessManager processManager, PodSchema pod, CurrentState currentState, List<ManifestContainer> containers) throws Exception {
+    public static String createMissingContainers(ProcessManager processManager, KubernetesModel model, PodSchema pod, CurrentState currentState, List<ManifestContainer> containers) throws Exception {
         Map<String, PodCurrentContainerInfo> currentContainers = KubernetesHelper.getCurrentContainers(currentState);
 
         for (ManifestContainer container : containers) {
             // TODO check if we already have a working container
-            createContainer(processManager, container, pod, currentState);
+            createContainer(processManager, model, container, pod, currentState);
         }
         return null;
     }
@@ -170,7 +173,7 @@ public class NodeHelper {
         return answer;
     }
 
-    protected static void createContainer(ProcessManager processManager, ManifestContainer container, PodSchema pod, CurrentState currentState) throws Exception {
+    protected static void createContainer(ProcessManager processManager, KubernetesModel model, ManifestContainer container, PodSchema pod, CurrentState currentState) throws Exception {
         String containerName = container.getName();
         String image = container.getImage();
         Strings.notEmpty(image);
@@ -179,6 +182,8 @@ public class NodeHelper {
 
         System.out.println("Creating new container " + containerName + " from: " + mavenUrl);
         Map<String,String> envVarMap = createEnvironmentVariableMap(container.getEnv());
+        // now lets copy in the service env vars...
+        appendServiceEnvironmentVariables(envVarMap, model);
         System.out.println("Env variables are: " + envVarMap);
         InstallOptions.InstallOptionsBuilder builder = new InstallOptions.InstallOptionsBuilder().
                 url(mavenUrl).environment(envVarMap);
@@ -202,6 +207,26 @@ public class NodeHelper {
         containerAlive(pod, containerName, pid != null && pid.longValue() > 0);
 
         System.out.println("Started the process!");
+    }
+
+    public static void appendServiceEnvironmentVariables(Map<String, String> map, KubernetesModel model) {
+        ImmutableSet<Map.Entry<String, ServiceSchema>> entries = model.getServiceMap().entrySet();
+        for (Map.Entry<String, ServiceSchema> entry : entries) {
+            String id = entry.getKey().toUpperCase();
+            String envVarPrefix = id + "_SERVICE_";
+            ServiceSchema service = entry.getValue();
+
+            // TODO should we allow different service ports?
+            String host = "localhost";
+            Integer port = service.getPort();
+            if (port != null) {
+                String hostEnvVar = envVarPrefix + "HOST";
+                String portEnvVar = envVarPrefix + "PORT";
+
+                map.put(hostEnvVar, host);
+                map.put(portEnvVar, "" + port);
+            }
+        }
     }
 
     public static void deleteContainers(ProcessManager processManager, PodSchema pod, CurrentState currentState, List<ManifestContainer> desiredContainers) throws Exception {

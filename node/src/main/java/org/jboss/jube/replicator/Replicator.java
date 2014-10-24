@@ -243,7 +243,7 @@ public class Replicator {
             }
             // TODO should we update the pod now we've updated it?
             List<ManifestContainer> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);
-            NodeHelper.createMissingContainers(processManager, pod, NodeHelper.getOrCreateCurrentState(pod), desiredContainers);
+            NodeHelper.createMissingContainers(processManager, model, pod, NodeHelper.getOrCreateCurrentState(pod), desiredContainers);
             model.updatePod(pod.getId(), pod);
         }
         return ImmutableList.copyOf(list);

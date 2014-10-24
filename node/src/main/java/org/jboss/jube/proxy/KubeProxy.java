@@ -17,6 +17,8 @@
  */
 package org.jboss.jube.proxy;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import io.fabric8.gateway.loadbalancer.LoadBalancer;
 import io.fabric8.kubernetes.api.model.PodSchema;
 import io.fabric8.kubernetes.api.model.ServiceSchema;
@@ -86,6 +88,16 @@ public class KubeProxy {
         ServiceProxy serviceProxy = new ServiceProxy(vertx, service, port, loadBalancer);
         serviceProxy.init();
         serviceMap.put(id, serviceProxy);
+
+        // now lets populate it with the current pods
+        ImmutableMap<String, PodSchema> podMap = model.getPodMap();
+        ImmutableSet<Map.Entry<String, PodSchema>> entries = podMap.entrySet();
+        for (Map.Entry<String, PodSchema> entry : entries) {
+            String podId = entry.getKey();
+            PodSchema pod = entry.getValue();
+            serviceProxy.entityChanged(podId, pod);
+        }
+        System.out.println("Service now initialised as: " + service);
     }
 
     protected void serviceDeleted(String id) {

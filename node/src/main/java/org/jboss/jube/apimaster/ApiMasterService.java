@@ -104,7 +104,7 @@ public class ApiMasterService implements Kubernetes {
         CurrentState currentState = getOrCreateCurrentState(pod);
         List<ManifestContainer> containers = KubernetesHelper.getContainers(pod);
         model.updatePod(podId, pod);
-        return NodeHelper.createMissingContainers(processManager, pod, currentState, containers);
+        return NodeHelper.createMissingContainers(processManager, model, pod, currentState, containers);
     }
 
     @Override

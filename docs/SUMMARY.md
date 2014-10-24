@@ -1,5 +1,6 @@
 * [Goals](goals.md)
 * [Getting Started](getStarted.md)
+    * [Example](example.md)
     * [Maven Plugin](mavenPlugin.md)
 * [Image Zips](imageZips.md)
 * [Differences](differences.md)
