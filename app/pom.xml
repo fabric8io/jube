@@ -207,11 +207,13 @@
                 <artifactId>kubernetes-war</artifactId>
                 <type>war</type>
               </dependency>
+<!--
               <dependency>
                 <groupId>io.hawt</groupId>
                 <artifactId>hawtio-default</artifactId>
                 <type>war</type>
               </dependency>
+-->
             </dependencies>
           </plugin>
         </plugins>
@@ -237,11 +239,13 @@
           <artifactId>kubernetes-war</artifactId>
           <type>war</type>
         </dependency>
+<!--
         <dependency>
           <groupId>io.hawt</groupId>
           <artifactId>hawtio-default</artifactId>
           <type>war</type>
         </dependency>
+-->
       </dependencies>
     </profile>
   </profiles>

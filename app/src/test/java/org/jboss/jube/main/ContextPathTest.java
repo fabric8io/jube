@@ -27,8 +27,7 @@ public class ContextPathTest {
 
     @Test
     public void testContextPath() throws Exception {
-        assertContextPath("file:/projects/jube/app/target/jube/maven/hawtio-default-1.4.27.war!/WEB-INF/web.xml", "hawtio");
-        assertContextPath("file:/projects/jube/app/target/jube/maven/kubernetes-war-2.0.0-SNAPSHOT.war!/WEB-INF/web.xml", "fabric8-kubernetes");
+        assertContextPath("file:/projects/jube/app/target/jube/maven/kubernetes-war-2.0.0-SNAPSHOT.war!/WEB-INF/web.xml", "hawtio");
     }
 
 

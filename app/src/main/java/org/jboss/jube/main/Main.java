@@ -145,10 +145,8 @@ public class Main {
     public static String createContextPath(String uri) {
         String contextPath = trimUpToLastIndexOf(uri, '!', '.');
         contextPath = trimFromAfterLastIndexOf(contextPath, '/', '\\');
-        if (contextPath.startsWith("hawtio-")) {
+        if (contextPath.startsWith("kubernetes-war-")) {
             contextPath = "hawtio";
-        } else if (contextPath.startsWith("kubernetes-war-")) {
-            contextPath = "fabric8-kubernetes";
         }
         return contextPath;
     }
