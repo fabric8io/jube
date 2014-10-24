@@ -5,7 +5,7 @@
         
         
         <meta charset="UTF-8">
-        <title>Introduction | Jube Documentation</title>
+        <title>Differences | Jube Documentation</title>
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="robots" content="index, follow">
@@ -15,11 +15,13 @@
         <meta name="generator" content="www.gitbook.io">
 
         
-        <link rel="next" href="./goals.html" />
+        <link rel="next" href="./FAQ.html" />
         
+        
+        <link rel="prev" href="./imageZips.html" />
         
 
-        <meta property="og:title" content="Introduction | Jube Documentation">
+        <meta property="og:title" content="Differences | Jube Documentation">
         <meta property="og:site_name" content="Jube Documentation">
         <meta property="og:type" content="book">
         <meta property="og:locale" content="en_US">
@@ -48,7 +50,7 @@
 
 
         
-    <div class="book" data-github="jubeio/jube" data-level="0" data-basepath="." data-revision="1414173126510">
+    <div class="book" data-github="jubeio/jube" data-level="4" data-basepath="." data-revision="1414173126510">
     <div class="book-header">
     <!-- Actions Left -->
     <a href="#" class="btn pull-left toggle-summary" aria-label="Toggle summary"><i class="fa fa-align-justify"></i></a>
@@ -245,23 +247,23 @@
             <div class="page-wrapper" tabindex="-1">
                 <div class="book-progress">
     <div class="bar">
-        <div class="inner" style="width: 0%;min-width: 0%;"></div>
+        <div class="inner" style="width: 75%;min-width: 62.5%;"></div>
     </div>
     <div class="chapters">
     
         <a href="./index.html" title="Introduction" class="chapter done new-chapter" data-progress="0" style="left: 0%;"></a>
     
-        <a href="./goals.html" title="Goals" class="chapter  new-chapter" data-progress="1" style="left: 12.5%;"></a>
+        <a href="./goals.html" title="Goals" class="chapter done new-chapter" data-progress="1" style="left: 12.5%;"></a>
     
-        <a href="./getStarted.html" title="Getting Started" class="chapter  new-chapter" data-progress="2" style="left: 25%;"></a>
+        <a href="./getStarted.html" title="Getting Started" class="chapter done new-chapter" data-progress="2" style="left: 25%;"></a>
     
-        <a href="./example.html" title="Example" class="chapter  " data-progress="2.1" style="left: 37.5%;"></a>
+        <a href="./example.html" title="Example" class="chapter done " data-progress="2.1" style="left: 37.5%;"></a>
     
-        <a href="./mavenPlugin.html" title="Maven Plugin" class="chapter  " data-progress="2.2" style="left: 50%;"></a>
+        <a href="./mavenPlugin.html" title="Maven Plugin" class="chapter done " data-progress="2.2" style="left: 50%;"></a>
     
-        <a href="./imageZips.html" title="Image Zips" class="chapter  new-chapter" data-progress="3" style="left: 62.5%;"></a>
+        <a href="./imageZips.html" title="Image Zips" class="chapter done new-chapter" data-progress="3" style="left: 62.5%;"></a>
     
-        <a href="./differences.html" title="Differences" class="chapter  new-chapter" data-progress="4" style="left: 75%;"></a>
+        <a href="./differences.html" title="Differences" class="chapter done new-chapter" data-progress="4" style="left: 75%;"></a>
     
         <a href="./FAQ.html" title="FAQ" class="chapter  new-chapter" data-progress="5" style="left: 87.5%;"></a>
     
@@ -272,9 +274,20 @@
 
                 <div class="page-inner">
                 
-                    <section class="normal" id="section-gitbook_5">
+                    <section class="normal" id="section-gitbook_3">
                     
-                        <p>Jube the pure Java implementation of Kubernetes</p>
+                        <h2 id="differences-between-jube-and-the-go-based-kubernetes-openshift-v3"><a name="differences-between-jube-and-the-go-based-kubernetes-openshift-v3" class="anchor" href="#differences-between-jube-and-the-go-based-kubernetes-openshift-v3"><span class="fa fa-link"></span></a>Differences between Jube and the Go based Kubernetes / OpenShift V3</h2>
+<p>Jube is a pure Java implementation of kubernetes; designed for use provisioning Java based middleware and applications when either Go Lang, Docker or Kubernetes is not available on your platform.</p>
+<p>While it tries to keep as close as possible to the Kubernetes REST API and metadata it does have some differences:</p>
+<ul>
+<li>Jube is implemented in pure Java; intended for use in non-modern-linux platforms where any of Go Lang, Docker or Kubernetes is not natively supported well. We recommened you use Docker and Kubernetes for real whenever you can though!</li>
+<li>Since its pure Java, Jube cannot do any funky iptables / OpenVSwitch stuff; so the kubernetes networking model is a little different in that:<ul>
+<li>we cannot allocate an IP port per Pod or Service</li>
+<li>service ports are global across all services; so please be careful to avoid clashes!</li>
+</ul>
+</li>
+<li>Jube does not use Docker (since if you had docker, we recommend you use Kubernetes for real ;). So cannot run arbitrary linux images. It can run <a href="imageZips.html">image zips</a> which are similar conceptually; some files used to run a process. This is fine for running simple binaries and Java applications; but is not ideal if you wish to use things like package managers and RPMs per container (e.g. for working with Ruby, Python, Node etc). For those kinds of things we highly recommend Docker and Kubernetes. The focus of Jube is predominantly around running Java based middleware and applications; were an image zip is OK (when docker is not available)</li>
+</ul>
 
                     
                     </section>
@@ -284,8 +297,10 @@
         </div>
 
         
+        <a href="./imageZips.html" class="navigation navigation-prev " aria-label="Previous page: Image Zips"><i class="fa fa-angle-left"></i></a>
         
-        <a href="./goals.html" class="navigation navigation-next navigation-unique" aria-label="Next page: Goals"><i class="fa fa-angle-right"></i></a>
+        
+        <a href="./FAQ.html" class="navigation navigation-next " aria-label="Next page: FAQ"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>

@@ -5,7 +5,7 @@
         
         
         <meta charset="UTF-8">
-        <title>Introduction | Jube Documentation</title>
+        <title>Example | Jube Documentation</title>
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="robots" content="index, follow">
@@ -15,11 +15,13 @@
         <meta name="generator" content="www.gitbook.io">
 
         
-        <link rel="next" href="./goals.html" />
+        <link rel="next" href="./mavenPlugin.html" />
         
+        
+        <link rel="prev" href="./getStarted.html" />
         
 
-        <meta property="og:title" content="Introduction | Jube Documentation">
+        <meta property="og:title" content="Example | Jube Documentation">
         <meta property="og:site_name" content="Jube Documentation">
         <meta property="og:type" content="book">
         <meta property="og:locale" content="en_US">
@@ -48,7 +50,7 @@
 
 
         
-    <div class="book" data-github="jubeio/jube" data-level="0" data-basepath="." data-revision="1414173126510">
+    <div class="book" data-github="jubeio/jube" data-level="2.1" data-basepath="." data-revision="1414173126510">
     <div class="book-header">
     <!-- Actions Left -->
     <a href="#" class="btn pull-left toggle-summary" aria-label="Toggle summary"><i class="fa fa-align-justify"></i></a>
@@ -245,17 +247,17 @@
             <div class="page-wrapper" tabindex="-1">
                 <div class="book-progress">
     <div class="bar">
-        <div class="inner" style="width: 0%;min-width: 0%;"></div>
+        <div class="inner" style="width: 37.5%;min-width: 25%;"></div>
     </div>
     <div class="chapters">
     
         <a href="./index.html" title="Introduction" class="chapter done new-chapter" data-progress="0" style="left: 0%;"></a>
     
-        <a href="./goals.html" title="Goals" class="chapter  new-chapter" data-progress="1" style="left: 12.5%;"></a>
+        <a href="./goals.html" title="Goals" class="chapter done new-chapter" data-progress="1" style="left: 12.5%;"></a>
     
-        <a href="./getStarted.html" title="Getting Started" class="chapter  new-chapter" data-progress="2" style="left: 25%;"></a>
+        <a href="./getStarted.html" title="Getting Started" class="chapter done new-chapter" data-progress="2" style="left: 25%;"></a>
     
-        <a href="./example.html" title="Example" class="chapter  " data-progress="2.1" style="left: 37.5%;"></a>
+        <a href="./example.html" title="Example" class="chapter done " data-progress="2.1" style="left: 37.5%;"></a>
     
         <a href="./mavenPlugin.html" title="Maven Plugin" class="chapter  " data-progress="2.2" style="left: 50%;"></a>
     
@@ -272,9 +274,49 @@
 
                 <div class="page-inner">
                 
-                    <section class="normal" id="section-gitbook_5">
+                    <section class="normal" id="section-gitbook_4">
                     
-                        <p>Jube the pure Java implementation of Kubernetes</p>
+                        <h2 id="example"><a name="example" class="anchor" href="#example"><span class="fa fa-link"></span></a>Example</h2>
+<p>The following will show you how to run some examples from <a href="http://fabric8.io/v2/index.html" target="_blank">fabric8</a></p>
+<h3 id="prerequisites"><a name="prerequisites" class="anchor" href="#prerequisites"><span class="fa fa-link"></span></a>Prerequisites</h3>
+<p>We assume you have cloned and built fabric8 and jube and followed the <a href="getStarted.html">get started guide</a> to get Jube up and running.</p>
+<p>The following assumes you have also setup the <a href="http://fabric8.io/v2/forge.html" target="_blank">Fabric8 Forge Addons</a></p>
+<h3 id="using-forge"><a name="using-forge" class="anchor" href="#using-forge"><span class="fa fa-link"></span></a>Using Forge</h3>
+<p>First lets make sure that you have build fabric8 and created the <a href="imageZips.html">image zips</a> for the default apps in fabric8</p>
+<pre><code>cd fabric8
+mvn install
+cd apps
+mvn install -Pjube
+</code></pre><p>Now lets start Forge inside the fabric8-mq folder</p>
+<pre><code>cd fabric8/apps/fabric8-mq
+forge
+</code></pre><p>Now the following commands all apply various kubernetes json to the Kubernetes environment.</p>
+<p>Start a broker (replication controller, pod and its service):</p>
+<pre><code>kubernetes-apply --file  target/classes/kubernetes-extra.json
+kubernetes-apply --file  target/classes/kubernetes.json
+</code></pre><p>Start a producer (replication controller and a pod):</p>
+<pre><code>kubernetes-apply --file  ../fabric8-mq-producer/target/classes/kubernetes.json
+</code></pre><p>Start a consumer (replication controller and a pod):</p>
+<pre><code>kubernetes-apply --file  ../fabric8-mq-consumer/target/classes/kubernetes.json
+</code></pre><p>Order isn&apos;t massively crucial; other than that the Fabric8 MQ service must be created first before producer/consumer pods.</p>
+<h3 id="checking-whats-happening"><a name="checking-whats-happening" class="anchor" href="#checking-whats-happening"><span class="fa fa-link"></span></a>Checking whats happening</h3>
+<p>To check on what happens after each command you can watch the JSON in your browser:</p>
+<ul>
+<li><a href="http://localhost:8585/api/v1beta1/pods" target="_blank">http://localhost:8585/api/v1beta1/pods</a> for the pods</li>
+<li><a href="http://localhost:8585/api/v1beta1/replicationControllers" target="_blank">http://localhost:8585/api/v1beta1/replicationControllers</a> for replication controllers</li>
+<li><a href="http://localhost:8585/api/v1beta1/services" target="_blank">http://localhost:8585/api/v1beta1/services</a> for the services</li>
+</ul>
+<p>You can obviously browse the above in hawtio too plus you can use these commands</p>
+<pre><code>kubernetes-pod-list
+kubernetes-replication-controller-list
+kubernetes-service-list
+</code></pre><h3 id="looking-at-the-log-files"><a name="looking-at-the-log-files" class="anchor" href="#looking-at-the-log-files"><span class="fa fa-link"></span></a>Looking at the log files</h3>
+<p>If you look in the <strong>jube/app/processes</strong> folder you should see a folder for each pod (so a broker, producer, consumer) and inside each of those folders you should see some useful files:</p>
+<ul>
+<li><strong>logs/cmd.out</strong> shows the standard output of the image zip command along with the environment variables passed into the process</li>
+<li><strong>logs/out.out</strong> standard output of the pod</li>
+<li><strong>logs/err.log</strong> standard error of the pod</li>
+</ul>
 
                     
                     </section>
@@ -284,8 +326,10 @@
         </div>
 
         
+        <a href="./getStarted.html" class="navigation navigation-prev " aria-label="Previous page: Getting Started"><i class="fa fa-angle-left"></i></a>
         
-        <a href="./goals.html" class="navigation navigation-next navigation-unique" aria-label="Next page: Goals"><i class="fa fa-angle-right"></i></a>
+        
+        <a href="./mavenPlugin.html" class="navigation navigation-next " aria-label="Next page: Maven Plugin"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>

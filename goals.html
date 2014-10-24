@@ -5,7 +5,7 @@
         
         
         <meta charset="UTF-8">
-        <title>Introduction | Jube Documentation</title>
+        <title>Goals | Jube Documentation</title>
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="robots" content="index, follow">
@@ -15,11 +15,13 @@
         <meta name="generator" content="www.gitbook.io">
 
         
-        <link rel="next" href="./goals.html" />
+        <link rel="next" href="./getStarted.html" />
         
+        
+        <link rel="prev" href="./index.html" />
         
 
-        <meta property="og:title" content="Introduction | Jube Documentation">
+        <meta property="og:title" content="Goals | Jube Documentation">
         <meta property="og:site_name" content="Jube Documentation">
         <meta property="og:type" content="book">
         <meta property="og:locale" content="en_US">
@@ -48,7 +50,7 @@
 
 
         
-    <div class="book" data-github="jubeio/jube" data-level="0" data-basepath="." data-revision="1414173126510">
+    <div class="book" data-github="jubeio/jube" data-level="1" data-basepath="." data-revision="1414173126510">
     <div class="book-header">
     <!-- Actions Left -->
     <a href="#" class="btn pull-left toggle-summary" aria-label="Toggle summary"><i class="fa fa-align-justify"></i></a>
@@ -245,13 +247,13 @@
             <div class="page-wrapper" tabindex="-1">
                 <div class="book-progress">
     <div class="bar">
-        <div class="inner" style="width: 0%;min-width: 0%;"></div>
+        <div class="inner" style="width: 12.5%;min-width: 0%;"></div>
     </div>
     <div class="chapters">
     
         <a href="./index.html" title="Introduction" class="chapter done new-chapter" data-progress="0" style="left: 0%;"></a>
     
-        <a href="./goals.html" title="Goals" class="chapter  new-chapter" data-progress="1" style="left: 12.5%;"></a>
+        <a href="./goals.html" title="Goals" class="chapter done new-chapter" data-progress="1" style="left: 12.5%;"></a>
     
         <a href="./getStarted.html" title="Getting Started" class="chapter  new-chapter" data-progress="2" style="left: 25%;"></a>
     
@@ -272,9 +274,17 @@
 
                 <div class="page-inner">
                 
-                    <section class="normal" id="section-gitbook_5">
+                    <section class="normal" id="section-gitbook_7">
                     
-                        <p>Jube the pure Java implementation of Kubernetes</p>
+                        <h2 id="goals"><a name="goals" class="anchor" href="#goals"><span class="fa fa-link"></span></a>Goals</h2>
+<p>The goals of Jube are to try increase the adoption of Kubernetes concepts in managing containers (pods, replication controllers, services); whether folks are using modern linux or have Go Lang or Docker support or not.</p>
+<p>The idea is that if you are running on a platform that is not yet supported by Kubernetes / Docker / Go Lang; you can still work in a kubernetes-like way using Jube&apos;s pure Java implementation of the Kubernetes model and REST API.</p>
+<p>If you are using Linux we highly recommend you use <a href="http://kubernetes.io/" target="_blank">Kubernetes</a> and <a href="http://docker.com" target="_blank">Docker</a>! However if you must run Java middleware on non-Linux platforms then Jube can help provide a kubernetes-like experience on platforms where <a href="https://golang.org/" target="_blank">golang</a>, <a href="http://kubernetes.io/" target="_blank">Kubernetes</a> or <a href="http://docker.com" target="_blank">Docker</a> are not supported,</p>
+<h3 id="aims"><a name="aims" class="anchor" href="#aims"><span class="fa fa-link"></span></a>Aims</h3>
+<ul>
+<li>To reuse your <a href="http://fabric8.io/v2/apps.html" target="_blank">Kuberentes Apps</a> and <a href="http://fabric8.io/v2/appzip.html" target="_blank">App Zips</a> on platforms not supported by Kubernetes/Docker</li>
+<li>To allow you to any Kubernetes based tools which use the Kubernetes REST API (for provisioning or monitoring) when using pure Java.</li>
+</ul>
 
                     
                     </section>
@@ -284,8 +294,10 @@
         </div>
 
         
+        <a href="./index.html" class="navigation navigation-prev " aria-label="Previous page: Introduction"><i class="fa fa-angle-left"></i></a>
         
-        <a href="./goals.html" class="navigation navigation-next navigation-unique" aria-label="Next page: Goals"><i class="fa fa-angle-right"></i></a>
+        
+        <a href="./getStarted.html" class="navigation navigation-next " aria-label="Next page: Getting Started"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>

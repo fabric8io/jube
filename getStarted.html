@@ -5,7 +5,7 @@
         
         
         <meta charset="UTF-8">
-        <title>Introduction | Jube Documentation</title>
+        <title>Getting Started | Jube Documentation</title>
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="robots" content="index, follow">
@@ -15,11 +15,13 @@
         <meta name="generator" content="www.gitbook.io">
 
         
-        <link rel="next" href="./goals.html" />
+        <link rel="next" href="./example.html" />
         
+        
+        <link rel="prev" href="./goals.html" />
         
 
-        <meta property="og:title" content="Introduction | Jube Documentation">
+        <meta property="og:title" content="Getting Started | Jube Documentation">
         <meta property="og:site_name" content="Jube Documentation">
         <meta property="og:type" content="book">
         <meta property="og:locale" content="en_US">
@@ -48,7 +50,7 @@
 
 
         
-    <div class="book" data-github="jubeio/jube" data-level="0" data-basepath="." data-revision="1414173126510">
+    <div class="book" data-github="jubeio/jube" data-level="2" data-basepath="." data-revision="1414173126510">
     <div class="book-header">
     <!-- Actions Left -->
     <a href="#" class="btn pull-left toggle-summary" aria-label="Toggle summary"><i class="fa fa-align-justify"></i></a>
@@ -245,15 +247,15 @@
             <div class="page-wrapper" tabindex="-1">
                 <div class="book-progress">
     <div class="bar">
-        <div class="inner" style="width: 0%;min-width: 0%;"></div>
+        <div class="inner" style="width: 25%;min-width: 12.5%;"></div>
     </div>
     <div class="chapters">
     
         <a href="./index.html" title="Introduction" class="chapter done new-chapter" data-progress="0" style="left: 0%;"></a>
     
-        <a href="./goals.html" title="Goals" class="chapter  new-chapter" data-progress="1" style="left: 12.5%;"></a>
+        <a href="./goals.html" title="Goals" class="chapter done new-chapter" data-progress="1" style="left: 12.5%;"></a>
     
-        <a href="./getStarted.html" title="Getting Started" class="chapter  new-chapter" data-progress="2" style="left: 25%;"></a>
+        <a href="./getStarted.html" title="Getting Started" class="chapter done new-chapter" data-progress="2" style="left: 25%;"></a>
     
         <a href="./example.html" title="Example" class="chapter  " data-progress="2.1" style="left: 37.5%;"></a>
     
@@ -272,10 +274,26 @@
 
                 <div class="page-inner">
                 
-                    <section class="normal" id="section-gitbook_5">
+                    <section class="normal" id="section-gitbook_6">
                     
-                        <p>Jube the pure Java implementation of Kubernetes</p>
-
+                        <h2 id="get-started"><a name="get-started" class="anchor" href="#get-started"><span class="fa fa-link"></span></a>Get Started</h2>
+<p>To run jube:</p>
+<pre><code>git clone https://github.com/jubeio/jube.git
+cd jube
+mvn install
+cd app
+mvn install
+cd target/jube
+./start.sh
+</code></pre><p>Then you can test its running by viewing the kubernetes REST API at: <a href="http://localhost:8585/api/v1beta1/pods" target="_blank">http://localhost:8585/api/v1beta1/pods</a></p>
+<p>You can then type:</p>
+<pre><code>export KUBERNETES_MASTER=http://localhost:8585/
+</code></pre><p>and run the fabric8 JBoss Forge plugins for kubernetes or use the hawtio for kubernetes.</p>
+<h3 id="developing-jube"><a name="developing-jube" class="anchor" href="#developing-jube"><span class="fa fa-link"></span></a>Developing Jube</h3>
+<p>To run jube a little faster in a single command (without the embedded hawtio console) you can run</p>
+<pre><code>cd app
+mvn clean test-compile exec:java
+</code></pre>
                     
                     </section>
                 
@@ -284,8 +302,10 @@
         </div>
 
         
+        <a href="./goals.html" class="navigation navigation-prev " aria-label="Previous page: Goals"><i class="fa fa-angle-left"></i></a>
         
-        <a href="./goals.html" class="navigation navigation-next navigation-unique" aria-label="Next page: Goals"><i class="fa fa-angle-right"></i></a>
+        
+        <a href="./example.html" class="navigation navigation-next " aria-label="Next page: Example"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>

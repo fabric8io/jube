@@ -5,7 +5,7 @@
         
         
         <meta charset="UTF-8">
-        <title>Introduction | Jube Documentation</title>
+        <title>Image Zips | Jube Documentation</title>
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="robots" content="index, follow">
@@ -15,11 +15,13 @@
         <meta name="generator" content="www.gitbook.io">
 
         
-        <link rel="next" href="./goals.html" />
+        <link rel="next" href="./differences.html" />
         
+        
+        <link rel="prev" href="./mavenPlugin.html" />
         
 
-        <meta property="og:title" content="Introduction | Jube Documentation">
+        <meta property="og:title" content="Image Zips | Jube Documentation">
         <meta property="og:site_name" content="Jube Documentation">
         <meta property="og:type" content="book">
         <meta property="og:locale" content="en_US">
@@ -48,7 +50,7 @@
 
 
         
-    <div class="book" data-github="jubeio/jube" data-level="0" data-basepath="." data-revision="1414173126510">
+    <div class="book" data-github="jubeio/jube" data-level="3" data-basepath="." data-revision="1414173126510">
     <div class="book-header">
     <!-- Actions Left -->
     <a href="#" class="btn pull-left toggle-summary" aria-label="Toggle summary"><i class="fa fa-align-justify"></i></a>
@@ -245,21 +247,21 @@
             <div class="page-wrapper" tabindex="-1">
                 <div class="book-progress">
     <div class="bar">
-        <div class="inner" style="width: 0%;min-width: 0%;"></div>
+        <div class="inner" style="width: 62.5%;min-width: 50%;"></div>
     </div>
     <div class="chapters">
     
         <a href="./index.html" title="Introduction" class="chapter done new-chapter" data-progress="0" style="left: 0%;"></a>
     
-        <a href="./goals.html" title="Goals" class="chapter  new-chapter" data-progress="1" style="left: 12.5%;"></a>
+        <a href="./goals.html" title="Goals" class="chapter done new-chapter" data-progress="1" style="left: 12.5%;"></a>
     
-        <a href="./getStarted.html" title="Getting Started" class="chapter  new-chapter" data-progress="2" style="left: 25%;"></a>
+        <a href="./getStarted.html" title="Getting Started" class="chapter done new-chapter" data-progress="2" style="left: 25%;"></a>
     
-        <a href="./example.html" title="Example" class="chapter  " data-progress="2.1" style="left: 37.5%;"></a>
+        <a href="./example.html" title="Example" class="chapter done " data-progress="2.1" style="left: 37.5%;"></a>
     
-        <a href="./mavenPlugin.html" title="Maven Plugin" class="chapter  " data-progress="2.2" style="left: 50%;"></a>
+        <a href="./mavenPlugin.html" title="Maven Plugin" class="chapter done " data-progress="2.2" style="left: 50%;"></a>
     
-        <a href="./imageZips.html" title="Image Zips" class="chapter  new-chapter" data-progress="3" style="left: 62.5%;"></a>
+        <a href="./imageZips.html" title="Image Zips" class="chapter done new-chapter" data-progress="3" style="left: 62.5%;"></a>
     
         <a href="./differences.html" title="Differences" class="chapter  new-chapter" data-progress="4" style="left: 75%;"></a>
     
@@ -272,9 +274,38 @@
 
                 <div class="page-inner">
                 
-                    <section class="normal" id="section-gitbook_5">
+                    <section class="normal" id="section-gitbook_8">
                     
-                        <p>Jube the pure Java implementation of Kubernetes</p>
+                        <h2 id="image-zips"><a name="image-zips" class="anchor" href="#image-zips"><span class="fa fa-link"></span></a>Image Zips</h2>
+<p><em>Image Zips</em> are a Jube packaging format which is used to emulate Docker when running on an operating system which doesn&apos;t support Docker. They are literally just zip files with some binaries, artifacts and shell scripts inside using a standard layout.</p>
+<p><strong>NOTE</strong> that Image Zips are a very poor substitute for Docker and linux based lightweight containers. As they don&apos;t support process isolation, CPU/disk/IO limits, SE Linux and cannot support including snapshots of a linux operating system and working well with package managers etc.</p>
+<h3 id="basic-idea"><a name="basic-idea" class="anchor" href="#basic-idea"><span class="fa fa-link"></span></a>Basic Idea</h3>
+<p>So any <a href="http://fabric8.io/v2/apps.html" target="_blank">Kuberentes Apps</a> uses Kubernetes JSON to refer to Pods, Replication Controllers and Services which reference Docker image names.</p>
+<p>Jube then maps those docker image names to be Maven coordinates of Image Zips.</p>
+<p>e.g. the docker container name <strong>fabric8/java:version</strong> is mapped to be</p>
+<ul>
+<li>group ID <strong>org.jboss.jube.images.fabric8</strong> (i.e. adding the <em>org.jboss.jube.images.</em> prefix to the docker user name)</li>
+<li>artifact Id: <strong>java</strong></li>
+<li>version is the version specified or defaults to the latest one</li>
+<li>classifier: <strong>image</strong></li>
+<li>type: <strong>zip</strong></li>
+</ul>
+<p>Jube can then download the image zip via Aether from maven repositories and cache it locally.</p>
+<p>Note that currently Jube does not support <em>layers</em> like docker does; a docker image is mapped to a single image zip.</p>
+<h3 id="zip-file-format"><a name="zip-file-format" class="anchor" href="#zip-file-format"><span class="fa fa-link"></span></a>Zip File Format</h3>
+<p>The Zip can contain whatever files are required to run a container; the idea is all the files for an Image Zip should be inside the Zip.</p>
+<p>There are some required files in the root directory:</p>
+<ul>
+<li>start.(sh|bat) starts the process in the background and returns</li>
+<li>stop.(sh|bat) stops the process</li>
+<li>kill.(sh|bat) forces the process to stop</li>
+<li>restart.(sh|bat) restarts a dead process</li>
+<li>status.(sh|bat) returns the running status</li>
+<li>env.sh contains any environment variables defined inside the image; its also where any additional container environment variables from Kubernetes are appended when an App is installed</li>
+<li>process.pid is where the start script should write the process PID</li>
+</ul>
+<h3 id="image-zips-are-usable"><a name="image-zips-are-usable" class="anchor" href="#image-zips-are-usable"><span class="fa fa-link"></span></a>Image Zips are usable</h3>
+<p>You can take any image zip created by any Jube-enabled project and use it from the command line. From an unzipped image, just run start.(sh|bat)</p>
 
                     
                     </section>
@@ -284,8 +315,10 @@
         </div>
 
         
+        <a href="./mavenPlugin.html" class="navigation navigation-prev " aria-label="Previous page: Maven Plugin"><i class="fa fa-angle-left"></i></a>
         
-        <a href="./goals.html" class="navigation navigation-next navigation-unique" aria-label="Next page: Goals"><i class="fa fa-angle-right"></i></a>
+        
+        <a href="./differences.html" class="navigation navigation-next " aria-label="Next page: Differences"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>

@@ -5,7 +5,7 @@
         
         
         <meta charset="UTF-8">
-        <title>Introduction | Jube Documentation</title>
+        <title>Maven Plugin | Jube Documentation</title>
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="robots" content="index, follow">
@@ -15,11 +15,13 @@
         <meta name="generator" content="www.gitbook.io">
 
         
-        <link rel="next" href="./goals.html" />
+        <link rel="next" href="./imageZips.html" />
         
+        
+        <link rel="prev" href="./example.html" />
         
 
-        <meta property="og:title" content="Introduction | Jube Documentation">
+        <meta property="og:title" content="Maven Plugin | Jube Documentation">
         <meta property="og:site_name" content="Jube Documentation">
         <meta property="og:type" content="book">
         <meta property="og:locale" content="en_US">
@@ -48,7 +50,7 @@
 
 
         
-    <div class="book" data-github="jubeio/jube" data-level="0" data-basepath="." data-revision="1414173126510">
+    <div class="book" data-github="jubeio/jube" data-level="2.2" data-basepath="." data-revision="1414173126510">
     <div class="book-header">
     <!-- Actions Left -->
     <a href="#" class="btn pull-left toggle-summary" aria-label="Toggle summary"><i class="fa fa-align-justify"></i></a>
@@ -245,19 +247,19 @@
             <div class="page-wrapper" tabindex="-1">
                 <div class="book-progress">
     <div class="bar">
-        <div class="inner" style="width: 0%;min-width: 0%;"></div>
+        <div class="inner" style="width: 50%;min-width: 37.5%;"></div>
     </div>
     <div class="chapters">
     
         <a href="./index.html" title="Introduction" class="chapter done new-chapter" data-progress="0" style="left: 0%;"></a>
     
-        <a href="./goals.html" title="Goals" class="chapter  new-chapter" data-progress="1" style="left: 12.5%;"></a>
+        <a href="./goals.html" title="Goals" class="chapter done new-chapter" data-progress="1" style="left: 12.5%;"></a>
     
-        <a href="./getStarted.html" title="Getting Started" class="chapter  new-chapter" data-progress="2" style="left: 25%;"></a>
+        <a href="./getStarted.html" title="Getting Started" class="chapter done new-chapter" data-progress="2" style="left: 25%;"></a>
     
-        <a href="./example.html" title="Example" class="chapter  " data-progress="2.1" style="left: 37.5%;"></a>
+        <a href="./example.html" title="Example" class="chapter done " data-progress="2.1" style="left: 37.5%;"></a>
     
-        <a href="./mavenPlugin.html" title="Maven Plugin" class="chapter  " data-progress="2.2" style="left: 50%;"></a>
+        <a href="./mavenPlugin.html" title="Maven Plugin" class="chapter done " data-progress="2.2" style="left: 50%;"></a>
     
         <a href="./imageZips.html" title="Image Zips" class="chapter  new-chapter" data-progress="3" style="left: 62.5%;"></a>
     
@@ -272,9 +274,46 @@
 
                 <div class="page-inner">
                 
-                    <section class="normal" id="section-gitbook_5">
+                    <section class="normal" id="section-gitbook_9">
                     
-                        <p>Jube the pure Java implementation of Kubernetes</p>
+                        <h2 id="jube-maven-plugin"><a name="jube-maven-plugin" class="anchor" href="#jube-maven-plugin"><span class="fa fa-link"></span></a>Jube Maven Plugin</h2>
+<p>This maven plugin makes it easy to create <a href="imageZips.html">Image Zips</a> as part of your maven project. </p>
+<p>Jube tries to <a href="goals.html">reuse as much of the metadata</a> for building docker images as possible to have minimal impact on your pom.xml files.</p>
+<h3 id="adding-the-plugin-to-your-project"><a name="adding-the-plugin-to-your-project" class="anchor" href="#adding-the-plugin-to-your-project"><span class="fa fa-link"></span></a>Adding the plugin to your project</h3>
+<p>To enable this maven plugin and to automatically generate an <a href="imageZips.html">Image Zip</a> as part of your build</p>
+<pre><code>  &lt;plugin&gt;
+    &lt;groupId&gt;org.jboss.jube&lt;/groupId&gt;
+    &lt;artifactId&gt;jube-maven-plugin&lt;/artifactId&gt;
+    &lt;version&gt;${jube.version}&lt;/version&gt;
+    &lt;executions&gt;
+      &lt;execution&gt;
+        &lt;goals&gt;
+          &lt;goal&gt;build&lt;/goal&gt;
+        &lt;/goals&gt;
+        &lt;phase&gt;package&lt;/phase&gt;
+      &lt;/execution&gt;
+    &lt;/executions&gt;
+  &lt;/plugin&gt;
+</code></pre><h3 id="building-your-image-zip"><a name="building-your-image-zip" class="anchor" href="#building-your-image-zip"><span class="fa fa-link"></span></a>Building your image zip</h3>
+<p>To generate an <a href="imageZips.html">Image Zip</a> just type:</p>
+<pre><code>mvn install jube:build
+</code></pre><p>The image zip will be installed into the local maven repository.</p>
+<h4 id="properties-for-configuring-the-generation"><a name="properties-for-configuring-the-generation" class="anchor" href="#properties-for-configuring-the-generation"><span class="fa fa-link"></span></a>Properties for configuring the generation</h4>
+<p>You can use maven properties to customize the generation of the JSON:</p>
+<table class="table table-striped">
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+<tr>
+<td>docker.baseImage</td>
+<td>The name of the base docker image used to generate the new image zip.</td>
+</tr>
+<tr>
+<td>docker.dataImage</td>
+<td>The name of the image to generate.</td>
+</tr>
+</table>
 
                     
                     </section>
@@ -284,8 +323,10 @@
         </div>
 
         
+        <a href="./example.html" class="navigation navigation-prev " aria-label="Previous page: Example"><i class="fa fa-angle-left"></i></a>
         
-        <a href="./goals.html" class="navigation navigation-next navigation-unique" aria-label="Next page: Goals"><i class="fa fa-angle-right"></i></a>
+        
+        <a href="./imageZips.html" class="navigation navigation-next " aria-label="Next page: Image Zips"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>
