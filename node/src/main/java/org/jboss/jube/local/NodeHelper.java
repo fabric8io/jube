@@ -179,6 +179,7 @@ public class NodeHelper {
 
         System.out.println("Creating new container " + containerName + " from: " + mavenUrl);
         Map<String,String> envVarMap = createEnvironmentVariableMap(container.getEnv());
+        System.out.println("Env variables are: " + envVarMap);
         InstallOptions.InstallOptionsBuilder builder = new InstallOptions.InstallOptionsBuilder().
                 url(mavenUrl).environment(envVarMap);
         if (Strings.isNotBlank(containerName)) {

@@ -58,9 +58,11 @@ public class ServiceProxy implements EntityListener<PodSchema> {
         server = vertx.createNetServer().connectHandler(handler);
         if (host != null) {
             LOG.info("Listening on port " + port + " and host " + host + " for service: " + service);
+            System.out.println("Listening on port " + port + " and host " + host + " for service: " + service);
             server = server.listen(port, host);
         } else {
             LOG.info("Listening on port " + port + " for service: " + service);
+            System.out.println("Listening on port " + port + " for service: " + service);
             server = server.listen(port);
         }
 

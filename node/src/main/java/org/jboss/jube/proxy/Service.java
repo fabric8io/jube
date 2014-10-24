@@ -21,8 +21,8 @@ import io.fabric8.common.util.Filter;
 import io.fabric8.common.util.Objects;
 import io.fabric8.gateway.loadbalancer.LoadBalancer;
 import io.fabric8.gateway.loadbalancer.RandomLoadBalancer;
+import io.fabric8.kubernetes.api.IntOrString;
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.PodSchema;
 import io.fabric8.kubernetes.api.model.ServiceSchema;
 import io.hawt.util.Strings;
@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -60,20 +59,7 @@ public class Service implements EntityListener<PodSchema> {
         if (this.port <= 0) {
             throw new IllegalArgumentException("Invalid port number " + this.port + " for service " + id);
         }
-        IntOrString containerPort = service.getContainerPort();
-        Objects.notNull(containerPort, "containerPort for service " + id);
-        String containerPortText = containerPort.toString();
-        if (Strings.isBlank(containerPortText)) {
-            throw new IllegalArgumentException("No containerPort for service " + id);
-        }
-        try {
-            this.containerPort = Integer.parseInt(containerPortText);
-        } catch (NumberFormatException e) {
-            throw new IllegalStateException("Invalid containerPort expression " + containerPortText + " for service " + id + ". " + e, e);
-        }
-        if (this.containerPort <= 0) {
-            throw new IllegalArgumentException("Invalid containerPort number " + this.containerPort + " for service " + id);
-        }
+        this.containerPort = KubernetesHelper.getContainerPort(service);
         this.selector = service.getSelector();
         Objects.notNull(this.selector, "No selector for service " + id);
         if (selector.isEmpty()) {
@@ -83,6 +69,15 @@ public class Service implements EntityListener<PodSchema> {
 
         // TODO should we use some service metadata to choose the load balancer?
         this.loadBalancer = new RandomLoadBalancer();
+    }
+
+    @Override
+    public String toString() {
+        return "Service{" +
+                "id='" + id + '\'' +
+                ", selector=" + selector +
+                ", containerServices=" + containerServices.values() +
+                '}';
     }
 
     public List<ContainerService> getContainerServices() {

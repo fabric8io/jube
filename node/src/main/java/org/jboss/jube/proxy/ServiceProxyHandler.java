@@ -55,6 +55,7 @@ public class ServiceProxyHandler implements Handler<NetSocket> {
             ContainerService containerService = loadBalancer.choose(services, requestFacade);
             if (containerService != null) {
                 URI uri = containerService.getURI();
+                System.out.println("Binding the inbound socket requeset to container service: " + containerService);
                 try {
                     Handler<AsyncResult<NetSocket>> handler = new Handler<AsyncResult<NetSocket>>() {
                         public void handle(final AsyncResult<NetSocket> asyncSocket) {

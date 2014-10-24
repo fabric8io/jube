@@ -52,6 +52,14 @@ public class ContainerService {
         }
     }
 
+    @Override
+    public String toString() {
+        return "ContainerService{" +
+                "pod=" + pod.getId() +
+                ", uri=" + uri +
+                '}';
+    }
+
     public URI getURI() {
         return uri;
     }

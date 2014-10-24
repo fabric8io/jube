@@ -21,12 +21,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import io.fabric8.common.util.Closeables;
+import io.fabric8.common.util.Objects;
 import io.fabric8.groups.Group;
 import io.fabric8.groups.GroupListener;
 import io.fabric8.groups.internal.ZooKeeperGroup;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ControllerCurrentState;
 import io.fabric8.kubernetes.api.model.ControllerDesiredState;
+import io.fabric8.kubernetes.api.model.CurrentState;
 import io.fabric8.kubernetes.api.model.ManifestContainer;
 import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
 import io.fabric8.kubernetes.api.model.PodSchema;
@@ -209,6 +211,8 @@ public class Replicator {
 
 
     protected ImmutableList<PodSchema> createMissingContainers(ReplicationControllerSchema replicationController, PodTemplateDesiredState podTemplateDesiredState, ControllerDesiredState desiredState, int createCount, ImmutableList<PodSchema> pods) throws Exception {
+        // TODO this is a hack ;) needs replacing with the real host we're creating on
+        String host = "localhost";
         List<PodSchema> list = Lists.newArrayList(pods);
         for (int i = 0; i < createCount; i++) {
             PodSchema pod = new PodSchema();
@@ -220,7 +224,12 @@ public class Replicator {
             List<ManifestContainer> containers = KubernetesHelper.getContainers(podTemplateDesiredState);
             for (ManifestContainer container : containers) {
                 String containerName = pod.getId() + "-" + container.getName();
+
                 PodCurrentContainerInfo containerInfo = NodeHelper.getOrCreateContainerInfo(pod, containerName);
+                CurrentState currentState = pod.getCurrentState();
+                Objects.notNull(currentState, "currentState");
+                currentState.setHost(host);
+
                 String image = container.getImage();
                 if (Strings.isBlank(image)) {
                     LOG.warn("Missing image for " + containerName + " so cannot create it!");

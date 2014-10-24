@@ -22,7 +22,7 @@ To enable this maven plugin and to automatically generate an [Image Zip](imageZi
         </executions>
       </plugin>
 
-### Building your docker image
+### Building your image zip
 
 To generate an [Image Zip](imageZips.html) just type:
 
