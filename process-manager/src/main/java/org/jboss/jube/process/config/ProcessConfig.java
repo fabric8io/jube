@@ -66,7 +66,7 @@ public class ProcessConfig implements Serializable {
         if (isWindows()) {
             return commandName + ".bat";
         }
-        return "bash -c " + commandName + ".sh";
+        return "bash -c ./" + commandName + ".sh";
     }
 
     private static boolean isWindows() {

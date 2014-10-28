@@ -226,8 +226,11 @@ public class Command {
 
         @Override
         public Integer call() throws CommandFailedException, InterruptedException {
-            ProcessBuilder processBuilder = new ProcessBuilder(command.getCommand());
-            processBuilder.directory(command.getDirectory());
+            List<String> arguments = command.getCommand();
+            ProcessBuilder processBuilder = new ProcessBuilder(arguments);
+            File commandDirectory = command.getDirectory();
+            processBuilder.directory(commandDirectory);
+            System.out.println("Running command " + arguments + " in directory: " + commandDirectory);
             processBuilder.redirectErrorStream(true);
             Map<String, String> processenv = processBuilder.environment();
             Set<Map.Entry<String, String>> entries = command.getEnvironment().entrySet();
