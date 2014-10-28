@@ -18,7 +18,7 @@
 # Discover the APP_BASE from the location of this script.
 #
 if [ -z "$APP_BASE" ] ; then
-  APP_BASE=`dirname "$PRG"`
+  APP_BASE=`dirname "$0"`
   export APP_BASE
 fi
 
