@@ -62,6 +62,7 @@ public class ProcessManagerServiceTest {
     @After
     public void destroy() throws Exception {
     }
+
     @Test
     public void shouldGenerateJvmConfig() throws Exception {
         Installation installation = processManagerService.install(installOptions, postInstall);
