@@ -18,9 +18,11 @@
 # Discover the APP_BASE from the location of this script.
 #
 if [ -z "$APP_BASE" ] ; then
-  APP_BASE=`dirname "$0"`
+  DIRNAME=`dirname "$0"`
+  APP_BASE=`cd "$DIRNAME"; pwd`
   export APP_BASE
 fi
 
+echo "Running launcher in folder: $APP_BASE"
 $APP_BASE/bin/launcher start
 
