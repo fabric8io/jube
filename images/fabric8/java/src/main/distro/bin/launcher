@@ -16,24 +16,6 @@
 
 ### Helper functions
 
-jvmArgs() {
-  if [ "x${JVM_ARGS}" = "x" ]; then
-    cat ${PROCESS_ROOT_DIR}/etc/jvm.config
-  else
-    echo "$JVM_ARGS"
-  fi
-}
-
-### Helper functions ends
-
-APP_USER=""
-SERVICE="process"
-
-SERVICE_NAME="$RUNTIME_ID"
-if [ -f "${SERVICE_NAME}" ] ; then
-  SERVICE_NAME="$SERVICE"
-fi
-
 #
 # Discover the PROCESS_ROOT_DIR from the location of this script.
 #
@@ -44,6 +26,15 @@ if [ -z "$PROCESS_ROOT_DIR" ] ; then
 fi
 
 echo "PROCESS_ROOT_DIR is ${PROCESS_ROOT_DIR}"
+
+APP_USER=""
+SERVICE="process"
+
+SERVICE_NAME="$RUNTIME_ID"
+if [ -f "${SERVICE_NAME}" ] ; then
+  SERVICE_NAME="$SERVICE"
+fi
+
 source ${PROCESS_ROOT_DIR}/env.sh
 
 PID_FILE="${PROCESS_ROOT_DIR}/process.pid"
