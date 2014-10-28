@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -234,6 +235,7 @@ public class ProcessConfig implements Serializable {
         if (arguments == null || arguments.length == 0) {
             return 0;
         }
+        System.out.println("--- running command " + Arrays.asList(arguments) + " in directory " + baseDir.getAbsolutePath());
         Command command = new Command(arguments).setDirectory(baseDir);
         Map<String,String> environment = getEnvironment();
         if (environment != null && environment.size() > 0) {
