@@ -18,26 +18,25 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.jboss.jube</groupId>
+    <parent>
+        <groupId>org.jboss.jube.images</groupId>
+        <artifactId>parent-project</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+    </parent>
+
+    <groupId>org.jboss.jube.images.wildfly</groupId>
     <artifactId>parent-project</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
-  </parent>
+    <packaging>pom</packaging>
 
-  <groupId>org.jboss.jube.images</groupId>
-  <artifactId>parent-project</artifactId>
-  <packaging>pom</packaging>
+    <name>Jube :: Images :: WildFly</name>
 
-  <name>Jube :: Images</name>
+    <properties>
+        <wildfly.version>8.1.0.Final</wildfly.version>
+    </properties>
 
-  <properties>
-  </properties>
-
-  <modules>
-    <module>fabric8</module>
-    <module>examples</module>
-    <module>wildfly</module>
-  </modules>
+    <modules>
+        <module>default</module>
+    </modules>
 </project>
