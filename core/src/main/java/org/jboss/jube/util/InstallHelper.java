@@ -17,20 +17,29 @@
  */
 package org.jboss.jube.util;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+
 import io.fabric8.common.util.Closeables;
 import io.fabric8.common.util.Files;
 import io.fabric8.common.util.Objects;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.Map;
-import java.util.Set;
-
 /**
  */
 public class InstallHelper {
+    private static final Logger log = Logger.getLogger(InstallHelper.class.getName());
+
+    private static final Matcher DEFAULT_MATCHER = new DefaultMatcher();
+
     /**
      * chmods the various scripts in the installation
      */
@@ -39,24 +48,42 @@ public class InstallHelper {
             System.out.println("WARN: installDir is null!");
             return;
         }
-        chmodScripts(installDir);
+        chmodScripts(installDir, DEFAULT_MATCHER);
+
         File binDir = new File(installDir, "bin");
         if (binDir.exists()) {
-            chmodScripts(binDir);
+            chmodScripts(binDir, DEFAULT_MATCHER);
+        }
+
+        File executables = new File(installDir, "executables.properties");
+        if (executables.exists()) {
+            try {
+                Properties properties = new Properties();
+                try (InputStream stream = new FileInputStream(executables)) {
+                    properties.load(stream);
+                }
+                for (String dir : properties.stringPropertyNames()) {
+                    String property = properties.getProperty(dir);
+                    Matcher matcher = new RegexpMatcher(property);
+                    log.info(String.format("CHMOD %s with pattern %s", dir, property));
+                    chmodScripts(new File(installDir, dir), matcher);
+                }
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
         }
     }
 
     /**
      * Lets make sure all shell scripts are executable
      */
-    protected static void chmodScripts(File dir) {
+    protected static void chmodScripts(File dir, Matcher matcher) {
         if (dir.exists() && dir.isDirectory()) {
             File[] files = dir.listFiles();
             if (files != null) {
                 for (File file : files) {
-                    String name = file.getName();
-                    String extension = Files.getFileExtension(name);
-                    if (Objects.equal(name, "launcher") || Objects.equal(extension, "sh") || Objects.equal(extension, "bat") || Objects.equal(extension, "cmd")) {
+                    if (matcher.match(file)) {
+                        //noinspection ResultOfMethodCallIgnored
                         file.setExecutable(true);
                     }
                 }
@@ -84,4 +111,29 @@ public class InstallHelper {
             Closeables.closeQuietly(writer);
         }
     }
+
+    private static interface Matcher {
+        boolean match(File file);
+    }
+
+    private static class DefaultMatcher implements Matcher {
+        public boolean match(File file) {
+            String name = file.getName();
+            String extension = Files.getFileExtension(name);
+            return (Objects.equal(name, "launcher") || Objects.equal(extension, "sh") || Objects.equal(extension, "bat") || Objects.equal(extension, "cmd"));
+        }
+    }
+
+    private static class RegexpMatcher implements Matcher {
+        private final Pattern pattern;
+
+        private RegexpMatcher(String regexp) {
+            pattern = Pattern.compile(regexp);
+        }
+
+        public boolean match(File file) {
+            return pattern.matcher(file.getName()).matches();
+        }
+    }
+
 }
