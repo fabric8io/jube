@@ -25,4 +25,4 @@ fi
 export LAUNCH_JBOSS_IN_BACKGROUND=true
 export JBOSS_PIDFILE=process.pid
 
-$APP_BASE/bin/standalone.sh
+$APP_BASE/wildfly/bin/standalone.sh
