@@ -181,9 +181,47 @@ start() {
   return 0
 }
 
+run() {
+
+  echo "Running ${SERVICE_NAME}"
+  status
+  if [ $? -eq 1 ] ; then
+    echo "Already running."
+    return 1
+  fi
+
+  if [ -z "$MAIN" ]; then
+    RUN_COMMAND="${JVM_EXEC} ${JVM_DEBUG_ARGS} ${JAVA_AGENT} ${JVM_ARGS} ${SYSTEM_PROPERTIES} -classpath ${CLASSPATH} -jar ${MAIN_JAR} ${APP_ARGS}"
+  else
+    RUN_COMMAND="${JVM_EXEC} ${JVM_DEBUG_ARGS} ${JAVA_AGENT} ${JVM_ARGS} ${SYSTEM_PROPERTIES} -classpath ${CLASSPATH} ${MAIN} ${APP_ARGS}"
+  fi
+
+  echo "Running:" > ${APP_CONSOLE_CMD}
+  echo "$RUN_COMMAND" >> ${APP_CONSOLE_CMD}
+  echo >> ${APP_CONSOLE_CMD}
+  echo "Environment variables:" >> ${APP_CONSOLE_CMD}
+  env | sort | grep FABRIC >> ${APP_CONSOLE_CMD}
+
+  echo "Running $RUN_COMMAND"
+
+  # If you have bash, then you can use the 'exec -a newname' syntax to rename the java process.
+  if [ -x "/bin/bash" ] ; then
+    echo exec -a ${SERVICE} $RUN_COMMAND 
+  elif [ -x "/usr/bin/bash" ] ; then
+    echo exec -a ${SERVICE} $RUN_COMMAND
+  else 
+    echo exec $RUN_COMMAND
+  fi
+}
+
 case $1 in
   start)
     start
+    exit $?
+  ;;
+
+  run)
+    run
     exit $?
   ;;
 
