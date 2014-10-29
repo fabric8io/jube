@@ -17,15 +17,15 @@
 ### Helper functions
 
 #
-# Discover the PROCESS_ROOT_DIR from the location of this script.
+# Discover the APP_BASE from the location of this script.
 #
-if [ -z "$PROCESS_ROOT_DIR" ] ; then
+if [ -z "$APP_BASE" ] ; then
   DIRNAME=`dirname "$0"`
-  PROCESS_ROOT_DIR=`cd "$DIRNAME/.."; pwd`
-  export PROCESS_ROOT_DIR
+  APP_BASE=`cd "$DIRNAME/.."; pwd`
+  export APP_BASE
 fi
 
-echo "PROCESS_ROOT_DIR is ${PROCESS_ROOT_DIR}"
+echo "APP_BASE is ${APP_BASE}"
 
 APP_USER=""
 SERVICE="process"
@@ -35,20 +35,20 @@ if [ -f "${SERVICE_NAME}" ] ; then
   SERVICE_NAME="$SERVICE"
 fi
 
-source ${PROCESS_ROOT_DIR}/env.sh
+source ${APP_BASE}/env.sh
 
-PID_FILE="${PROCESS_ROOT_DIR}/process.pid"
+PID_FILE="${APP_BASE}/process.pid"
 
-#PID_FILE="${PROCESS_ROOT_DIR}/var/${SERVICE}.pid"
+#PID_FILE="${APP_BASE}/var/${SERVICE}.pid"
 
 # Redirect process output to log files
-APP_CONSOLE_CMD="${PROCESS_ROOT_DIR}/logs/cmd.log"
-APP_CONSOLE_OUT="${PROCESS_ROOT_DIR}/logs/out.log"
-APP_CONSOLE_ERR="${PROCESS_ROOT_DIR}/logs/err.log"
+APP_CONSOLE_CMD="${APP_BASE}/logs/cmd.log"
+APP_CONSOLE_OUT="${APP_BASE}/logs/out.log"
+APP_CONSOLE_ERR="${APP_BASE}/logs/err.log"
 
 # Add the jars in the maven dir
 CLASSPATH=""
-for file in "$PROCESS_ROOT_DIR"/maven/*.jar
+for file in "$APP_BASE"/maven/*.jar
 do
     if [ -z "$CLASSPATH" ]; then
         CLASSPATH="$file"
@@ -56,7 +56,7 @@ do
         CLASSPATH="$CLASSPATH:$file"
     fi
 done
-for file in "$PROCESS_ROOT_DIR"/maven/*.war
+for file in "$APP_BASE"/maven/*.war
 do
     if [ -z "$CLASSPATH" ]; then
         CLASSPATH="$file"
@@ -64,7 +64,7 @@ do
         CLASSPATH="$CLASSPATH:$file"
     fi
 done
-CLASSPATH="$CLASSPATH:$PROCESS_ROOT_DIR/classes"
+CLASSPATH="$CLASSPATH:$APP_BASE/classes"
 
 JVM_DEBUG_ARGS="$JVM_DEBUG_ARGS"
 if [ -z "$JVM_DEBUG_ARGS" ]; then
@@ -79,7 +79,7 @@ JAVA_AGENT="$JAVA_AGENT"
 #JVM_ARGS=jvmArgs
 JVM_ARGS="$JVM_ARGS"
 APP_ARGS="$MAIN_ARGS"
-MAIN_JAR="$PROCESS_ROOT_DIR/maven/main.jar"
+MAIN_JAR="$APP_BASE/maven/main.jar"
 if [ -z "$MAIN" ] ; then
   MAIN="$MAIN"
 fi
@@ -92,8 +92,8 @@ fi
 
 # Source the /etc/defaults script if it exists so it can modify the 
 # env vars setup so far..
-if [ -f "${PROCESS_ROOT_DIR}/etc/defaults" ] ; then
-  . "${PROCESS_ROOT_DIR}/etc/defaults"
+if [ -f "${APP_BASE}/etc/defaults" ] ; then
+  . "${APP_BASE}/etc/defaults"
 fi
 
 if [ ! -z "$APP_USER" -a ! `id -un` = "$APP_USER" ] ; then

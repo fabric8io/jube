@@ -30,7 +30,7 @@ public class ConfigHelper {
 
     public static ProcessConfig loadProcessConfig(File installDir) throws IOException {
         File file = createControllerConfigFile(installDir);
-        ProcessConfig answer = new ProcessConfig();
+        ProcessConfig answer = new ProcessConfig(installDir);
         if (!file.exists()) {
             LOG.warn("Process configuration file " + file.getPath() + " does not exist");
             return answer;

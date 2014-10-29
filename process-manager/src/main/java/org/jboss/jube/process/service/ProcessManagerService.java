@@ -187,7 +187,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     }
 
     protected void exportInstallDirEnvVar(InstallOptions options, File nestedProcessDirectory) {
-        options.getEnvironment().put("JUBE_INSTALL_DIR", nestedProcessDirectory.getAbsolutePath());
+        options.getEnvironment().put("APP_BASE", nestedProcessDirectory.getAbsolutePath());
         substituteEnvironmentVariableExpressions(options.getEnvironment(), options.getEnvironment());
     }
 

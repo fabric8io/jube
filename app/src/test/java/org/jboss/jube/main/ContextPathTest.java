@@ -27,13 +27,13 @@ public class ContextPathTest {
 
     @Test
     public void testContextPath() throws Exception {
-        assertContextPath("file:/projects/jube/app/target/jube/maven/kubernetes-war-2.0.0-SNAPSHOT.war!/WEB-INF/web.xml", "hawtio");
+        assertContextPath("file:/projects/jube/app/target/jube/maven/hawtio-web-1.4.27.war!/WEB-INF/web.xml", "hawtio");
     }
 
 
     @Test
     public void testFilePath() throws Exception {
-        assertFilePath("file:/projects/jube/app/target/jube/maven/hawtio-default-1.4.27.war!/WEB-INF/web.xml", "/projects/jube/app/target/jube/maven/hawtio-default-1.4.27.war");
+        assertFilePath("file:/projects/jube/app/target/jube/maven/hawtio-web-1.4.27.war!/WEB-INF/web.xml", "/projects/jube/app/target/jube/maven/hawtio-web-1.4.27.war");
         assertFilePath("file:/projects/jube/app/target/jube/maven/kubernetes-war-2.0.0-SNAPSHOT.war!/WEB-INF/web.xml", "/projects/jube/app/target/jube/maven/kubernetes-war-2.0.0-SNAPSHOT.war");
         assertFilePath("file:///projects/jube/app/target/jube/maven/kubernetes-war-2.0.0-SNAPSHOT.war!/WEB-INF/web.xml", "/projects/jube/app/target/jube/maven/kubernetes-war-2.0.0-SNAPSHOT.war");
     }

@@ -15,15 +15,24 @@
  */
 package org.jboss.jube.main;
 
+import io.fabric8.kubernetes.api.KubernetesClient;
+import io.fabric8.kubernetes.api.KubernetesFactory;
+import io.fabric8.kubernetes.api.KubernetesManager;
+import io.fabric8.kubernetes.template.TemplateManager;
+import io.hawt.aether.AetherFacade;
+import io.hawt.git.GitFacade;
+import io.hawt.kubernetes.KubernetesService;
 import org.apache.cxf.cdi.CXFCdiServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.log.Slf4jLog;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.jboss.weld.environment.servlet.BeanManagerResourceBindingListener;
 import org.jboss.weld.environment.servlet.Listener;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -34,6 +43,8 @@ public class Main {
     public static void main(final String[] args) throws Exception {
         try {
             System.setProperty("hawtio.authenticationEnabled", "false");
+            System.setProperty("org.eclipse.jetty.util.log.class", Slf4jLog.class.getName());
+
             String port = System.getenv("HTTP_PORT");
             if (port == null) {
                 port = System.getProperty("http.port");
@@ -45,19 +56,27 @@ public class Main {
 
             System.out.println("Starting REST server on port: " + port);
             final Server server = new Server(portNumber);
+
             HandlerCollection handlers = new HandlerCollection();
             server.setHandler(handlers);
 
-            // lets install the thread context class loader
+            initaliseGitStuff();
+
+
+            // lets find wars on the classpath
             Set<String> foundURLs = new HashSet<>();
             findWarsOnClassPath(server, handlers, Thread.currentThread().getContextClassLoader(), foundURLs, portNumber);
 
             ClassLoader classLoader = Main.class.getClassLoader();
             Thread.currentThread().setContextClassLoader(classLoader);
+
+
             findWarsOnClassPath(server, handlers, classLoader, foundURLs, portNumber);
             if (foundURLs.isEmpty()) {
                 System.out.println("WARNING: did not find any war files on the classpath to embed!");
             }
+            
+            initialiseHawtioStuff();
 
             // Register and map the dispatcher servlet
             final ServletHolder servletHolder = new ServletHolder(new CXFCdiServlet());
@@ -76,24 +95,61 @@ public class Main {
 
             server.start();
             server.join();
-        } catch (Exception e) {
-            Set<Throwable> exceptions = new HashSet<>();
-            exceptions.add(e);
-            System.out.println(e);
-            e.printStackTrace();
+        } catch (Throwable e) {
+            logException(e);
+        }
+    }
 
-            // show all causes
-            Throwable t = e;
-            while (true) {
-                Throwable cause = t.getCause();
-                if (cause != null && exceptions.add(cause)) {
-                    System.out.println();
-                    System.out.println("Caused by: " + cause);
-                    cause.printStackTrace();
-                    t = cause;
-                } else {
-                    break;
-                }
+    protected static void initialiseHawtioStuff() throws Exception {
+        final String kubernetesAddress = "http://localhost:8585/";
+        KubernetesClient kubernetesClient = new KubernetesClient(new KubernetesFactory(kubernetesAddress));
+
+        KubernetesService kubernetesService = new KubernetesService() {
+            @Override
+            public String getKubernetesAddress() {
+                return kubernetesAddress;
+            }
+        };
+        kubernetesService.init();
+
+        AetherFacade aetherFacade = new AetherFacade();
+        aetherFacade.init();
+
+        KubernetesManager kubernetesManager = new KubernetesManager();
+        kubernetesManager.setKubernetes(kubernetesClient);
+        kubernetesManager.init();
+
+        TemplateManager templateManager = new TemplateManager();
+        templateManager.init();
+    }
+
+    private static void initaliseGitStuff() throws Exception {
+        GitFacade gitFacade = new GitFacade();
+        gitFacade.init();
+    }
+
+    protected static void logException(Throwable e) {
+        if (e instanceof InvocationTargetException) {
+            InvocationTargetException invocationTargetException = (InvocationTargetException) e;
+            e = invocationTargetException.getTargetException();
+            System.out.println("=== was InvocationTargetException caught: " + e);
+        }
+        Set<Throwable> exceptions = new HashSet<>();
+        exceptions.add(e);
+        System.out.println("CAUGHT: " + e);
+        e.printStackTrace();
+
+        // show all causes
+        Throwable t = e;
+        while (true) {
+            Throwable cause = t.getCause();
+            if (cause != null && exceptions.add(cause)) {
+                System.out.println();
+                System.out.println("Caused by: " + cause);
+                cause.printStackTrace();
+                t = cause;
+            } else {
+                break;
             }
         }
     }
@@ -123,12 +179,13 @@ public class Main {
                     webapp.setContextPath("/" + contextPath);
                     webapp.setWar("file://" + filePath);
                     handlers.addHandler(webapp);
+                    webapp.setThrowUnavailableOnStartupException(true);
                     try {
                         System.out.println("Starting web app: " + contextPath);
                         webapp.start();
-                    } catch (Exception e) {
-                        System.out.println("Failed: " + e);
-                        e.printStackTrace();
+                        System.out.println("Started web app: " + contextPath + " without any exceptions!");
+                    } catch (Throwable e) {
+                        logException(e);
                     }
                 }
             }
@@ -145,7 +202,7 @@ public class Main {
     public static String createContextPath(String uri) {
         String contextPath = trimUpToLastIndexOf(uri, '!', '.');
         contextPath = trimFromAfterLastIndexOf(contextPath, '/', '\\');
-        if (contextPath.startsWith("kubernetes-war-")) {
+        if (contextPath.startsWith("hawtio-") || contextPath.startsWith("console-")) {
             contextPath = "hawtio";
         }
         return contextPath;

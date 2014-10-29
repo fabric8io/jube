@@ -49,8 +49,18 @@ public class ProcessConfig implements Serializable {
 
     private String deployPath;
     private String sharedLibraryPath;
+    private File installDir;
 
     public ProcessConfig() {
+        init(null);
+    }
+
+    public ProcessConfig(File installDir) {
+        init(installDir);
+    }
+
+    private void init(File installDir) {
+        this.installDir = installDir;
         startCommand = toCommand("start");
         stopCommand = toCommand("stop");
         restartCommand = toCommand("restart");
@@ -62,11 +72,12 @@ public class ProcessConfig implements Serializable {
     /**
      * Converts the command name to the operating system specific commadn that should be used.
      */
-    protected static String toCommand(String commandName) {
+    protected String toCommand(String commandName) {
         if (isWindows()) {
             return commandName + ".bat";
         }
-        return "bash -c ./" + commandName + ".sh";
+        String path = installDir != null ? installDir.getAbsolutePath() : ".";
+        return "bash -c " + path + "/" + commandName + ".sh";
     }
 
     private static boolean isWindows() {

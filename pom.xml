@@ -63,12 +63,14 @@
 
   <properties>
     <fabric8.version>2.0.0-SNAPSHOT</fabric8.version>
-    <hawtio.version>1.4.27</hawtio.version>
+    <hawtio.version>1.4.28</hawtio.version>
+    <jetty9.version>9.1.5.v20140505</jetty9.version>
 
     <!-- maven plugin versions can't be reused via BOM -->
     <cxf.plugin.version>3.0.2</cxf.plugin.version>
     <docker.maven.plugin.version>0.9.10</docker.maven.plugin.version>
     <exec.maven.plugin.version>1.2.1</exec.maven.plugin.version>
+    <jetty-plugin.version>8.1.14.v20131031</jetty-plugin.version>
     <maven.resources.plugin.version>2.6</maven.resources.plugin.version>
     <maven.surefire.plugin.version>2.16</maven.surefire.plugin.version>
   </properties>
@@ -79,6 +81,8 @@
     <module>process-manager</module>
     <module>core</module>
     <module>node</module>
+    <module>war</module>
+    <module>console</module>
     <module>app</module>
   </modules>
 
