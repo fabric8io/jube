@@ -21,43 +21,39 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.List;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.google.common.io.Files;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
-import io.fabric8.utils.Systems;
 import io.fabric8.utils.Zips;
 import io.hawt.aether.OpenMavenURL;
+import io.hawt.util.Closeables;
 import org.jboss.jube.process.DownloadStrategy;
 import org.jboss.jube.process.InstallContext;
 import org.jboss.jube.process.Installation;
 import org.jboss.jube.process.config.ConfigHelper;
 import org.jboss.jube.process.config.ProcessConfig;
-import org.jboss.jube.process.support.command.Command;
 import org.jboss.jube.process.support.command.Duration;
 import org.jboss.jube.process.InstallOptions;
 import org.jboss.jube.process.InstallTask;
 import org.jboss.jube.process.ProcessController;
 import org.jboss.jube.process.support.DefaultProcessController;
-import org.jboss.jube.process.support.FileUtils;
 import org.jboss.jube.util.InstallHelper;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
 import org.apache.deltaspike.core.api.jmx.JmxManaged;
@@ -84,6 +80,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     private SortedMap<String, Installation> installations = Maps.newTreeMap();
 
     private MBeanServer mbeanServer;
+    private AtomicInteger fallbackPortGenerator = new AtomicInteger(30000);
 
     @Inject
     public ProcessManagerService(@ConfigProperty(name = "process_dir", defaultValue = "./processes")  String storageLocation) throws MalformedObjectNameException, IOException {
@@ -171,7 +168,8 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
 
                     InstallHelper.chmodAllScripts(installDir);
                     nestedProcessDirectory = findInstallDir(installDir);
-                    exportInstallDirEnvVar(options, nestedProcessDirectory);
+                    allocatePorts(options, nestedProcessDirectory);
+                    exportInstallDirEnvVar(options, nestedProcessDirectory, installContext, config);
                 }
             }
         };
@@ -186,9 +184,82 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
         return answer;
     }
 
-    protected void exportInstallDirEnvVar(InstallOptions options, File nestedProcessDirectory) {
-        options.getEnvironment().put("APP_BASE", nestedProcessDirectory.getAbsolutePath());
+    protected void allocatePorts(InstallOptions options, File nestedProcessDirectory) throws IOException {
+        Map<String,String> ports = InstallHelper.readPortsFromDirectory(nestedProcessDirectory);
+        Set<Map.Entry<String, String>> entries = ports.entrySet();
+        if (!entries.isEmpty()) {
+            // lets allocate ports and add them as env vars
+            for (Map.Entry<String, String> entry : entries) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+                if (Strings.isNotBlank(key) && Strings.isNotBlank(value)) {
+                    String envVarName = key.toUpperCase() + "_PORT";
+                    int port = allocatePortNumber(options, nestedProcessDirectory, key, value);
+                    if (port <= 0) {
+                        System.out.println("Could not allocate port " + envVarName + " has value: " + port);
+                        LOGGER.warn("Could not allocate port " + envVarName + " has value: " + port);
+                        continue;
+                    }
+                    options.getEnvironment().put(envVarName, "" + port);
+                }
+            }
+            System.out.println("============ ports " + ports + " mapped to env vars: " + options.getEnvironment());
+        }
+    }
+
+    /**
+   	 * When using the {@link java.net.InetAddress#getHostName()} method in an
+   	 * environment where neither a proper DNS lookup nor an <tt>/etc/hosts</tt>
+   	 * entry exists for a given host, the following exception will be thrown:
+   	 * <code>
+   	 * java.net.UnknownHostException: &lt;hostname&gt;: &lt;hostname&gt;
+        *  at java.net.InetAddress.getLocalHost(InetAddress.java:1425)
+        *   ...
+   	 * </code>
+   	 * Instead of just throwing an UnknownHostException and giving up, this
+   	 * method grabs a suitable hostname from the exception and prevents the
+   	 * exception from being thrown. If a suitable hostname cannot be acquired
+   	 * from the exception, only then is the <tt>UnknownHostException</tt> thrown.
+   	 *
+   	 * @return The hostname
+   	 * @throws UnknownHostException
+   	 * @see {@link java.net.InetAddress#getLocalHost()}
+   	 * @see {@link java.net.InetAddress#getHostName()}
+   	 */
+   	public static String getLocalHostName() throws UnknownHostException {
+   		try {
+   			return (InetAddress.getLocalHost()).getHostName();
+   		} catch (UnknownHostException uhe) {
+   			String host = uhe.getMessage(); // host = "hostname: hostname"
+   			if (host != null) {
+   				int colon = host.indexOf(':');
+   				if (colon > 0) {
+   					return host.substring(0, colon);
+   				}
+   			}
+   			throw uhe;
+   		}
+   	}
+
+    protected int allocatePortNumber(InstallOptions options, File nestedProcessDirectory, String key, String value) {
+        ServerSocket ss = null;
+        try {
+            String hostName = getLocalHostName();
+            int idGeneratorPort = 0;
+            ss = new ServerSocket(idGeneratorPort);
+            return ss.getLocalPort();
+        } catch (Exception e) {
+            LOGGER.warn("Failed to allocate port " + key + ". " + e, e);
+            return fallbackPortGenerator.incrementAndGet();
+        } finally {
+            Closeables.closeQuitely(ss);
+        }
+    }
+
+    protected void exportInstallDirEnvVar(InstallOptions options, File installDir, InstallContext installContext, ProcessConfig config) throws IOException {
+        options.getEnvironment().put("APP_BASE", installDir.getAbsolutePath());
         substituteEnvironmentVariableExpressions(options.getEnvironment(), options.getEnvironment());
+        config.getEnvironment().putAll(options.getEnvironment());
     }
 
     @Override
@@ -235,8 +306,6 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
         String id = createNextId(options);
         File installDir = createInstallDir(id);
         installDir.mkdirs();
-        exportInstallDirEnvVar(options, installDir);
-
         ProcessConfig config = loadProcessConfig(installDir, options);
         InstallContext installContext = new InstallContext(installDir, false);
         installTask.install(installContext, config, id, installDir);

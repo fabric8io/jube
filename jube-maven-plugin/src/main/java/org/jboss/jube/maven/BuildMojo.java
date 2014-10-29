@@ -58,7 +58,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static io.fabric8.utils.PropertiesHelper.findPropertiesWithPrefix;
 
@@ -300,7 +299,7 @@ public class BuildMojo extends AbstractMojo {
 
     protected void writeEnvironmentVariables(File buildDir) throws IOException {
         Map<String, String> envMap = getEnvironmentVariables();
-        File envScript = new File(buildDir, "env.sh");
+        File envScript = new File(buildDir, InstallHelper.ENVIRONMENT_VARIABLE_SCRIPT);
         InstallHelper.writeEnvironmentVariables(envScript, envMap);
     }
 
@@ -309,7 +308,7 @@ public class BuildMojo extends AbstractMojo {
         if (portMap.isEmpty()) {
             return;
         }
-        File envScript = new File(buildDir, "ports.properties");
+        File envScript = new File(buildDir, InstallHelper.PORTS_PROPERTIES_FILE);
         InstallHelper.writePorts(envScript, portMap);
     }
 

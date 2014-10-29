@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -37,6 +38,9 @@ import io.fabric8.utils.Objects;
 /**
  */
 public class InstallHelper {
+    public static final String PORTS_PROPERTIES_FILE = "ports.properties";
+    public static final String ENVIRONMENT_VARIABLE_SCRIPT = "env.sh";
+
     private static final Logger log = Logger.getLogger(InstallHelper.class.getName());
 
     private static final Matcher DEFAULT_MATCHER = new DefaultMatcher();
@@ -112,6 +116,34 @@ public class InstallHelper {
             Closeables.closeQuietly(writer);
         }
     }
+
+    /**
+     * Reads the {@link #PORTS_PROPERTIES_FILE} file in the given directory
+     * for the map of port name to default value
+     */
+    public static Map<String, String> readPortsFromDirectory(File directory) throws IOException {
+        File propertiesFile = new File(directory, PORTS_PROPERTIES_FILE);
+        return readPorts(propertiesFile);
+    }
+
+    /**
+     * Reads the properties file returning a map of port name to default port value
+     */
+    public static Map<String,String> readPorts(File propertiesFile) throws IOException {
+        Map<String, String> answer = new Hashtable<>();
+        Properties properties = new Properties();
+        properties.load(new FileInputStream(propertiesFile));
+        Set<Map.Entry<Object, Object>> entries = properties.entrySet();
+        for (Map.Entry<Object, Object> entry : entries) {
+            Object key = entry.getKey();
+            Object value = entry.getValue();
+            if (key != null && value != null) {
+                answer.put(key.toString(), value.toString());
+            }
+        }
+        return answer;
+    }
+
 
     /**
      * Writes the ports to the ports.properties file
