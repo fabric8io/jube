@@ -20,6 +20,7 @@ package org.jboss.jube.proxy;
 import io.fabric8.kubernetes.api.model.CurrentState;
 import io.fabric8.kubernetes.api.model.PodSchema;
 import io.hawt.util.Strings;
+import org.jboss.jube.local.NodeHelper;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -34,7 +35,8 @@ public class ContainerService {
     public ContainerService(Service service, PodSchema pod) throws URISyntaxException {
         this.pod = pod;
 
-        int port = service.getContainerPort();
+        int serviceContainerPort = service.getContainerPort();
+        int port = NodeHelper.findHostPortForService(pod, serviceContainerPort);
 
         // lets get host / port of the container
         String host = null;

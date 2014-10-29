@@ -60,8 +60,13 @@ public class ServiceProxyHandler implements Handler<NetSocket> {
                     Handler<AsyncResult<NetSocket>> handler = new Handler<AsyncResult<NetSocket>>() {
                         public void handle(final AsyncResult<NetSocket> asyncSocket) {
                             NetSocket clientSocket = asyncSocket.result();
-                            Pump.createPump(clientSocket, socket).start();
-                            Pump.createPump(socket, clientSocket).start();
+                            if (clientSocket == null) {
+                                System.out.println("No client socket available for " + service);
+                                socket.close();
+                            } else {
+                                Pump.createPump(clientSocket, socket).start();
+                                Pump.createPump(socket, clientSocket).start();
+                            }
                         }
                     };
                     client = createClient(socket, uri, handler);

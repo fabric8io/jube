@@ -18,6 +18,7 @@
 package org.jboss.jube.local;
 
 import com.google.common.collect.ImmutableSet;
+import io.fabric8.kubernetes.api.model.Port;
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -38,23 +39,29 @@ import io.fabric8.kubernetes.api.model.ServiceSchema;
 import io.fabric8.kubernetes.api.model.State;
 import io.hawt.aether.OpenMavenURL;
 import org.jboss.jube.KubernetesModel;
-import org.jboss.jube.apimaster.ApiMasterService;
 import org.jboss.jube.process.InstallOptions;
 import org.jboss.jube.process.Installation;
 import org.jboss.jube.process.ProcessController;
 import org.jboss.jube.process.ProcessManager;
 import org.jboss.jube.util.ImageMavenCoords;
+import org.jboss.jube.util.InstallHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A set of helper functions for implementing the local node
  */
 public class NodeHelper {
+    private static final transient Logger LOG = LoggerFactory.getLogger(NodeHelper.class);
+
     public static final String KIND_POD = "Pod";
     public static final String KIND_REPLICATION_CONTROLLER = "ReplicationController";
     public static final String KIND_SERVICE = "SERVICE";
@@ -173,6 +180,23 @@ public class NodeHelper {
         return answer;
     }
 
+
+    public static List<Env> createEnvironmentVariables(Map<String, String> environment) {
+        List<Env> answer = new ArrayList<>();
+        Set<Map.Entry<String, String>> entries = environment.entrySet();
+        for (Map.Entry<String, String> entry : entries) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            if (Strings.isNotBlank(key)) {
+                Env env = new Env();
+                env.setName(key);
+                env.setValue(value);
+                answer.add(env);
+            }
+        }
+        return answer;
+    }
+
     protected static void createContainer(ProcessManager processManager, KubernetesModel model, ManifestContainer container, PodSchema pod, CurrentState currentState) throws Exception {
         String containerName = container.getName();
         String image = container.getImage();
@@ -206,7 +230,78 @@ public class NodeHelper {
         Long pid = controller.getPid();
         containerAlive(pod, containerName, pid != null && pid.longValue() > 0);
 
+        Map<String, String> environment = controller.getConfig().getEnvironment();
+        container.setEnv(createEnvironmentVariables(environment));
+        List<Port> installationPorts = createInstallationPorts(environment, installation);
+        if (installationPorts != null) {
+            container.setPorts(installationPorts);
+        }
+
         System.out.println("Started the process!");
+    }
+
+    protected static List<Port> createInstallationPorts(Map<String, String> environment, Installation installation) {
+        try {
+            List<Port> answer = new ArrayList<>();
+            File installDir = installation.getInstallDir();
+            Map<String, String> portMap = InstallHelper.readPortsFromDirectory(installDir);
+            Set<Map.Entry<String, String>> entries = portMap.entrySet();
+            for (Map.Entry<String, String> entry : entries) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+                String containerPort = value;
+                String envVarName = InstallHelper.portNameToHostEnvVarName(key);
+                String hostPort = environment.get(envVarName);
+                if (Strings.isNullOrBlank(hostPort)) {
+                    LOG.warn("Cannot find env var value for $" + envVarName + " so cannot define the host port");
+                } else {
+                    Port port = new Port();
+                    port.setName(key);
+                    int containerPortNumber = toPortNumber(value, key, "container");
+                    int hostPortNumber = toPortNumber(hostPort, key, "host");
+                    if (containerPortNumber > 0) {
+                        port.setContainerPort(containerPortNumber);
+                    }
+                    if (hostPortNumber > 0) {
+                        port.setHostPort(hostPortNumber);
+                    }
+                    answer.add(port);
+                }
+            }
+            return answer;
+        } catch (IOException e) {
+            LOG.warn("Failed to load ports for installation " + installation + ". " + e, e);
+            return null;
+        }
+    }
+
+    protected static int toPortNumber(String text, String key, String description) {
+        try {
+            return Integer.parseInt(text);
+        } catch (NumberFormatException e) {
+            LOG.warn("Failed to parse port text '" + text + "' for port " + key + " " + description + ". " + e, e);
+            return -1;
+        }
+    }
+
+    public static int findHostPortForService(PodSchema pod, int serviceContainerPort) {
+        List<ManifestContainer> containers = KubernetesHelper.getContainers(pod);
+        for (ManifestContainer container : containers) {
+            List<Port> ports = container.getPorts();
+            if (ports != null) {
+                for (Port port : ports) {
+                    Integer containerPort = port.getContainerPort();
+                    Integer hostPort = port.getHostPort();
+                    if (containerPort != null && containerPort.intValue() == serviceContainerPort) {
+                        if (hostPort != null) {
+                            return hostPort.intValue();
+                        }
+                    }
+                }
+            }
+        }
+        LOG.warn("Could not find host port for service port: " + serviceContainerPort + " pod " + pod);
+        return serviceContainerPort;
     }
 
     public static void appendServiceEnvironmentVariables(Map<String, String> map, KubernetesModel model) {

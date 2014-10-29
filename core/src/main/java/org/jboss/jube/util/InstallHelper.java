@@ -166,6 +166,13 @@ public class InstallHelper {
         }
     }
 
+    /**
+     * Converts the given port name to a host environment variable name
+     */
+    public static String portNameToHostEnvVarName(String portName) {
+        return portName.toUpperCase() + "_PORT";
+    }
+
     private static interface Matcher {
         boolean match(File file);
     }

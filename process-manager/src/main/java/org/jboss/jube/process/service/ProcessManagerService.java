@@ -193,7 +193,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
                 String key = entry.getKey();
                 String value = entry.getValue();
                 if (Strings.isNotBlank(key) && Strings.isNotBlank(value)) {
-                    String envVarName = key.toUpperCase() + "_PORT";
+                    String envVarName = InstallHelper.portNameToHostEnvVarName(key);
                     int port = allocatePortNumber(options, nestedProcessDirectory, key, value);
                     if (port <= 0) {
                         System.out.println("Could not allocate port " + envVarName + " has value: " + port);
