@@ -206,11 +206,11 @@ run() {
 
   # If you have bash, then you can use the 'exec -a newname' syntax to rename the java process.
   if [ -x "/bin/bash" ] ; then
-    echo exec -a ${SERVICE} $RUN_COMMAND 
+    exec -a ${SERVICE} $RUN_COMMAND
   elif [ -x "/usr/bin/bash" ] ; then
-    echo exec -a ${SERVICE} $RUN_COMMAND
+    exec -a ${SERVICE} $RUN_COMMAND
   else 
-    echo exec $RUN_COMMAND
+    exec $RUN_COMMAND
   fi
 }
 
