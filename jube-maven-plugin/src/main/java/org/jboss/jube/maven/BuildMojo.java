@@ -221,7 +221,7 @@ public class BuildMojo extends AbstractMojo {
         if (ports.isEmpty()) {
             ports = findPropertiesWithPrefix(project.getProperties(), "docker.port.");
         }
-        return environmentVariables;
+        return ports;
     }
 
     protected void createAssembly() throws MojoFailureException, MojoExecutionException {
