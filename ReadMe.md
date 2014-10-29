@@ -8,8 +8,5 @@ Jube lets you use [fabric8](http://fabric8.io/v2/index.html) on any platform tha
 
 ### Documentation
 
-* [Getting Started](https://github.com/jubeio/jube/blob/master/docs/getStarted.md)
-* [Goals](https://github.com/jubeio/jube/blob/master/docs/goals.md)
-* [Differences from Kubernetes / OpenShift V3](https://github.com/jubeio/jube/blob/master/docs/differences.md)
-* [Image Zips](https://github.com/jubeio/jube/blob/master/docs/imagezips.md)
-* [Node details](https://github.com/jubeio/jube/blob/master/docs/node.md)
+* [Getting Started](http://jubeio.github.io/jube/getStarted.html)
+* [User Guide](http://jubeio.github.io/jube/goals.html)
