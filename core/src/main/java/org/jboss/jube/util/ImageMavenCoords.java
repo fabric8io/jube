@@ -17,8 +17,8 @@
  */
 package org.jboss.jube.util;
 
-import io.fabric8.common.util.IOHelpers;
-import io.fabric8.common.util.Strings;
+import io.fabric8.utils.IOHelpers;
+import io.fabric8.utils.Strings;
 import io.hawt.aether.OpenMavenURL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

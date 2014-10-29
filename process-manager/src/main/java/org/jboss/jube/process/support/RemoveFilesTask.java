@@ -15,9 +15,9 @@
  */
 package org.jboss.jube.process.support;
 
-import io.fabric8.common.util.ChecksumUtils;
-import io.fabric8.common.util.FileChangeInfo;
-import io.fabric8.common.util.Files;
+import io.fabric8.utils.ChecksumUtils;
+import io.fabric8.utils.FileChangeInfo;
+import io.fabric8.utils.Files;
 import org.jboss.jube.process.InstallContext;
 import org.jboss.jube.process.InstallTask;
 import org.jboss.jube.process.config.ProcessConfig;

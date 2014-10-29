@@ -19,7 +19,7 @@ package org.jboss.jube;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import io.fabric8.common.util.Filter;
+import io.fabric8.utils.Filter;
 import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
 import io.fabric8.kubernetes.api.model.PodListSchema;
 import io.fabric8.kubernetes.api.model.PodSchema;

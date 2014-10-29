@@ -19,6 +19,7 @@ package org.jboss.jube.util;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,9 +30,9 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import io.fabric8.common.util.Closeables;
-import io.fabric8.common.util.Files;
-import io.fabric8.common.util.Objects;
+import io.fabric8.utils.Closeables;
+import io.fabric8.utils.Files;
+import io.fabric8.utils.Objects;
 
 /**
  */
@@ -105,6 +106,27 @@ public class InstallHelper {
                 String value = entry.getValue();
 
                 writer.println("export " + name + "=\"" + value + "\"");
+            }
+            writer.println();
+        } finally {
+            Closeables.closeQuietly(writer);
+        }
+    }
+
+    /**
+     * Writes the ports to the ports.properties file
+     */
+    public static void writePorts(File portFile, Map<String, String> portMap) throws FileNotFoundException {
+        PrintStream writer = new PrintStream(new FileOutputStream(portFile, true));
+        try {
+            writer.println();
+
+            Set<Map.Entry<String, String>> entries = portMap.entrySet();
+            for (Map.Entry<String, String> entry : entries) {
+                String name = entry.getKey();
+                String value = entry.getValue();
+
+                writer.println(name + " = " + value);
             }
             writer.println();
         } finally {

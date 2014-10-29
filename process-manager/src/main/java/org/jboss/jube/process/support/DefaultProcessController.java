@@ -18,9 +18,9 @@ package org.jboss.jube.process.support;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import io.fabric8.common.util.ExecParseUtils;
-import io.fabric8.common.util.Files;
-import io.fabric8.common.util.Processes;
+import io.fabric8.utils.ExecParseUtils;
+import io.fabric8.utils.Files;
+import io.fabric8.utils.Processes;
 import org.jboss.jube.process.ProcessController;
 import org.jboss.jube.process.config.ProcessConfig;
 import org.jboss.jube.process.support.command.CommandFailedException;

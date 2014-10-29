@@ -17,8 +17,8 @@
  */
 package org.jboss.jube.proxy;
 
-import io.fabric8.common.util.Filter;
-import io.fabric8.common.util.Objects;
+import io.fabric8.utils.Filter;
+import io.fabric8.utils.Objects;
 import io.fabric8.gateway.loadbalancer.LoadBalancer;
 import io.fabric8.gateway.loadbalancer.RandomLoadBalancer;
 import io.fabric8.kubernetes.api.IntOrString;

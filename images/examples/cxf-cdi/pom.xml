@@ -45,6 +45,7 @@
     <!-- jube properties -->
     <docker.baseImage>fabric8/java</docker.baseImage>
     <docker.env.MAIN>io.fabric8.quickstarts.cxfcdi.ApplicationStarter</docker.env.MAIN>
+    <docker.port.JOLOKIA>8778</docker.port.JOLOKIA>
   </properties>
 
   <dependencyManagement>

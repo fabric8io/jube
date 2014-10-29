@@ -19,8 +19,8 @@ package org.jboss.jube.apimaster;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import io.fabric8.common.util.Filter;
-import io.fabric8.common.util.Strings;
+import io.fabric8.utils.Filter;
+import io.fabric8.utils.Strings;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
 import io.fabric8.kubernetes.api.model.PodListSchema;

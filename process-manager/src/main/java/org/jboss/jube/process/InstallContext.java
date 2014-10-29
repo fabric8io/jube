@@ -15,8 +15,8 @@
  */
 package org.jboss.jube.process;
 
-import io.fabric8.common.util.FileChangeInfo;
-import io.fabric8.common.util.Files;
+import io.fabric8.utils.FileChangeInfo;
+import io.fabric8.utils.Files;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -25,7 +25,7 @@ import com.google.common.primitives.Ints;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 
-import io.fabric8.common.util.Closeables;
+import io.fabric8.utils.Closeables;
 
 import java.io.*;
 import java.util.Arrays;

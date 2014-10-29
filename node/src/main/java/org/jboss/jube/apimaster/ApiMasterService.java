@@ -17,7 +17,7 @@
  */
 package org.jboss.jube.apimaster;
 
-import io.fabric8.common.util.Objects;
+import io.fabric8.utils.Objects;
 import io.fabric8.kubernetes.api.Kubernetes;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.CurrentState;

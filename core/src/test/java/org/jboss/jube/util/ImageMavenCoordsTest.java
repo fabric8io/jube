@@ -17,7 +17,7 @@
  */
 package org.jboss.jube.util;
 
-import io.fabric8.common.util.Strings;
+import io.fabric8.utils.Strings;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

@@ -15,7 +15,7 @@
  */
 package org.jboss.jube.process.support;
 
-import io.fabric8.common.util.Processes;
+import io.fabric8.utils.Processes;
 import org.junit.Assert;
 import org.junit.Test;
 

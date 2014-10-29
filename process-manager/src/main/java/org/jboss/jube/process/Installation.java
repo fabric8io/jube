@@ -15,7 +15,7 @@
  */
 package org.jboss.jube.process;
 
-import io.fabric8.common.util.Processes;
+import io.fabric8.utils.Processes;
 import io.hawt.aether.OpenMavenURL;
 import org.jboss.jube.process.config.ProcessConfig;
 

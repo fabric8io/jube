@@ -18,8 +18,8 @@
 package org.jboss.jube.local;
 
 import com.google.common.collect.ImmutableSet;
-import io.fabric8.common.util.Objects;
-import io.fabric8.common.util.Strings;
+import io.fabric8.utils.Objects;
+import io.fabric8.utils.Strings;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ControllerCurrentState;
 import io.fabric8.kubernetes.api.model.ControllerDesiredState;

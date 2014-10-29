@@ -17,8 +17,8 @@
  */
 package org.jboss.jube.maven;
 
-import io.fabric8.common.util.Objects;
-import io.fabric8.common.util.Zips;
+import io.fabric8.utils.Objects;
+import io.fabric8.utils.Zips;
 import org.jboss.jube.util.ImageMavenCoords;
 import org.jboss.jube.util.InstallHelper;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
@@ -58,8 +58,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import static io.fabric8.common.util.PropertiesHelper.findPropertiesWithPrefix;
+import static io.fabric8.utils.PropertiesHelper.findPropertiesWithPrefix;
 
 /**
  * Builds a Jube from a known base image.
@@ -78,6 +79,11 @@ public class BuildMojo extends AbstractMojo {
 
     @Parameter
     private Map<String, String> environmentVariables;
+
+    @Parameter
+    private Map<String, String> ports;
+
+
     /**
      * A descriptor to use for building the data assembly to be exported
      * in an Docker image
@@ -208,6 +214,16 @@ public class BuildMojo extends AbstractMojo {
         this.environmentVariables = environmentVariables;
     }
 
+    public Map<String, String> getPorts() {
+        if (ports == null) {
+            ports = new HashMap<>();
+        }
+        if (ports.isEmpty()) {
+            ports = findPropertiesWithPrefix(project.getProperties(), "docker.port.");
+        }
+        return environmentVariables;
+    }
+
     protected void createAssembly() throws MojoFailureException, MojoExecutionException {
         String extractBaseImageRef = "extractBaseImage";
         String createZipRef = "createZip";
@@ -223,6 +239,7 @@ public class BuildMojo extends AbstractMojo {
             buildDir.mkdirs();
             unpackBaseImage(buildDir);
             writeEnvironmentVariables(buildDir);
+            writePorts(buildDir);
 
             assembly = extractAssembly(projectConfig);
             assembly.setId("docker");
@@ -285,6 +302,15 @@ public class BuildMojo extends AbstractMojo {
         Map<String, String> envMap = getEnvironmentVariables();
         File envScript = new File(buildDir, "env.sh");
         InstallHelper.writeEnvironmentVariables(envScript, envMap);
+    }
+
+    protected void writePorts(File buildDir) throws IOException {
+        Map<String, String> portMap = getPorts();
+        if (portMap.isEmpty()) {
+            return;
+        }
+        File envScript = new File(buildDir, "ports.properties");
+        InstallHelper.writePorts(envScript, portMap);
     }
 
     protected void unpackBaseImage(File buildDir) throws Exception {
