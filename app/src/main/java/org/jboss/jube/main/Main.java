@@ -32,6 +32,7 @@ import org.eclipse.jetty.webapp.WebAppContext;
 import org.jboss.weld.environment.servlet.BeanManagerResourceBindingListener;
 import org.jboss.weld.environment.servlet.Listener;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Enumeration;
@@ -72,6 +73,20 @@ public class Main {
 
 
             findWarsOnClassPath(server, handlers, classLoader, foundURLs, portNumber);
+
+            // In case you want to run in an IDE, and it does not setup the classpath right.. lets
+            // find the .war files in the maven dir.  Assumes you set the working dir to the target/jube dir.
+            if (foundURLs.isEmpty()) {
+                File[] files = new File("maven").listFiles();
+                if( files!=null ) {
+                    for (File file : files) {
+                        if( file.getName().endsWith(".war") ) {
+                            createWebapp(handlers, foundURLs, portNumber, file.getAbsolutePath());
+                        }
+                    }
+                }
+            }
+
             if (foundURLs.isEmpty()) {
                 System.out.println("WARNING: did not find any war files on the classpath to embed!");
             }
@@ -163,37 +178,41 @@ public class Main {
                 if (text.startsWith("jar:")) {
                     text = text.substring(4);
                 }
-                if (foundURLs.add(text)) {
-                    String contextPath = createContextPath(text);
-                    String filePath = createFilePath(text);
-                    if (contextPath.equals("hawtio")) {
-                        System.out.println();
-                        System.out.println("==================================================");
-                        System.out.println("hawtio is running on http://localhost:" + port + "/" + contextPath + "/");
-                        System.out.println("==================================================");
-                        System.out.println();
-                    } else {
-                        System.out.println("adding web context path: /" + contextPath + " war: " + filePath);
-                    }
-                    WebAppContext webapp = new WebAppContext();
-                    webapp.setContextPath("/" + contextPath);
-                    webapp.setWar("file://" + filePath);
-                    handlers.addHandler(webapp);
-                    webapp.setThrowUnavailableOnStartupException(true);
-                    try {
-                        System.out.println("Starting web app: " + contextPath);
-                        webapp.start();
-                        System.out.println("Started web app: " + contextPath + " without any exceptions!");
-                    } catch (Throwable e) {
-                        logException(e);
-                    }
-                }
+                createWebapp(handlers, foundURLs, port, text);
             }
         } catch (Exception e) {
             System.out.println("Failed to find web.xml on classpath: " + e);
             e.printStackTrace();
         }
 
+    }
+
+    private static void createWebapp(HandlerCollection handlers, Set<String> foundURLs, Integer port, String war) {
+        if (foundURLs.add(war)) {
+            String contextPath = createContextPath(war);
+            String filePath = createFilePath(war);
+            if (contextPath.equals("hawtio")) {
+                System.out.println();
+                System.out.println("==================================================");
+                System.out.println("hawtio is running on http://localhost:" + port + "/" + contextPath + "/");
+                System.out.println("==================================================");
+                System.out.println();
+            } else {
+                System.out.println("adding web context path: /" + contextPath + " war: " + filePath);
+            }
+            WebAppContext webapp = new WebAppContext();
+            webapp.setContextPath("/" + contextPath);
+            webapp.setWar("file://" + filePath);
+            handlers.addHandler(webapp);
+            webapp.setThrowUnavailableOnStartupException(true);
+            try {
+                System.out.println("Starting web app: " + contextPath);
+                webapp.start();
+                System.out.println("Started web app: " + contextPath + " without any exceptions!");
+            } catch (Throwable e) {
+                logException(e);
+            }
+        }
     }
 
     /**
