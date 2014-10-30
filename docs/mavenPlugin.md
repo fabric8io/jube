@@ -47,4 +47,12 @@ You can use maven properties to customize the generation of the JSON:
 <td>docker.dataImage</td>
 <td>The name of the image to generate.</td>
 </tr>
+<tr>
+<td>docker.env.FOO</td>
+<td>The environmental variable, FOO, which should be defined by default in the image zip. This value is written on the  **env.sh** file.</td>
+</tr>
+<tr>
+<td>docker.port.FOO</td>
+<td>The container port name and default value which is written to **ports.properties** and then mapped to a dynamically allocated (host) port at installation time and exposed as **FOO_PORT** environment variable
+</tr>
 </table>
