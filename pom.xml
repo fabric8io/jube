@@ -51,6 +51,10 @@
     </license>
   </licenses>
 
+  <prerequisites>
+      <maven>3.1.1</maven>
+  </prerequisites>
+
   <!-- including A developer as it's required by the maven poms going into central -->
   <developers>
     <developer>
