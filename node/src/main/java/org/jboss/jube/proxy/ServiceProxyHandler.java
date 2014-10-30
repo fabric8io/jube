@@ -21,9 +21,11 @@ import org.slf4j.LoggerFactory;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
+import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.net.NetClient;
 import org.vertx.java.core.net.NetSocket;
 import org.vertx.java.core.streams.Pump;
+import org.vertx.java.core.streams.ReadStream;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -61,6 +63,7 @@ public class ServiceProxyHandler implements Handler<NetSocket> {
                 handleConnectFailure(clientSocket, String.format("Client '%s' for service '%s' closed the connection before it could be routed.", clientSocket.remoteAddress(), service));
             }
         });
+        clientSocket.pause();
 
         NetClient client = null;
         TcpClientRequestFacade requestFacade = new TcpClientRequestFacade(clientSocket);
@@ -101,8 +104,10 @@ public class ServiceProxyHandler implements Handler<NetSocket> {
                             clientSocket.endHandler(endHandler);
                             clientSocket.exceptionHandler(endHandler);
 
-                            Pump.createPump(clientSocket, serverSocket).start();
-                            Pump.createPump(serverSocket, clientSocket).start();
+                            Pump.createPump(logging(clientSocket, "From "+clientSocket.remoteAddress()), serverSocket).start();
+                            Pump.createPump(logging(serverSocket, "To "+clientSocket.remoteAddress()), clientSocket).start();
+                            clientSocket.resume();
+
                             LOG.info(String.format("Connected client '%s' to service '%s' at %s:%d.", clientSocket.remoteAddress(), service, host, port));
 
                         }
@@ -113,6 +118,52 @@ public class ServiceProxyHandler implements Handler<NetSocket> {
             }
         }
         handleConnectFailure(clientSocket, String.format("Client '%s' could not be routed: No service implementation available for '%s'.", clientSocket.remoteAddress(), service));
+    }
+
+    private ReadStream<?> logging(final ReadStream<?> stream, final String prefix) {
+        if( true ) { // set to false to enable proxy data logging..
+            return stream;
+        }
+        return new ReadStream<Object>() {
+
+            @Override
+            public Object endHandler(Handler<Void> handler) {
+                stream.endHandler(handler);
+                return this;
+            }
+
+            @Override
+            public Object exceptionHandler(Handler handler) {
+                stream.endHandler(handler);
+                return this;
+            }
+
+            @Override
+            public Object dataHandler(final Handler<Buffer> handler) {
+
+                stream.dataHandler(new Handler<Buffer>() {
+                    @Override
+                    public void handle(Buffer event) {
+                        LOG.info(prefix+": ["+event.toString()+"]");
+                        handler.handle(event);
+                    }
+                });
+                return this;
+            }
+
+            @Override
+            public Object pause() {
+                stream.pause();
+                return this;
+            }
+
+            @Override
+            public Object resume() {
+                stream.pause();
+                return this;
+            }
+
+        };
     }
 
     private void handleConnectFailure(NetSocket socket, String reason) {
