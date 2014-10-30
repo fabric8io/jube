@@ -50,7 +50,7 @@
 
 
         
-    <div class="book" data-github="jubeio/jube" data-level="2" data-basepath="." data-revision="1414643405779">
+    <div class="book" data-github="jubeio/jube" data-level="2" data-basepath="." data-revision="1414688913742">
     <div class="book-header">
     <!-- Actions Left -->
     <a href="#" class="btn pull-left toggle-summary" aria-label="Toggle summary"><i class="fa fa-align-justify"></i></a>
@@ -274,7 +274,7 @@
 
                 <div class="page-inner">
                 
-                    <section class="normal" id="section-gitbook_5">
+                    <section class="normal" id="section-gitbook_6">
                     
                         <h2 id="get-started"><a name="get-started" class="anchor" href="#get-started"><span class="fa fa-link"></span></a>Get Started</h2>
 <p>To run jube:</p>
@@ -294,7 +294,7 @@ export FABRIC8_CONSOLE=http://localhost:8585/hawtio/
 <pre><code>mvn fabric8:deploy
 </code></pre><p>To deploy your app into the Wiki in the web console. e.g. if you have a local clone of fabric8 try</p>
 <pre><code>cd fabric8/apps/fabric8-mq
-mvn fabric8:deploy
+mvn clean install fabric8:deploy -Pjube
 </code></pre><p>Then you should see the Fabric8 MQ application in the wiki <a href="http://localhost:8585/hawtio/wiki/view" target="_blank">http://localhost:8585/hawtio/wiki/view</a>.</p>
 <p>If you click on the application&apos;s link you should see the Run button (top right) which lets you run the application</p>
 <h3 id="developing-jube"><a name="developing-jube" class="anchor" href="#developing-jube"><span class="fa fa-link"></span></a>Developing Jube</h3>

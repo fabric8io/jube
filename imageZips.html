@@ -50,7 +50,7 @@
 
 
         
-    <div class="book" data-github="jubeio/jube" data-level="3" data-basepath="." data-revision="1414643405779">
+    <div class="book" data-github="jubeio/jube" data-level="3" data-basepath="." data-revision="1414688913742">
     <div class="book-header">
     <!-- Actions Left -->
     <a href="#" class="btn pull-left toggle-summary" aria-label="Toggle summary"><i class="fa fa-align-justify"></i></a>
@@ -274,7 +274,7 @@
 
                 <div class="page-inner">
                 
-                    <section class="normal" id="section-gitbook_7">
+                    <section class="normal" id="section-gitbook_8">
                     
                         <h2 id="image-zips"><a name="image-zips" class="anchor" href="#image-zips"><span class="fa fa-link"></span></a>Image Zips</h2>
 <p><em>Image Zips</em> are a Jube packaging format which is used to emulate Docker when running on an operating system which doesn&apos;t support Docker. They are literally just zip files with some binaries, artifacts and shell scripts inside using a standard layout.</p>
@@ -301,7 +301,9 @@
 <li>kill.(sh|bat) forces the process to stop</li>
 <li>restart.(sh|bat) restarts a dead process</li>
 <li>status.(sh|bat) returns the running status</li>
+<li>run.(sh|bat) starts the process in the foreground so you can see the logs and can easiy Ctrl-C it to stop</li>
 <li>env.sh contains any environment variables defined inside the image; its also where any additional container environment variables from Kubernetes are appended when an App is installed</li>
+<li>ports.properties contains the list of container port names and default values; these port names are then mapped to environment variables <strong>FOO_PORT</strong> with the actual host port number (which is a dynamically generated value per container) so that you can run multiple instances of a container on a single host</li>
 <li>process.pid is where the start script should write the process PID</li>
 </ul>
 <h3 id="image-zips-are-usable"><a name="image-zips-are-usable" class="anchor" href="#image-zips-are-usable"><span class="fa fa-link"></span></a>Image Zips are usable</h3>

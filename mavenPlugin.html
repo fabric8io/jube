@@ -50,7 +50,7 @@
 
 
         
-    <div class="book" data-github="jubeio/jube" data-level="2.2" data-basepath="." data-revision="1414643405779">
+    <div class="book" data-github="jubeio/jube" data-level="2.2" data-basepath="." data-revision="1414688913742">
     <div class="book-header">
     <!-- Actions Left -->
     <a href="#" class="btn pull-left toggle-summary" aria-label="Toggle summary"><i class="fa fa-align-justify"></i></a>
@@ -313,6 +313,14 @@
 <td>docker.dataImage</td>
 <td>The name of the image to generate.</td>
 </tr>
+<tr>
+<td>docker.env.FOO</td>
+<td>The environmental variable, FOO, which should be defined by default in the image zip. This value is written on the  <strong>env.sh</strong> file.</td>
+</tr>
+<tr>
+<td>docker.port.FOO</td>
+<td>The container port name and default value which is written to <strong>ports.properties</strong> and then mapped to a dynamically allocated (host) port at installation time and exposed as <strong>FOO_PORT</strong> environment variable
+</td></tr>
 </table>
 
                     

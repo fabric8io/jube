@@ -50,7 +50,7 @@
 
 
         
-    <div class="book" data-github="jubeio/jube" data-level="4" data-basepath="." data-revision="1414643405779">
+    <div class="book" data-github="jubeio/jube" data-level="4" data-basepath="." data-revision="1414688913742">
     <div class="book-header">
     <!-- Actions Left -->
     <a href="#" class="btn pull-left toggle-summary" aria-label="Toggle summary"><i class="fa fa-align-justify"></i></a>
@@ -284,6 +284,7 @@
 <li>Since its pure Java, Jube cannot do any funky iptables / OpenVSwitch stuff; so the kubernetes networking model is a little different in that:<ul>
 <li>we cannot allocate an IP port per Pod or Service</li>
 <li>service ports are global across all services; so please be careful to avoid clashes!</li>
+<li>this means that services which want to run multiple times on a single host must use consumer port environment variables to listen on dynamic port numbers using environment variables</li>
 </ul>
 </li>
 <li>Jube does not use Docker (since if you had docker, we recommend you use Kubernetes for real ;). So cannot run arbitrary linux images. It can run <a href="imageZips.html">image zips</a> which are similar conceptually; some files used to run a process. This is fine for running simple binaries and Java applications; but is not ideal if you wish to use things like package managers and RPMs per container (e.g. for working with Ruby, Python, Node etc). For those kinds of things we highly recommend Docker and Kubernetes. The focus of Jube is predominantly around running Java based middleware and applications; were an image zip is OK (when docker is not available)</li>
