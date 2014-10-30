@@ -66,6 +66,17 @@ do
 done
 CLASSPATH="$CLASSPATH:$APP_BASE/classes"
 
+if [ -z "$JOLOKIA_PORT" ]; then
+  JOLOKIA_ARGS=""
+else
+  if [ -z "$AGENT_ID" ]; then
+    AGENT_ID=`basename $APP_BASE`
+  fi
+  JOLOKIA_ARGS="-javaagent:$APP_BASE/jolokia-agent.jar=host=0.0.0.0,port=$JOLOKIA_PORT,agentId=$AGENT_ID"
+fi
+
+
+
 JVM_DEBUG_ARGS="$JVM_DEBUG_ARGS"
 if [ -z "$JVM_DEBUG_ARGS" ]; then
   if [ ! -z "$JVM_DEBUG" ] && [ "$JVM_DEBUG" == 'TRUE' ]; then
@@ -74,7 +85,6 @@ if [ -z "$JVM_DEBUG_ARGS" ]; then
 fi
 
 JVM_EXEC="java"
-JAVA_AGENT="$JAVA_AGENT"
 # TODO
 #JVM_ARGS=jvmArgs
 JVM_ARGS="$JVM_ARGS"
@@ -83,7 +93,8 @@ MAIN_JAR="$APP_BASE/maven/main.jar"
 if [ -z "$MAIN" ] ; then
   MAIN="$MAIN"
 fi
-JAVA_AGENT="$JAVA_AGENT"
+
+JAVA_AGENT="$JAVA_AGENT $JOLOKIA_ARGS"
 SYSTEM_PROPERTIES="$SYSTEM_PROPERTIES"
 STOP_TIMEOUT="$PROCESS_STOP_TIMEOUT"
 if [ "x${STOP_TIMEOUT}" = "x" ] ; then
