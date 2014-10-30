@@ -132,13 +132,15 @@ public class InstallHelper {
     public static Map<String,String> readPorts(File propertiesFile) throws IOException {
         Map<String, String> answer = new Hashtable<>();
         Properties properties = new Properties();
-        properties.load(new FileInputStream(propertiesFile));
-        Set<Map.Entry<Object, Object>> entries = properties.entrySet();
-        for (Map.Entry<Object, Object> entry : entries) {
-            Object key = entry.getKey();
-            Object value = entry.getValue();
-            if (key != null && value != null) {
-                answer.put(key.toString(), value.toString());
+        if (propertiesFile.exists() && propertiesFile.isFile()) {
+            properties.load(new FileInputStream(propertiesFile));
+            Set<Map.Entry<Object, Object>> entries = properties.entrySet();
+            for (Map.Entry<Object, Object> entry : entries) {
+                Object key = entry.getKey();
+                Object value = entry.getValue();
+                if (key != null && value != null) {
+                    answer.put(key.toString(), value.toString());
+                }
             }
         }
         return answer;
