@@ -36,6 +36,7 @@ import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.framework.recipes.cache.TreeCache;
+import org.apache.zookeeper.data.Stat;
 import org.jboss.jube.KubernetesModel;
 import org.jboss.jube.local.EntityListener;
 import org.jboss.jube.local.EntityListenerList;
@@ -277,7 +278,11 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
 
     protected void deleteEntity(String path) {
         try {
-            ZooKeeperUtils.delete(curator, path);
+            Stat stat = curator.checkExists().forPath(path);
+            if (stat != null) {
+                ZooKeeperUtils.delete(curator, path);
+            }
+
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete object at path: " + path + ". " + e, e);
         }

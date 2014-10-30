@@ -158,6 +158,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
             @Override
             public void install(InstallContext installContext, ProcessConfig config, String id, File installDir) throws Exception {
                 config.setName(options.getName());
+                installDir.mkdirs();
                 File archive = getDownloadStrategy(options).downloadContent(options.getUrl(), installDir);
                 if (archive == null) {
                     archive = new File(installDir, INSTALLED_BINARY);
@@ -179,7 +180,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     protected DownloadStrategy getDownloadStrategy(InstallOptions options) {
         DownloadStrategy answer = options.getDownloadStrategy();
         if (answer == null) {
-            answer = createDeafultDownloadStrategy();
+            answer = createDefaultDownloadStrategy();
         }
         return answer;
     }
@@ -316,7 +317,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
         return installation;
     }
 
-    protected DownloadStrategy createDeafultDownloadStrategy() {
+    protected DownloadStrategy createDefaultDownloadStrategy() {
         return new DownloadStrategy() {
             @Override
             public File downloadContent(final OpenMavenURL sourceUrl, final File installDir) throws IOException {
