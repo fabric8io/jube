@@ -324,13 +324,13 @@ public class NodeHelper {
         }
     }
 
-    public static void deleteContainers(ProcessManager processManager, PodSchema pod, CurrentState currentState, List<ManifestContainer> desiredContainers) throws Exception {
+    public static void deleteContainers(ProcessManager processManager, KubernetesModel model, PodSchema pod, CurrentState currentState, List<ManifestContainer> desiredContainers) throws Exception {
         for (ManifestContainer container : desiredContainers) {
-            deleteContainer(processManager, container, pod, currentState);
+            deleteContainer(processManager, model, container, pod, currentState);
         }
     }
 
-    protected static void deleteContainer(ProcessManager processManager, ManifestContainer container, PodSchema pod, CurrentState currentState) throws Exception {
+    protected static void deleteContainer(ProcessManager processManager, KubernetesModel model, ManifestContainer container, PodSchema pod, CurrentState currentState) throws Exception {
         String containerName = container.getName();
         Installation installation = processManager.getInstallation(containerName);
         if (installation == null) {
@@ -340,6 +340,7 @@ public class NodeHelper {
         ProcessController controller = installation.getController();
         controller.kill();
         controller.uninstall();
+        model.deletePod(pod.getId());
     }
 
 
@@ -421,7 +422,7 @@ public class NodeHelper {
         PodSchema pod = model.deletePod(podId);
         if (pod != null) {
             List<ManifestContainer> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);
-            NodeHelper.deleteContainers(processManager, pod, NodeHelper.getOrCreateCurrentState(pod), desiredContainers);
+            NodeHelper.deleteContainers(processManager, model, pod, NodeHelper.getOrCreateCurrentState(pod), desiredContainers);
         }
     }
 }

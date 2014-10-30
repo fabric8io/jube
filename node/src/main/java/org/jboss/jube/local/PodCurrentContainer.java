@@ -61,5 +61,6 @@ public class PodCurrentContainer {
 
     public void containerAlive(String id, boolean alive) {
         NodeHelper.containerAlive(pod, id, alive);
+        model.updatePod(podId, pod);
     }
 }

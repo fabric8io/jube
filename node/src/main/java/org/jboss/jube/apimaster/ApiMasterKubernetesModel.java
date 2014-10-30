@@ -117,6 +117,13 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
 
     // Updating API which just writes to ZK and waits for ZK watches to update in memory
     // -------------------------------------------------------------------------
+    @Override
+    public PodSchema deletePod(String podId) {
+        PodSchema answer = memoryModel.deletePod(podId);
+        deleteEntity(zkPathForPod(podId));
+        return answer;
+    }
+
 
     @Override
     public void updatePod(String id, PodSchema entity) {
@@ -193,11 +200,6 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     @Override
     public PodSchema getPod(String id) {
         return memoryModel.getPod(id);
-    }
-
-    @Override
-    public PodSchema deletePod(String podId) {
-        return memoryModel.deletePod(podId);
     }
 
     @Override
