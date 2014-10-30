@@ -16,6 +16,8 @@
 package org.jboss.jube.main;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import org.apache.cxf.jaxrs.swagger.SwaggerFeature;
+import org.apache.deltaspike.core.api.config.ConfigProperty;
 import org.jboss.jube.apimaster.ApiMasterService;
 import org.jboss.jube.apimaster.ApiMasterService;
 import org.apache.cxf.feature.LoggingFeature;
@@ -26,6 +28,7 @@ import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @ApplicationPath("/")
@@ -36,20 +39,25 @@ public class NodeApplication extends Application {
     @Inject
     private ApiMasterService apiMasterService;
 
+    @Inject
+    @ConfigProperty(name = "CXF_LOG_REQUESTS", defaultValue = "false")
+    boolean cxfLogRequests;
+
     @Override
     public Set<Object> getSingletons() {
-        return new HashSet<Object>(
-                Arrays.asList(
-                        apiMasterService,
-                        jacksonJsonProvider,
+        Set<Object> answer = new HashSet<Object>();
+        answer.add(apiMasterService);
+        answer.add(jacksonJsonProvider);
+        answer.add(new SwaggerFeature());
 /*
     TODO
-                    new SwaggerFeature(),
-                    new EnableJMXFeature(),
+        answer.add();
+        answer.add(new EnableJMXFeature());
 */
-                        new LoggingFeature()
-                )
-        );
+        if (cxfLogRequests) {
+            answer.add(new LoggingFeature());
+        }
+        return answer;
     }
 }
 
