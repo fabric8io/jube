@@ -67,7 +67,7 @@
 
   <properties>
     <fabric8.version>2.0.0-SNAPSHOT</fabric8.version>
-    <hawtio.version>1.4.28</hawtio.version>
+    <hawtio.version>1.4.29</hawtio.version>
     <jetty9.version>9.1.5.v20140505</jetty9.version>
 
     <!-- maven plugin versions can't be reused via BOM -->
