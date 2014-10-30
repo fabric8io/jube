@@ -27,8 +27,8 @@ import org.vertx.java.core.streams.Pump;
 
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A handler for a single service proxy
@@ -39,6 +39,7 @@ public class ServiceProxyHandler implements Handler<NetSocket> {
     private final Vertx vertx;
     private final Service service;
     private final LoadBalancer loadBalancer;
+    final AtomicLong failedConnectionAttempts = new AtomicLong();
 
     public ServiceProxyHandler(Vertx vertx, Service service, LoadBalancer loadBalancer) {
         this.vertx = vertx;
@@ -47,49 +48,79 @@ public class ServiceProxyHandler implements Handler<NetSocket> {
     }
 
     @Override
-    public void handle(final NetSocket socket) {
+    public void handle(final NetSocket clientSocket) {
+        clientSocket.exceptionHandler(new Handler<Throwable>() {
+            @Override
+            public void handle(Throwable e) {
+                handleConnectFailure(clientSocket, String.format("Failed to route to service '%s' from client '%s' due to: %s", service, clientSocket.remoteAddress(), e));
+            }
+        });
+        clientSocket.endHandler(new Handler<Void>() {
+            @Override
+            public void handle(Void event) {
+                handleConnectFailure(clientSocket, String.format("Client '%s' for service '%s' closed the connection before it could be routed.", clientSocket.remoteAddress(), service));
+            }
+        });
+
         NetClient client = null;
-        TcpClientRequestFacade requestFacade = new TcpClientRequestFacade(socket);
+        TcpClientRequestFacade requestFacade = new TcpClientRequestFacade(clientSocket);
         List<ContainerService> services = service.getContainerServices();
         if (!services.isEmpty()) {
             ContainerService containerService = loadBalancer.choose(services, requestFacade);
             if (containerService != null) {
+
                 URI uri = containerService.getURI();
-                System.out.println("Binding the inbound socket requeset to container service: " + containerService);
-                try {
-                    Handler<AsyncResult<NetSocket>> handler = new Handler<AsyncResult<NetSocket>>() {
-                        public void handle(final AsyncResult<NetSocket> asyncSocket) {
-                            NetSocket clientSocket = asyncSocket.result();
-                            if (clientSocket == null) {
-                                System.out.println("No client socket available for " + service);
-                                socket.close();
-                            } else {
-                                Pump.createPump(clientSocket, socket).start();
-                                Pump.createPump(socket, clientSocket).start();
-                            }
+
+                NetClient netClient = vertx.createNetClient();
+                final String host = uri.getHost();
+                final int port = uri.getPort();
+                LOG.info(String.format("Connecting client '%s' to service '%s' at %s:%d.", clientSocket.remoteAddress(), service, host, port));
+
+                netClient.connect(port, host, new Handler<AsyncResult<NetSocket>>() {
+                    public void handle(final AsyncResult<NetSocket> asyncSocket) {
+                        final NetSocket serverSocket = asyncSocket.result();
+                        if (serverSocket == null) {
+                            handleConnectFailure(clientSocket, String.format("Could not connect client '%s' to service '%s' at %s:%d.", clientSocket.remoteAddress(), service, host, port));
+                        } else {
+
+                            Handler endHandler = new Handler() {
+                                boolean closed;
+                                @Override
+                                synchronized public void handle(Object event) {
+                                    if( !closed ) {
+                                        LOG.info(String.format("Disconnected client '%s' from service '%s' at %s:%d.", clientSocket.remoteAddress(), service, host, port));
+                                        closed = true;
+                                        clientSocket.close();
+                                        serverSocket.close();
+                                    }
+                                }
+                            };
+
+                            serverSocket.endHandler(endHandler);
+                            serverSocket.exceptionHandler(endHandler);
+                            clientSocket.endHandler(endHandler);
+                            clientSocket.exceptionHandler(endHandler);
+
+                            Pump.createPump(clientSocket, serverSocket).start();
+                            Pump.createPump(serverSocket, clientSocket).start();
+                            LOG.info(String.format("Connected client '%s' to service '%s' at %s:%d.", clientSocket.remoteAddress(), service, host, port));
+
                         }
-                    };
-                    client = createClient(socket, uri, handler);
-                } catch (MalformedURLException e) {
-                    LOG.warn("Failed to parse URL: " + containerService + ". " + e, e);
-                }
+                    }
+                });
+
+                return;
             }
         }
-        if (client == null) {
-            // fail to route
-            LOG.info("No service implementation available for " + service);
-            socket.close();
-        }
+        handleConnectFailure(clientSocket, String.format("Client '%s' could not be routed: No service implementation available for '%s'.", clientSocket.remoteAddress(), service));
     }
 
-    /**
-     * Creates a new client for the given URL and handler
-     */
-    protected NetClient createClient(NetSocket socket, URI url, Handler<AsyncResult<NetSocket>> handler) throws MalformedURLException {
-        NetClient client = vertx.createNetClient();
-        int port = url.getPort();
-        String host = url.getHost();
-        LOG.info("Connecting " + socket.remoteAddress() + " to host " + host + " port " + port + " service " + service);
-        return client.connect(port, host, handler);
+    private void handleConnectFailure(NetSocket socket, String reason) {
+        if( reason!=null ) {
+            LOG.info(reason);
+        }
+        failedConnectionAttempts.incrementAndGet();
+        socket.close();
     }
+
 }
