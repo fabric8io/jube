@@ -27,6 +27,10 @@ import javax.inject.Singleton;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import io.fabric8.utils.Closeables;
+import io.fabric8.utils.Filter;
+import io.fabric8.utils.Filters;
+import io.fabric8.utils.Objects;
 import io.fabric8.groups.Group;
 import io.fabric8.groups.GroupListener;
 import io.fabric8.groups.internal.ZooKeeperGroup;
@@ -181,7 +185,8 @@ public class Replicator {
             }
             ControllerCurrentState currentState = NodeHelper.getOrCreateCurrentState(replicationController);
             Map<String, String> replicaSelector = desiredState.getReplicaSelector();
-            ImmutableList<PodSchema> pods = model.getPods(replicaSelector);
+            ImmutableList<PodSchema> allPods = model.getPods(replicaSelector);
+            List<PodSchema> pods = Filters.filter(allPods, podHasNotTerminated());
 
             int currentSize = pods.size();
             int createCount = replicaCount - currentSize;
@@ -197,8 +202,35 @@ public class Replicator {
         }
     }
 
+    /**
+     * Returns a filter of all terminated pods
+     */
+    public static Filter<PodSchema> podHasNotTerminated() {
+        return new Filter<PodSchema>() {
+            @Override
+            public String toString() {
+                return "PodHasNotTerminatedFilter";
+            }
 
-    private ImmutableList<PodSchema> deleteContainers(ImmutableList<PodSchema> pods, int deleteCount) throws Exception {
+            @Override
+            public boolean matches(PodSchema pod) {
+                CurrentState currentState = pod.getCurrentState();
+                if (currentState != null) {
+                    String status = currentState.getStatus();
+                    if (status != null) {
+                        String lower = status.toLowerCase();
+                        if (lower.startsWith("error") || lower.startsWith("fail") || lower.startsWith("term")) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+        };
+    }
+
+
+    private ImmutableList<PodSchema> deleteContainers(List<PodSchema> pods, int deleteCount) throws Exception {
         List<PodSchema> list = Lists.newArrayList(pods);
         for (int i = 1, size = list.size(); i <= deleteCount && i <= size; i++) {
             PodSchema removePod = list.remove(size - 1);
@@ -208,11 +240,7 @@ public class Replicator {
     }
 
 
-    protected ImmutableList<PodSchema> createMissingContainers(ReplicationControllerSchema replicationController,
-                                                               PodTemplateDesiredState podTemplateDesiredState,
-                                                               ControllerDesiredState desiredState,
-                                                               int createCount,
-                                                               ImmutableList<PodSchema> pods) throws Exception {
+    protected ImmutableList<PodSchema> createMissingContainers(ReplicationControllerSchema replicationController, PodTemplateDesiredState podTemplateDesiredState, ControllerDesiredState desiredState, int createCount, List<PodSchema> pods) throws Exception {
         // TODO this is a hack ;) needs replacing with the real host we're creating on
         String host = "localhost";
         List<PodSchema> list = Lists.newArrayList(pods);
