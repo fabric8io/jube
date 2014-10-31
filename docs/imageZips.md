@@ -28,15 +28,15 @@ The Zip can contain whatever files are required to run a container; the idea is 
 
 There are some required files in the root directory:
 
-* start.(sh|bat) starts the process in the background and returns
-* stop.(sh|bat) stops the process
-* kill.(sh|bat) forces the process to stop
-* restart.(sh|bat) restarts a dead process
-* status.(sh|bat) returns the running status
-* run.(sh|bat) starts the process in the foreground so you can see the logs and can easiy Ctrl-C it to stop
-* env.sh contains any environment variables defined inside the image; its also where any additional container environment variables from Kubernetes are appended when an App is installed
-* ports.properties contains the list of container port names and default values; these port names are then mapped to environment variables **FOO_PORT** with the actual host port number (which is a dynamically generated value per container) so that you can run multiple instances of a container on a single host
-* process.pid is where the start script should write the process PID
+* **start.(sh|bat)** starts the process in the background and returns
+* **stop.(sh|bat)** stops the process
+* **kill.(sh|bat)** forces the process to stop
+* **restart.(sh|bat)** restarts a dead process
+* **status.(sh|bat)** returns the running status
+* **run.(sh|bat)** starts the process in the foreground so you can see the logs and can easiy Ctrl-C it to stop
+* **env.sh** contains any environment variables defined inside the image; its also where any additional container environment variables from Kubernetes are appended when an App is installed
+* **ports.properties** contains the list of container port names and default values; these port names are then mapped to environment variables **FOO_PORT** with the actual host port number (which is a dynamically generated value per container) so that you can run multiple instances of a container on a single host
+* **process.pid** is where the start script should write the process PID
 
 
 ### Image Zips are usable
