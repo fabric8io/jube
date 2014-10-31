@@ -134,7 +134,7 @@ public class LocalKubernetesModel implements KubernetesModel {
      * Returns all the current containers and their pods
      */
     @Override
-    public ImmutableMap<String, PodCurrentContainer> getPodRunningContainers() {
+    public ImmutableMap<String, PodCurrentContainer> getPodRunningContainers(KubernetesModel model) {
         Map<String, PodCurrentContainer> answer = new HashMap<>();
         for (Map.Entry<String, PodSchema> entry : podMap.entrySet()) {
             String podId = entry.getKey();
@@ -143,16 +143,11 @@ public class LocalKubernetesModel implements KubernetesModel {
             for (Map.Entry<String, PodCurrentContainerInfo> containerEntry : currentContainers.entrySet()) {
                 String containerId = containerEntry.getKey();
                 PodCurrentContainerInfo currentContainer = containerEntry.getValue();
-                PodCurrentContainer podCurrentContainer = createPodCurrentContainer(podId, podSchema, containerId, currentContainer);
+                PodCurrentContainer podCurrentContainer = new PodCurrentContainer(model, podId, podSchema, containerId, currentContainer);
                 answer.put(containerId, podCurrentContainer);
             }
         }
         return ImmutableMap.copyOf(answer);
-    }
-
-    @Override
-    public PodCurrentContainer createPodCurrentContainer(String podId, PodSchema podSchema, String containerId, PodCurrentContainerInfo currentContainer) {
-        return new PodCurrentContainer(this, podId, podSchema, containerId, currentContainer);
     }
 
 

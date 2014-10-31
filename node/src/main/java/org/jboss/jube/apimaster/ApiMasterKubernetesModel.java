@@ -193,13 +193,8 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     }
 
     @Override
-    public ImmutableMap<String, PodCurrentContainer> getPodRunningContainers() {
-        return memoryModel.getPodRunningContainers();
-    }
-
-    @Override
-    public PodCurrentContainer createPodCurrentContainer(String podId, PodSchema podSchema, String containerId, PodCurrentContainerInfo currentContainer) {
-        return memoryModel.createPodCurrentContainer(podId, podSchema, containerId, currentContainer);
+    public ImmutableMap<String, PodCurrentContainer> getPodRunningContainers(KubernetesModel model) {
+        return memoryModel.getPodRunningContainers(model);
     }
 
     @Override

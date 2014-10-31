@@ -15,14 +15,22 @@
  */
 package org.jboss.jube.local;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
 import io.fabric8.kubernetes.api.model.PodSchema;
 import org.jboss.jube.KubernetesModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Objects;
 
 /**
  * Represents a container in a pod in a model
  */
 public class PodCurrentContainer {
+    private static final transient Logger LOG = LoggerFactory.getLogger(PodCurrentContainer.class);
+
     private final KubernetesModel model;
     private final String podId;
     private final PodSchema pod;
@@ -58,7 +66,22 @@ public class PodCurrentContainer {
     }
 
     public void containerAlive(String id, boolean alive) {
+        String oldJson = getPodJson();
         NodeHelper.containerAlive(pod, id, alive);
-        model.updatePod(podId, pod);
+        String newJson = getPodJson();
+
+        // lets only update the model if we've really changed the pod
+        if (!Objects.equals(oldJson, newJson)) {
+            model.updatePod(podId, pod);
+        }
+    }
+
+    protected String getPodJson() {
+        try {
+            return KubernetesHelper.toJson(pod);
+        } catch (JsonProcessingException e) {
+            LOG.warn("Could not convert pod to json: " + e, e);
+            return null;
+        }
     }
 }

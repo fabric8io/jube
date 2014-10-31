@@ -70,7 +70,7 @@ public class ProcessMonitor {
     protected void processMonitor() {
         ImmutableMap<String, Installation> map = processManager.listInstallationMap();
         ImmutableSet<Map.Entry<String, Installation>> entries = map.entrySet();
-        ImmutableMap<String, PodCurrentContainer> podRunningContainers = model.getPodRunningContainers();
+        ImmutableMap<String, PodCurrentContainer> podRunningContainers = model.getPodRunningContainers(model);
 
         for (Map.Entry<String, Installation> entry : entries) {
             String id = entry.getKey();

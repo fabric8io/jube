@@ -348,10 +348,15 @@ public final class NodeHelper {
 
     public static void containerAlive(PodSchema pod, String id, boolean alive) {
         CurrentState currentState = getOrCreateCurrentState(pod);
+        String status = currentState.getStatus();
         if (alive) {
             currentState.setStatus("Running");
         } else {
-            currentState.setStatus("Waiting");
+            if (Strings.isNullOrBlank(status)) {
+                currentState.setStatus("Waiting");
+            } else {
+                currentState.setStatus("Terminated");
+            }
         }
         State state = getOrCreateContainerState(pod, id);
         if (alive) {

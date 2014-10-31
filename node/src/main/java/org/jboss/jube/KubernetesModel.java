@@ -50,9 +50,7 @@ public interface KubernetesModel {
 
     PodSchema deletePod(String podId);
 
-    ImmutableMap<String, PodCurrentContainer> getPodRunningContainers();
-
-    PodCurrentContainer createPodCurrentContainer(String podId, PodSchema podSchema, String containerId, PodCurrentContainerInfo currentContainer);
+    ImmutableMap<String, PodCurrentContainer> getPodRunningContainers(KubernetesModel model);
 
     ReplicationControllerSchema getReplicationController(String id);
 
