@@ -15,6 +15,7 @@
  */
 package org.jboss.jube.local;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Timer;
@@ -85,7 +86,12 @@ public class ProcessMonitor {
 
             PodCurrentContainer podCurrentContainer = podRunningContainers.get(id);
             if (podCurrentContainer == null) {
-                System.out.println("No pod container for id: " + id + " so lets create one!");
+                File installDir = installation.getInstallDir();
+                if (installDir.exists()) {
+                    System.out.println("No pod container for id: " + id);
+                } else {
+                    processManager.uninstall(installation);
+                }
             } else {
                 // lets mark the container as running or not...
                 podCurrentContainer.containerAlive(id, alive);
