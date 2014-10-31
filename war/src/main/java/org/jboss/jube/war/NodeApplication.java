@@ -15,23 +15,22 @@
  */
 package org.jboss.jube.war;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import io.fabric8.cxf.endpoint.EnableJMXFeature;
-import org.jboss.jube.apimaster.ApiMasterService;
-import org.jboss.jube.apimaster.ApiMasterService;
-import org.apache.cxf.feature.LoggingFeature;
-
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
+
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import io.fabric8.cxf.endpoint.EnableJMXFeature;
+import org.apache.cxf.feature.LoggingFeature;
+import org.jboss.jube.apimaster.ApiMasterService;
 
 @ApplicationPath("/cheese")
 public class NodeApplication extends Application {
+
     @Produces
     private JacksonJsonProvider jacksonJsonProvider = new JacksonJsonProvider();
 
@@ -48,10 +47,8 @@ public class NodeApplication extends Application {
                 Arrays.asList(
                         apiMasterService,
                         jacksonJsonProvider,
-/*
-    TODO
-                    new SwaggerFeature(),
-*/
+                        // TODO
+                        // new SwaggerFeature(),
                         new EnableJMXFeature(),
                         new LoggingFeature()
                 )
