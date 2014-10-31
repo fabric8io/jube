@@ -22,7 +22,10 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.jboss.weld.environment.servlet.BeanManagerResourceBindingListener;
 import org.jboss.weld.environment.servlet.Listener;
 
-public class ApplicationStarter {
+public final class ApplicationStarter {
+
+    private ApplicationStarter() {
+    }
 
     public static void main(final String[] args) throws Exception {
 

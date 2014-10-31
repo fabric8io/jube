@@ -18,33 +18,34 @@ package io.fabric8.quickstarts.cxfcdi;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-
 import io.fabric8.cxf.endpoint.EnableJMXFeature;
 import io.fabric8.cxf.endpoint.SwaggerFeature;
 import org.apache.cxf.feature.LoggingFeature;
 
-
-@ApplicationPath( "cxfcdi" )
+@ApplicationPath("cxfcdi")
 public class CxfCdiApplication extends Application {
-    @Inject private CustomerService customerService;
-    @Produces private JacksonJsonProvider jacksonJsonProvider = new JacksonJsonProvider();
+
+    @Inject
+    private CustomerService customerService;
+
+    @Produces
+    private JacksonJsonProvider jacksonJsonProvider = new JacksonJsonProvider();
 
     @Override
     public Set<Object> getSingletons() {
-            return new HashSet<Object>(
-                    Arrays.asList(
-                    customerService,
-                    jacksonJsonProvider,
-                    new SwaggerFeature(),
-                    new EnableJMXFeature(),
-                    new LoggingFeature()
+        return new HashSet<Object>(
+                Arrays.asList(
+                        customerService,
+                        jacksonJsonProvider,
+                        new SwaggerFeature(),
+                        new EnableJMXFeature(),
+                        new LoggingFeature()
                 )
         );
     }
