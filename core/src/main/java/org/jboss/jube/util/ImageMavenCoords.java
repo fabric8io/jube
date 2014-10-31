@@ -15,14 +15,14 @@
  */
 package org.jboss.jube.util;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import io.fabric8.utils.IOHelpers;
 import io.fabric8.utils.Strings;
 import io.hawt.aether.OpenMavenURL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * Parses docker image names and converts them to maven coordinates
@@ -32,7 +32,6 @@ public class ImageMavenCoords {
 
     private static String defaultVersion = findJubeVersion();
 
-
     private final String dockerImage;
     private final String groupId;
     private final String artifactId;
@@ -40,6 +39,15 @@ public class ImageMavenCoords {
     private final String type;
     private final String classifier;
     private String scope = "runtime";
+
+    public ImageMavenCoords(String dockerImage, String groupId, String artifactId, String version, String type, String classifier) {
+        this.dockerImage = dockerImage;
+        this.groupId = groupId;
+        this.artifactId = artifactId;
+        this.version = version;
+        this.type = type;
+        this.classifier = classifier;
+    }
 
     /**
      * Parses the given docker image name of the form "name", or "user/name" or "registry/user/name" and return a set of maven coordinates to download the corresponding jube.
@@ -65,18 +73,19 @@ public class ImageMavenCoords {
     public static ImageMavenCoords parse(String imageName) {
         String[] split = imageName.split("/");
         String groupId = "org.jboss.jube.images";
-        String artifactId = null;
+        String artifactId;
         String version = getDefaultVersion();
-        if (split == null || split.length == 0) {
+
+        if (split.length == 0) {
             throw new IllegalArgumentException("Invalid docker image name '" + imageName + "'");
         }
         switch (split.length) {
-            case 1:
-                artifactId = split[0];
-                break;
-            default:
-                groupId += "." + split[split.length - 2];
-                artifactId = split[split.length - 1];
+        case 1:
+            artifactId = split[0];
+            break;
+        default:
+            groupId += "." + split[split.length - 2];
+            artifactId = split[split.length - 1];
         }
         int idx = artifactId.indexOf(':');
         if (idx > 0) {
@@ -111,30 +120,20 @@ public class ImageMavenCoords {
         return answer;
     }
 
-
-    public ImageMavenCoords(String dockerImage, String groupId, String artifactId, String version, String type, String classifier) {
-        this.dockerImage = dockerImage;
-        this.groupId = groupId;
-        this.artifactId = artifactId;
-        this.version = version;
-        this.type = type;
-        this.classifier = classifier;
-    }
-
     @Override
     public String toString() {
-        return "ImageMavenCoords{" +
-                "dockerImage='" + dockerImage + '\'' +
-                ", groupId='" + groupId + '\'' +
-                ", artifactId='" + artifactId + '\'' +
-                ", version='" + version + '\'' +
-                ", type='" + type + '\'' +
-                ", classifier='" + classifier + '\'' +
-                '}';
+        return "ImageMavenCoords{"
+                + "dockerImage='" + dockerImage + '\''
+                + ", groupId='" + groupId + '\''
+                + ", artifactId='" + artifactId + '\''
+                + ", version='" + version + '\''
+                + ", type='" + type + '\''
+                + ", classifier='" + classifier + '\''
+                + '}';
     }
 
     public String getMavenCoords() {
-        return groupId + "/" + artifactId + "/" + version+ "/" + type + "/" + classifier;
+        return groupId + "/" + artifactId + "/" + version + "/" + type + "/" + classifier;
     }
 
     public String getAetherCoords() {

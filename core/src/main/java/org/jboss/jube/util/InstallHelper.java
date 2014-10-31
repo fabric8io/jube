@@ -34,14 +34,18 @@ import io.fabric8.utils.Files;
 import io.fabric8.utils.Objects;
 
 /**
+ * Utilities for install apps.
  */
-public class InstallHelper {
+public final class InstallHelper {
     public static final String PORTS_PROPERTIES_FILE = "ports.properties";
     public static final String ENVIRONMENT_VARIABLE_SCRIPT = "env.sh";
 
-    private static final Logger log = Logger.getLogger(InstallHelper.class.getName());
-
+    private static final Logger LOG = Logger.getLogger(InstallHelper.class.getName());
     private static final Matcher DEFAULT_MATCHER = new DefaultMatcher();
+
+    private InstallHelper() {
+        // utulity class
+    }
 
     /**
      * chmods the various scripts in the installation
@@ -68,7 +72,7 @@ public class InstallHelper {
                 for (String dir : properties.stringPropertyNames()) {
                     String property = properties.getProperty(dir);
                     Matcher matcher = new RegexpMatcher(property);
-                    log.info(String.format("CHMOD %s with pattern %s", dir, property));
+                    LOG.info(String.format("CHMOD %s with pattern %s", dir, property));
                     chmodScripts(new File(installDir, dir), matcher);
                 }
             } catch (IOException e) {
@@ -127,7 +131,7 @@ public class InstallHelper {
     /**
      * Reads the properties file returning a map of port name to default port value
      */
-    public static Map<String,String> readPorts(File propertiesFile) throws IOException {
+    public static Map<String, String> readPorts(File propertiesFile) throws IOException {
         Map<String, String> answer = new Hashtable<>();
         Properties properties = new Properties();
         if (propertiesFile.exists() && propertiesFile.isFile()) {
@@ -173,19 +177,21 @@ public class InstallHelper {
         return portName.toUpperCase() + "_PORT";
     }
 
-    private static interface Matcher {
+    private interface Matcher {
         boolean match(File file);
     }
 
-    private static class DefaultMatcher implements Matcher {
+    private static final class DefaultMatcher implements Matcher {
+
         public boolean match(File file) {
             String name = file.getName();
             String extension = Files.getFileExtension(name);
-            return (Objects.equal(name, "launcher") || Objects.equal(extension, "sh") || Objects.equal(extension, "bat") || Objects.equal(extension, "cmd"));
+            return Objects.equal(name, "launcher") || Objects.equal(extension, "sh") || Objects.equal(extension, "bat") || Objects.equal(extension, "cmd");
         }
+
     }
 
-    private static class RegexpMatcher implements Matcher {
+    private static final class RegexpMatcher implements Matcher {
         private final Pattern pattern;
 
         private RegexpMatcher(String regexp) {
