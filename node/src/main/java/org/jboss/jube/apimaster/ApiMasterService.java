@@ -17,11 +17,14 @@ package org.jboss.jube.apimaster;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 import io.fabric8.kubernetes.api.Kubernetes;
@@ -39,6 +42,8 @@ import io.fabric8.utils.Objects;
 import org.jboss.jube.KubernetesModel;
 import org.jboss.jube.local.NodeHelper;
 import org.jboss.jube.local.ProcessMonitor;
+import org.jboss.jube.model.HostNode;
+import org.jboss.jube.model.HostNodeModel;
 import org.jboss.jube.process.ProcessManager;
 import org.jboss.jube.proxy.KubeProxy;
 import org.jboss.jube.replicator.Replicator;
@@ -58,14 +63,22 @@ public class ApiMasterService implements Kubernetes {
     private final Replicator replicator;
     private final ProcessMonitor processMonitor;
     private final KubeProxy kubeProxy;
+    private final HostNodeModel hostNodeModel;
 
     @Inject
-    public ApiMasterService(ProcessManager processManager, ApiMasterKubernetesModel model, Replicator replicator, ProcessMonitor processMonitor, KubeProxy kubeProxy) {
+    public ApiMasterService(ProcessManager processManager, ApiMasterKubernetesModel model, Replicator replicator, ProcessMonitor processMonitor, KubeProxy kubeProxy, HostNodeModel hostNodeModel) {
         this.processManager = processManager;
         this.model = model;
         this.replicator = replicator;
         this.processMonitor = processMonitor;
         this.kubeProxy = kubeProxy;
+        this.hostNodeModel = hostNodeModel;
+
+        HostNode node = new HostNode();
+        // configure it with host name etc...
+        node.setHostName("localhost");
+        node.setId(UUID.randomUUID().toString());
+        hostNodeModel.write(node);
     }
 
     // Pods
@@ -175,6 +188,23 @@ public class ApiMasterService implements Kubernetes {
     public String deleteService(@NotNull String serviceId) throws Exception {
         model.deleteService(serviceId);
         return null;
+    }
+
+    // Local nodes
+    //-------------------------------------------------------------------------
+
+    @GET
+    @Path("hostNodes")
+    @Produces("application/json")
+    public Map<String,HostNode> getHostNodes() {
+        return hostNodeModel.getMap();
+    }
+
+    @GET
+    @Path("hostNodes/{id}")
+    @Produces("application/json")
+    public HostNode getHostNode(@PathParam("id") @NotNull String id) {
+        return hostNodeModel.getEntity(id);
     }
 
 }
