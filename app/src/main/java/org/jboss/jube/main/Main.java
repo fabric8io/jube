@@ -15,6 +15,13 @@
  */
 package org.jboss.jube.main;
 
+import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
+
 import io.fabric8.kubernetes.api.KubernetesClient;
 import io.fabric8.kubernetes.api.KubernetesFactory;
 import io.fabric8.kubernetes.api.KubernetesManager;
@@ -32,14 +39,14 @@ import org.eclipse.jetty.webapp.WebAppContext;
 import org.jboss.weld.environment.servlet.BeanManagerResourceBindingListener;
 import org.jboss.weld.environment.servlet.Listener;
 
-import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
+/**
+ * A main class to run jube.
+ */
+public final class Main {
 
-public class Main {
+    private Main() {
+        // run as main class
+    }
 
     public static void main(final String[] args) throws Exception {
         try {
@@ -63,7 +70,6 @@ public class Main {
 
             initaliseGitStuff();
 
-
             // lets find wars on the classpath
             Set<String> foundURLs = new HashSet<>();
             findWarsOnClassPath(server, handlers, Thread.currentThread().getContextClassLoader(), foundURLs, portNumber);
@@ -78,9 +84,9 @@ public class Main {
             // find the .war files in the maven dir.  Assumes you set the working dir to the target/jube dir.
             if (foundURLs.isEmpty()) {
                 File[] files = new File("maven").listFiles();
-                if( files!=null ) {
+                if (files != null) {
                     for (File file : files) {
-                        if( file.getName().endsWith(".war") ) {
+                        if (file.getName().endsWith(".war")) {
                             createWebapp(handlers, foundURLs, portNumber, file.getAbsolutePath());
                         }
                     }
@@ -90,7 +96,7 @@ public class Main {
             if (foundURLs.isEmpty()) {
                 System.out.println("WARNING: did not find any war files on the classpath to embed!");
             }
-            
+
             initialiseHawtioStuff();
 
             // Register and map the dispatcher servlet
@@ -226,7 +232,6 @@ public class Main {
         }
         return contextPath;
     }
-
 
     /**
      * Returns the file path of the given URL

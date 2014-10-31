@@ -15,24 +15,22 @@
  */
 package org.jboss.jube.main;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import org.apache.cxf.jaxrs.swagger.SwaggerFeature;
-import org.apache.deltaspike.core.api.config.ConfigProperty;
-import org.jboss.jube.apimaster.ApiMasterService;
-import org.jboss.jube.apimaster.ApiMasterService;
-import org.apache.cxf.feature.LoggingFeature;
-
+import java.util.HashSet;
+import java.util.Set;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import org.apache.cxf.feature.LoggingFeature;
+import org.apache.cxf.jaxrs.swagger.SwaggerFeature;
+import org.apache.deltaspike.core.api.config.ConfigProperty;
+import org.jboss.jube.apimaster.ApiMasterService;
 
 @ApplicationPath("/")
 public class NodeApplication extends Application {
+
     @Produces
     private JacksonJsonProvider jacksonJsonProvider = new JacksonJsonProvider();
 
@@ -41,7 +39,7 @@ public class NodeApplication extends Application {
 
     @Inject
     @ConfigProperty(name = "CXF_LOG_REQUESTS", defaultValue = "false")
-    boolean cxfLogRequests;
+    private boolean cxfLogRequests;
 
     @Override
     public Set<Object> getSingletons() {
