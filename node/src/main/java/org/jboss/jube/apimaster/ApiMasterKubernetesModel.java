@@ -15,6 +15,10 @@
  */
 package org.jboss.jube.apimaster;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,7 +27,10 @@ import javax.inject.Singleton;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import io.fabric8.kubernetes.api.KubernetesClient;
+import io.fabric8.kubernetes.api.KubernetesFactory;
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.CurrentState;
 import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
 import io.fabric8.kubernetes.api.model.PodListSchema;
 import io.fabric8.kubernetes.api.model.PodSchema;
@@ -47,6 +54,8 @@ import org.jboss.jube.local.EntityListenerList;
 import org.jboss.jube.local.LocalKubernetesModel;
 import org.jboss.jube.local.NodeHelper;
 import org.jboss.jube.local.PodCurrentContainer;
+import org.jboss.jube.model.HostNode;
+import org.jboss.jube.model.HostNodeModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +67,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
 
     private final LocalKubernetesModel memoryModel = new LocalKubernetesModel();
     private final CuratorFramework curator;
+    private final HostNodeModel hostNodeModel;
     private final ExecutorService treeCacheExecutor = Executors.newSingleThreadExecutor();
 
     private final PathChildrenCacheListener treeListener = new PathChildrenCacheListener() {
@@ -76,8 +86,9 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
 
     @Singleton
     @Inject
-    public ApiMasterKubernetesModel(CuratorFramework curator) throws Exception {
+    public ApiMasterKubernetesModel(CuratorFramework curator, HostNodeModel hostNodeModel) throws Exception {
         this.curator = curator;
+        this.hostNodeModel = hostNodeModel;
         this.zkPath = ZkPath.KUBERNETES_MODEL.getPath();
         this.treeCache = new TreeCache(curator, zkPath, true, false, true, treeCacheExecutor);
         this.treeCache.start(TreeCache.StartMode.NORMAL);
@@ -115,9 +126,13 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     // -------------------------------------------------------------------------
     @Override
     public PodSchema deletePod(String podId) {
-        PodSchema answer = memoryModel.deletePod(podId);
-        deleteEntity(zkPathForPod(podId));
-        return answer;
+        if (Strings.isNotBlank(podId)) {
+            PodSchema answer = memoryModel.deletePod(podId);
+            deleteEntity(zkPathForPod(podId));
+            return answer;
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -230,6 +245,76 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     @Override
     public String createID(String kind) {
         return memoryModel.createID(kind);
+    }
+
+    // Load balancing API
+    //-------------------------------------------------------------------------
+
+    public String loadBalanceCreatePod(PodSchema pod) {
+        Exception failed = null;
+        List<HostNode> hosts = new ArrayList<>(hostNodeModel.getMap().values());
+
+        // lets try randomize the list
+        int size = hosts.size();
+        if (size <= 0) {
+            throw new IllegalStateException("No host nodes available");
+        }
+        if (size == 1) {
+            HostNode hostNode = hosts.get(0);
+            try {
+                return tryCreatePod(hostNode, pod);
+            } catch (Exception e) {
+                failed = e;
+                LOG.error("Failed to create pod: " + pod.getId() + " on host: " + hostNode + ". " + e, e);
+            }
+        } else {
+            Collections.shuffle(hosts);
+            for (HostNode hostNode : hosts) {
+                try {
+                    return tryCreatePod(hostNode, pod);
+                } catch (Exception e) {
+                    failed = e;
+                    LOG.error("Failed to create pod: " + pod.getId() + " on host: " + hostNode + ". " + e, e);
+                }
+            }
+        }
+        CurrentState currentState = NodeHelper.getOrCreateCurrentState(pod);
+        currentState.setStatus("Terminated: " + failed);
+        return null;
+    }
+
+    protected String tryCreatePod(HostNode hostNode, PodSchema pod) throws Exception {
+        System.out.println("===== attempting to create pod on host: " + hostNode.getWebUrl());
+        KubernetesExtensionsClient client = createClient(hostNode);
+        return client.createLocalPod(pod);
+    }
+
+    public String deleteRemotePod(PodSchema pod) {
+        List<HostNode> hosts = new ArrayList<>(hostNodeModel.getMap().values());
+        for (HostNode hostNode : hosts) {
+            try {
+                return tryDeletePod(hostNode, pod);
+            } catch (Exception e) {
+                LOG.warn("Failed to delete pod on host " + hostNode.getWebUrl() + ". Might not be on that pod ;). " + e, e);
+            }
+        }
+        return null;
+    }
+
+    protected String tryDeletePod(HostNode hostNode, PodSchema pod) throws Exception {
+        String id = pod.getId();
+        System.out.println("===== attempting to delete pod: " + id + " on host: " + hostNode.getWebUrl());
+        KubernetesExtensionsClient client = createClient(hostNode);
+        return client.deleteLocalPod(id);
+    }
+
+
+    private KubernetesExtensionsClient createClient(HostNode hostNode) {
+        String webUrl = hostNode.getWebUrl();
+        if (Strings.isNullOrBlank(webUrl)) {
+            throw new IllegalArgumentException("No WebUrl so could not create client for host: " + hostNode);
+        }
+        return new KubernetesExtensionsClient(webUrl);
     }
 
 

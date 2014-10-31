@@ -127,6 +127,9 @@ public class LocalKubernetesModel implements KubernetesModel {
      */
     @Override
     public PodSchema deletePod(String podId) {
+        if (Strings.isBlank(podId)) {
+            return null;
+        }
         return podMap.remove(podId);
     }
 

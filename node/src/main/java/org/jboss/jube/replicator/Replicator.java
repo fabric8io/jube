@@ -64,7 +64,7 @@ public class Replicator {
     private static final transient Logger LOG = LoggerFactory.getLogger(Replicator.class);
 
     private final CuratorFramework curator;
-    private final KubernetesModel model;
+    private final ApiMasterKubernetesModel model;
     private final ProcessManager processManager;
     private final long pollTime;
     private final Timer timer = new Timer();
@@ -235,7 +235,8 @@ public class Replicator {
         List<PodSchema> list = Lists.newArrayList(pods);
         for (int i = 1, size = list.size(); i <= deleteCount && i <= size; i++) {
             PodSchema removePod = list.remove(size - 1);
-            NodeHelper.deletePod(processManager, model, removePod.getId());
+            String id = removePod.getId();
+            model.deleteRemotePod(removePod);
         }
         return ImmutableList.copyOf(list);
     }
@@ -274,8 +275,7 @@ public class Replicator {
             }
             // TODO should we update the pod now we've updated it?
             List<ManifestContainer> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);
-            NodeHelper.createMissingContainers(processManager, model, pod, NodeHelper.getOrCreateCurrentState(pod), desiredContainers);
-            model.updatePod(pod.getId(), pod);
+            model.loadBalanceCreatePod(pod);
         }
         return ImmutableList.copyOf(list);
     }

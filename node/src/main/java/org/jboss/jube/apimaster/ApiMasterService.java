@@ -22,7 +22,9 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -58,7 +60,7 @@ import static org.jboss.jube.local.NodeHelper.getOrCreateCurrentState;
 @Path("v1beta1")
 @Produces("application/json")
 @Consumes("application/json")
-public class ApiMasterService implements Kubernetes {
+public class ApiMasterService implements KubernetesExtensions {
     public static final String DEFAULT_HOSTNAME = "localhost";
     public static final String DEFAULT_HTTP_PORT = "8585";
 
@@ -212,7 +214,7 @@ public class ApiMasterService implements Kubernetes {
         return null;
     }
 
-    // Local nodes
+    // Host nodes
     //-------------------------------------------------------------------------
 
     @GET
@@ -229,4 +231,26 @@ public class ApiMasterService implements Kubernetes {
         return hostNodeModel.getEntity(id);
     }
 
+
+    // Local operations
+    //-------------------------------------------------------------------------
+
+    @Override
+    @POST
+    @Path("local/pods")
+    @Consumes("application/json")
+    public String createLocalPod(PodSchema entity) throws Exception {
+        String id = model.getOrCreateId(entity.getId(), NodeHelper.KIND_REPLICATION_CONTROLLER);
+        entity.setId(id);
+        return updatePod(id, entity);
+    }
+
+    @Override
+    @DELETE
+    @Path("pods/{id}")
+    @Consumes("text/plain")
+    public String deleteLocalPod(@PathParam("id") @NotNull String id) throws Exception {
+        NodeHelper.deletePod(processManager, model, id);
+        return null;
+    }
 }
