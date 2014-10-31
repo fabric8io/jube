@@ -207,11 +207,11 @@ public final class NodeHelper {
         OpenMavenURL mavenUrl = ImageMavenCoords.dockerImageToMavenURL(image);
         Objects.notNull(mavenUrl, "mavenUrl");
 
-        System.out.println("Creating new container " + containerName + " from: " + mavenUrl);
+        LOG.info("Creating new container " + containerName + " from: " + mavenUrl);
         Map<String, String> envVarMap = createEnvironmentVariableMap(container.getEnv());
         // now lets copy in the service env vars...
         appendServiceEnvironmentVariables(envVarMap, model);
-        System.out.println("Env variables are: " + envVarMap);
+        LOG.info("Env variables are: " + envVarMap);
         InstallOptions.InstallOptionsBuilder builder = new InstallOptions.InstallOptionsBuilder().
                 url(mavenUrl).environment(envVarMap);
         if (Strings.isNotBlank(containerName)) {
@@ -219,28 +219,31 @@ public final class NodeHelper {
         }
         InstallOptions installOptions = builder.build();
 
-        Installation installation = processManager.install(installOptions, null);
-        File installDir = installation.getInstallDir();
+        try {
+            Installation installation = processManager.install(installOptions, null);
+            File installDir = installation.getInstallDir();
 
-        PodCurrentContainerInfo containerInfo = NodeHelper.getOrCreateContainerInfo(pod, containerName);
+            PodCurrentContainerInfo containerInfo = NodeHelper.getOrCreateContainerInfo(pod, containerName);
 
-        System.out.println("Installed new process at: " + installDir);
+            LOG.info("Installed new process at: " + installDir);
 
-        // TODO add a container to the current state
-        ProcessController controller = installation.getController();
-        controller.start();
+            // TODO add a container to the current state
+            ProcessController controller = installation.getController();
+            controller.start();
 
-        Long pid = controller.getPid();
-        containerAlive(pod, containerName, pid != null && pid > 0);
+            Long pid = controller.getPid();
+            containerAlive(pod, containerName, pid != null && pid > 0);
 
-        Map<String, String> environment = controller.getConfig().getEnvironment();
-        container.setEnv(createEnvironmentVariables(environment));
-        List<Port> installationPorts = createInstallationPorts(environment, installation);
-        if (installationPorts != null) {
-            container.setPorts(installationPorts);
+            Map<String, String> environment = controller.getConfig().getEnvironment();
+            container.setEnv(createEnvironmentVariables(environment));
+            List<Port> installationPorts = createInstallationPorts(environment, installation);
+            if (installationPorts != null) {
+                container.setPorts(installationPorts);
+            }
+        } catch (Exception e) {
+            currentState.setStatus("Terminated: " + e);
+            LOG.error("Failed to create pod: " + pod.getId() + ". " + e, e);
         }
-
-        System.out.println("Started the process!");
     }
 
     protected static List<Port> createInstallationPorts(Map<String, String> environment, Installation installation) {
