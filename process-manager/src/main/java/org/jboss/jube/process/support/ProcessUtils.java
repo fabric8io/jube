@@ -16,17 +16,17 @@
 package org.jboss.jube.process.support;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
-import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ProcessUtils {
+public final class ProcessUtils {
 
     private static final transient Logger LOGGER = LoggerFactory.getLogger(ProcessUtils.class);
+
+    private ProcessUtils() {
+        // utility class
+    }
 
     /**
      * Lets find the install dir, which may be the root dir or could be a child directory (as typically untarring will create a new child directory)

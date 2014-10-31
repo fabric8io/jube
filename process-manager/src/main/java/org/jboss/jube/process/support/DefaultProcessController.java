@@ -15,9 +15,15 @@
  */
 package org.jboss.jube.process.support;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.Executor;
+
+import static java.util.concurrent.Executors.newFixedThreadPool;
+
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
 import io.fabric8.utils.ExecParseUtils;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Processes;
@@ -26,13 +32,6 @@ import org.jboss.jube.process.config.ProcessConfig;
 import org.jboss.jube.process.support.command.CommandFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.Executor;
-
-import static java.util.concurrent.Executors.newFixedThreadPool;
 
 /**
  * A default implementation of {@link org.jboss.jube.process.ProcessController} which assumes a launch script which
@@ -60,7 +59,6 @@ public class DefaultProcessController implements ProcessController {
     private final File baseDir;
     private final ProcessConfig config;
     private transient Executor executor;
-
 
     /**
      * @param id identifier of the controlled process. Usually PID.
@@ -168,7 +166,6 @@ public class DefaultProcessController implements ProcessController {
     }
 
 
-
     // Properties
     //-------------------------------------------------------------------------
     public File getBaseDir() {
@@ -176,9 +173,9 @@ public class DefaultProcessController implements ProcessController {
     }
 
     public Executor getExecutor() {
-    	if (executor == null) {
-    	    executor = newFixedThreadPool(THREADS_PER_CONTROLLER, new ThreadFactoryBuilder().setDaemon(true).setNameFormat("fuse-process-controller-%s").build());
-    	}
+        if (executor == null) {
+            executor = newFixedThreadPool(THREADS_PER_CONTROLLER, new ThreadFactoryBuilder().setDaemon(true).setNameFormat("fuse-process-controller-%s").build());
+        }
         return executor;
     }
 

@@ -15,18 +15,22 @@
  */
 package org.jboss.jube.process.config;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.jboss.jube.util.InstallHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-
 /**
  * Helper methods for working with the environment configuration
  */
-public class ConfigHelper {
+public final class ConfigHelper {
     private static final transient Logger LOG = LoggerFactory.getLogger(ConfigHelper.class);
+
+    private ConfigHelper() {
+        // utility class
+    }
 
     public static ProcessConfig loadProcessConfig(File installDir) throws IOException {
         File file = createControllerConfigFile(installDir);

@@ -15,15 +15,14 @@
  */
 package org.jboss.jube.process;
 
-import io.fabric8.utils.Processes;
-import io.hawt.aether.OpenMavenURL;
-import org.jboss.jube.process.config.ProcessConfig;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.URL;
 import java.util.Map;
+
+import io.fabric8.utils.Processes;
+import io.hawt.aether.OpenMavenURL;
+import org.jboss.jube.process.config.ProcessConfig;
 
 /**
  * Represents a locally installed managed process.

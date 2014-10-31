@@ -15,14 +15,10 @@
  */
 package org.jboss.jube.process;
 
-import io.hawt.aether.OpenMavenURL;
-import org.jboss.jube.process.InstallOptions;
-import org.junit.Assert;
+import java.net.MalformedURLException;
+
 import org.junit.Before;
 import org.junit.Test;
-
-import java.net.MalformedURLException;
-import java.net.URL;
 
 import static org.jboss.jube.process.InstallOptions.InstallOptionsBuilder;
 import static org.junit.Assert.assertEquals;

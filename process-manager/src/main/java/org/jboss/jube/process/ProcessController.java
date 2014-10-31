@@ -15,11 +15,11 @@
  */
 package org.jboss.jube.process;
 
-import org.jboss.jube.process.config.ProcessConfig;
-import org.jboss.jube.process.support.command.CommandFailedException;
-
 import java.io.IOException;
 import java.io.Serializable;
+
+import org.jboss.jube.process.config.ProcessConfig;
+import org.jboss.jube.process.support.command.CommandFailedException;
 
 /**
  * Controls a process and provides API for executing basic commands against it.

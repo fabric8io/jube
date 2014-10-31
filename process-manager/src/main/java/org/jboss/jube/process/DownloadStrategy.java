@@ -15,11 +15,10 @@
  */
 package org.jboss.jube.process;
 
-import io.hawt.aether.OpenMavenURL;
-
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
+
+import io.hawt.aether.OpenMavenURL;
 
 /**
  * A Strategy for how a distribution URL is to be downloaded and installed into the install directory

@@ -19,16 +19,22 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.concurrent.Executor;
 
-import org.jboss.jube.process.support.command.Command;
-import org.jboss.jube.process.support.command.Duration;
-import org.jboss.jube.process.support.command.CommandFailedException;
-
 import com.google.common.base.Preconditions;
+import org.jboss.jube.process.support.command.Command;
+import org.jboss.jube.process.support.command.CommandFailedException;
+import org.jboss.jube.process.support.command.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FileUtils {
+/**
+ * File utilities.
+ */
+public final class FileUtils {
     private static final transient Logger LOG = LoggerFactory.getLogger(FileUtils.class);
+
+    private FileUtils() {
+        // utility class
+    }
 
     public static void extractArchive(File archiveFile, File targetDirectory, String extractCommand, Duration timeLimit, Executor executor)
             throws CommandFailedException {

@@ -15,25 +15,16 @@
  */
 package org.jboss.jube.process;
 
+import java.io.File;
+import java.nio.charset.Charset;
+
 import com.google.common.io.Files;
 import io.hawt.aether.OpenMavenURL;
-import org.jboss.jube.process.InstallOptions;
-import org.jboss.jube.process.InstallTask;
 import org.jboss.jube.process.service.ProcessManagerService;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.management.MalformedObjectNameException;
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.nio.charset.Charset;
-
-import static java.lang.String.format;
-import static java.util.UUID.randomUUID;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 

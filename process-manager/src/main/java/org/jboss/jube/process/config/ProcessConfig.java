@@ -15,9 +15,6 @@
  */
 package org.jboss.jube.process.config;
 
-import org.jboss.jube.process.support.command.Command;
-import org.jboss.jube.process.support.command.CommandFailedException;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -27,6 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Executor;
+
+import org.jboss.jube.process.support.command.Command;
+import org.jboss.jube.process.support.command.CommandFailedException;
 
 /**
  * The configuration DTO stored as JSON so that the system can be restarted and remember how to run & control a managed process
@@ -44,7 +44,7 @@ public class ProcessConfig implements Serializable {
     private String killCommand;
     private String configureCommand;
     private String pidFile;
-    private Map<String,String> environment = new TreeMap<String, String>();
+    private Map<String, String> environment = new TreeMap<String, String>();
     private List<String> installCommands = new ArrayList<String>();
 
     private String deployPath;
@@ -92,29 +92,54 @@ public class ProcessConfig implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         ProcessConfig that = (ProcessConfig) o;
 
-        if (configureCommand != null ? !configureCommand.equals(that.configureCommand) : that.configureCommand != null)
+        if (configureCommand != null ? !configureCommand.equals(that.configureCommand) : that.configureCommand != null) {
             return false;
-        if (deployPath != null ? !deployPath.equals(that.deployPath) : that.deployPath != null) return false;
-        if (environment != null ? !environment.equals(that.environment) : that.environment != null) return false;
-        if (installCommands != null ? !installCommands.equals(that.installCommands) : that.installCommands != null)
+        }
+        if (deployPath != null ? !deployPath.equals(that.deployPath) : that.deployPath != null) {
             return false;
-        if (killCommand != null ? !killCommand.equals(that.killCommand) : that.killCommand != null) return false;
-        if (launchScript != null ? !launchScript.equals(that.launchScript) : that.launchScript != null) return false;
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
-        if (pidFile != null ? !pidFile.equals(that.pidFile) : that.pidFile != null) return false;
-        if (restartCommand != null ? !restartCommand.equals(that.restartCommand) : that.restartCommand != null)
+        }
+        if (environment != null ? !environment.equals(that.environment) : that.environment != null) {
             return false;
-        if (sharedLibraryPath != null ? !sharedLibraryPath.equals(that.sharedLibraryPath) : that.sharedLibraryPath != null)
+        }
+        if (installCommands != null ? !installCommands.equals(that.installCommands) : that.installCommands != null) {
             return false;
-        if (startCommand != null ? !startCommand.equals(that.startCommand) : that.startCommand != null) return false;
-        if (statusCommand != null ? !statusCommand.equals(that.statusCommand) : that.statusCommand != null)
+        }
+        if (killCommand != null ? !killCommand.equals(that.killCommand) : that.killCommand != null) {
             return false;
-        if (stopCommand != null ? !stopCommand.equals(that.stopCommand) : that.stopCommand != null) return false;
+        }
+        if (launchScript != null ? !launchScript.equals(that.launchScript) : that.launchScript != null) {
+            return false;
+        }
+        if (name != null ? !name.equals(that.name) : that.name != null) {
+            return false;
+        }
+        if (pidFile != null ? !pidFile.equals(that.pidFile) : that.pidFile != null) {
+            return false;
+        }
+        if (restartCommand != null ? !restartCommand.equals(that.restartCommand) : that.restartCommand != null) {
+            return false;
+        }
+        if (sharedLibraryPath != null ? !sharedLibraryPath.equals(that.sharedLibraryPath) : that.sharedLibraryPath != null) {
+            return false;
+        }
+        if (startCommand != null ? !startCommand.equals(that.startCommand) : that.startCommand != null) {
+            return false;
+        }
+        if (statusCommand != null ? !statusCommand.equals(that.statusCommand) : that.statusCommand != null) {
+            return false;
+        }
+        if (stopCommand != null ? !stopCommand.equals(that.stopCommand) : that.stopCommand != null) {
+            return false;
+        }
 
         return true;
     }
@@ -248,7 +273,7 @@ public class ProcessConfig implements Serializable {
         }
         System.out.println("--- running command " + Arrays.asList(arguments) + " in directory " + baseDir.getAbsolutePath());
         Command command = new Command(arguments).setDirectory(baseDir);
-        Map<String,String> environment = getEnvironment();
+        Map<String, String> environment = getEnvironment();
         if (environment != null && environment.size() > 0) {
             command = command.addEnvironment(environment);
         }

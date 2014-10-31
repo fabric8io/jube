@@ -44,20 +44,20 @@ import io.fabric8.utils.Strings;
 import io.fabric8.utils.Zips;
 import io.hawt.aether.OpenMavenURL;
 import io.hawt.util.Closeables;
-import org.jboss.jube.process.DownloadStrategy;
-import org.jboss.jube.process.InstallContext;
-import org.jboss.jube.process.Installation;
-import org.jboss.jube.process.config.ConfigHelper;
-import org.jboss.jube.process.config.ProcessConfig;
-import org.jboss.jube.process.support.command.Duration;
-import org.jboss.jube.process.InstallOptions;
-import org.jboss.jube.process.InstallTask;
-import org.jboss.jube.process.ProcessController;
-import org.jboss.jube.process.support.DefaultProcessController;
-import org.jboss.jube.util.InstallHelper;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
 import org.apache.deltaspike.core.api.jmx.JmxManaged;
 import org.apache.deltaspike.core.api.jmx.MBean;
+import org.jboss.jube.process.DownloadStrategy;
+import org.jboss.jube.process.InstallContext;
+import org.jboss.jube.process.InstallOptions;
+import org.jboss.jube.process.InstallTask;
+import org.jboss.jube.process.Installation;
+import org.jboss.jube.process.ProcessController;
+import org.jboss.jube.process.config.ConfigHelper;
+import org.jboss.jube.process.config.ProcessConfig;
+import org.jboss.jube.process.support.DefaultProcessController;
+import org.jboss.jube.process.support.command.Duration;
+import org.jboss.jube.util.InstallHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,9 +71,9 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcessManagerService.class);
     private static final String INSTALLED_BINARY = "install.bin";
 
-    private Executor executor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setDaemon(true).setNameFormat("fabric-process-manager-%s").build());
+    private Executor executor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setDaemon(true).setNameFormat("jube-process-manager-%s").build());
     private File storageLocation;
-    private int lastId = 0;
+    private int lastId;
     private final Duration untarTimeout = Duration.valueOf("1h");
     private final Duration postUnpackTimeout = Duration.valueOf("1h");
     private final Duration postInstallTimeout = Duration.valueOf("1h");
@@ -83,7 +83,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     private AtomicInteger fallbackPortGenerator = new AtomicInteger(30000);
 
     @Inject
-    public ProcessManagerService(@ConfigProperty(name = "process_dir", defaultValue = "./processes")  String storageLocation) throws MalformedObjectNameException, IOException {
+    public ProcessManagerService(@ConfigProperty(name = "process_dir", defaultValue = "./processes") String storageLocation) throws MalformedObjectNameException, IOException {
         this(new File(storageLocation));
     }
 
@@ -186,7 +186,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     }
 
     protected void allocatePorts(InstallOptions options, File nestedProcessDirectory) throws IOException {
-        Map<String,String> ports = InstallHelper.readPortsFromDirectory(nestedProcessDirectory);
+        Map<String, String> ports = InstallHelper.readPortsFromDirectory(nestedProcessDirectory);
         Set<Map.Entry<String, String>> entries = ports.entrySet();
         if (!entries.isEmpty()) {
             // lets allocate ports and add them as env vars
@@ -209,38 +209,38 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     }
 
     /**
-   	 * When using the {@link java.net.InetAddress#getHostName()} method in an
-   	 * environment where neither a proper DNS lookup nor an <tt>/etc/hosts</tt>
-   	 * entry exists for a given host, the following exception will be thrown:
-   	 * <code>
-   	 * java.net.UnknownHostException: &lt;hostname&gt;: &lt;hostname&gt;
-        *  at java.net.InetAddress.getLocalHost(InetAddress.java:1425)
-        *   ...
-   	 * </code>
-   	 * Instead of just throwing an UnknownHostException and giving up, this
-   	 * method grabs a suitable hostname from the exception and prevents the
-   	 * exception from being thrown. If a suitable hostname cannot be acquired
-   	 * from the exception, only then is the <tt>UnknownHostException</tt> thrown.
-   	 *
-   	 * @return The hostname
-   	 * @throws UnknownHostException
-   	 * @see {@link java.net.InetAddress#getLocalHost()}
-   	 * @see {@link java.net.InetAddress#getHostName()}
-   	 */
-   	public static String getLocalHostName() throws UnknownHostException {
-   		try {
-   			return (InetAddress.getLocalHost()).getHostName();
-   		} catch (UnknownHostException uhe) {
-   			String host = uhe.getMessage(); // host = "hostname: hostname"
-   			if (host != null) {
-   				int colon = host.indexOf(':');
-   				if (colon > 0) {
-   					return host.substring(0, colon);
-   				}
-   			}
-   			throw uhe;
-   		}
-   	}
+     * When using the {@link java.net.InetAddress#getHostName()} method in an
+     * environment where neither a proper DNS lookup nor an <tt>/etc/hosts</tt>
+     * entry exists for a given host, the following exception will be thrown:
+     * <code>
+     * java.net.UnknownHostException: &lt;hostname&gt;: &lt;hostname&gt;
+     * at java.net.InetAddress.getLocalHost(InetAddress.java:1425)
+     * ...
+     * </code>
+     * Instead of just throwing an UnknownHostException and giving up, this
+     * method grabs a suitable hostname from the exception and prevents the
+     * exception from being thrown. If a suitable hostname cannot be acquired
+     * from the exception, only then is the <tt>UnknownHostException</tt> thrown.
+     *
+     * @return The hostname
+     * @throws UnknownHostException
+     * @see {@link java.net.InetAddress#getLocalHost()}
+     * @see {@link java.net.InetAddress#getHostName()}
+     */
+    public static String getLocalHostName() throws UnknownHostException {
+        try {
+            return (InetAddress.getLocalHost()).getHostName();
+        } catch (UnknownHostException uhe) {
+            String host = uhe.getMessage(); // host = "hostname: hostname"
+            if (host != null) {
+                int colon = host.indexOf(':');
+                if (colon > 0) {
+                    return host.substring(0, colon);
+                }
+            }
+            throw uhe;
+        }
+    }
 
     protected int allocatePortNumber(InstallOptions options, File nestedProcessDirectory, String key, String value) {
         ServerSocket ss = null;
@@ -340,7 +340,6 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
 
     /**
      * Returns the next process ID
-     * @param options
      */
     protected synchronized String createNextId(InstallOptions options) {
         String id = options.getId();
@@ -350,7 +349,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
 
         // lets double check it doesn't exist already
         File dir;
-        String answer = null;
+        String answer;
         do {
             lastId++;
             answer = "" + lastId;
@@ -363,7 +362,6 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     protected File createInstallDir(String id) {
         return new File(storageLocation, id);
     }
-
 
     protected Installation createInstallation(OpenMavenURL url, String id, File rootDir, ProcessConfig config) {
         // TODO we should support different kinds of controller based on the kind of installation

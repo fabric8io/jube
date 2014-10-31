@@ -19,7 +19,6 @@ package org.jboss.jube.process;
 import java.io.File;
 import java.io.Serializable;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,9 +33,9 @@ import static com.google.common.base.Objects.firstNonNull;
  */
 public class InstallOptions implements Serializable {
 
+    public static final String DEFAULT_EXTRACT_CMD = "tar zxf";
 
     private static final long serialVersionUID = 4943127368399800099L;
-    public static final String DEFAULT_EXTRACT_CMD = "tar zxf";
 
     public static class InstallOptionsBuilder<T extends InstallOptionsBuilder> {
         private String id;
@@ -54,7 +53,7 @@ public class InstallOptions implements Serializable {
         private Map<String, Object> properties = new HashMap<String , Object>();
         private Map<String, String> environment = new HashMap<String, String>();
         private String[] jvmOptions = {};
-        private Map<String,File> jarFiles = new HashMap<String, File>();
+        private Map<String, File> jarFiles = new HashMap<String, File>();
         private DownloadStrategy downloadStrategy;
 
         public T id(final String id) {
@@ -126,8 +125,8 @@ public class InstallOptions implements Serializable {
             return (T) this;
         }
 
-        public T jarFiles(final Map<String,File> jarFiles) {
-            this.jarFiles = new HashMap<String,File>(jarFiles);
+        public T jarFiles(final Map<String, File> jarFiles) {
+            this.jarFiles = new HashMap<String, File>(jarFiles);
             return (T) this;
         }
 
@@ -227,17 +226,14 @@ public class InstallOptions implements Serializable {
         }
 
         public InstallOptions build() throws MalformedURLException {
-                return new InstallOptions(id, getName(), getUrl(),  offline, optionalDependencyPatterns, excludeDependencyFilterPatterns, properties, environment, jvmOptions, jarFiles, downloadStrategy);
+            return new InstallOptions(id, getName(), getUrl(),  offline, optionalDependencyPatterns, excludeDependencyFilterPatterns,
+                    properties, environment, jvmOptions, jarFiles, downloadStrategy);
         }
 
         public Map<String, File> getJarFiles() {
             return jarFiles;
         }
 
-    }
-
-    public static InstallOptionsBuilder builder() {
-        return new InstallOptionsBuilder();
     }
 
     private final String id;
@@ -252,8 +248,9 @@ public class InstallOptions implements Serializable {
     private final Map<String, File> jarFiles;
     private final DownloadStrategy downloadStrategy;
 
-
-    public InstallOptions(String id, String name, OpenMavenURL url, boolean offline, String[] optionalDependencyPatterns, String[] excludeDependencyFilterPatterns, Map<String, Object> properties, Map<String, String> environment, String[] jvmOptions, Map<String, File> jarFiles, DownloadStrategy downloadStrategy) {
+    public InstallOptions(String id, String name, OpenMavenURL url, boolean offline, String[] optionalDependencyPatterns,
+                          String[] excludeDependencyFilterPatterns, Map<String, Object> properties, Map<String, String> environment,
+                          String[] jvmOptions, Map<String, File> jarFiles, DownloadStrategy downloadStrategy) {
         this.id = id;
         this.name = name;
         this.url = url;
@@ -267,35 +264,63 @@ public class InstallOptions implements Serializable {
         this.downloadStrategy = downloadStrategy;
     }
 
+    public static InstallOptionsBuilder builder() {
+        return new InstallOptionsBuilder();
+    }
+
     @Override
     public String toString() {
-        return "InstallOptions{" +
-                "id='" + id + '\'' +
-                ", url=" + url +
-                ", properties=" + properties +
-                ", environment=" + environment +
-                ", jvmOptions=" + Arrays.toString(jvmOptions) +
-                ", jarFiles=" + jarFiles +
-                '}';
+        return "InstallOptions{"
+                + "id='" + id + '\''
+                + ", url=" + url
+                + ", properties=" + properties
+                + ", environment=" + environment
+                + ", jvmOptions=" + Arrays.toString(jvmOptions)
+                + ", jarFiles=" + jarFiles
+                + '}';
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         InstallOptions that = (InstallOptions) o;
 
-        if (offline != that.offline) return false;
-        if (environment != null ? !environment.equals(that.environment) : that.environment != null) return false;
-        if (!Arrays.equals(excludeDependencyFilterPatterns, that.excludeDependencyFilterPatterns)) return false;
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
-        if (jarFiles != null ? !jarFiles.equals(that.jarFiles) : that.jarFiles != null) return false;
-        if (!Arrays.equals(jvmOptions, that.jvmOptions)) return false;
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
-        if (!Arrays.equals(optionalDependencyPatterns, that.optionalDependencyPatterns)) return false;
-        if (properties != null ? !properties.equals(that.properties) : that.properties != null) return false;
-        if (url != null ? !url.equals(that.url) : that.url != null) return false;
+        if (offline != that.offline) {
+            return false;
+        }
+        if (environment != null ? !environment.equals(that.environment) : that.environment != null) {
+            return false;
+        }
+        if (!Arrays.equals(excludeDependencyFilterPatterns, that.excludeDependencyFilterPatterns)) {
+            return false;
+        }
+        if (id != null ? !id.equals(that.id) : that.id != null) {
+            return false;
+        }
+        if (jarFiles != null ? !jarFiles.equals(that.jarFiles) : that.jarFiles != null) {
+            return false;
+        }
+        if (!Arrays.equals(jvmOptions, that.jvmOptions)) {
+            return false;
+        }
+        if (name != null ? !name.equals(that.name) : that.name != null) {
+            return false;
+        }
+        if (!Arrays.equals(optionalDependencyPatterns, that.optionalDependencyPatterns)) {
+            return false;
+        }
+        if (properties != null ? !properties.equals(that.properties) : that.properties != null) {
+            return false;
+        }
+        if (url != null ? !url.equals(that.url) : that.url != null) {
+            return false;
+        }
 
         return true;
     }

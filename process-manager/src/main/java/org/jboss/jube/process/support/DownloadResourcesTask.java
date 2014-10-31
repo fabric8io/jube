@@ -15,15 +15,6 @@
  */
 package org.jboss.jube.process.support;
 
-import io.fabric8.utils.FileChangeInfo;
-import io.fabric8.utils.Files;
-import io.fabric8.utils.Strings;
-import org.jboss.jube.process.InstallContext;
-import org.jboss.jube.process.InstallTask;
-import org.jboss.jube.process.config.ProcessConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -33,13 +24,22 @@ import java.net.URL;
 import java.util.Map;
 import java.util.Set;
 
+import io.fabric8.utils.FileChangeInfo;
+import io.fabric8.utils.Files;
+import io.fabric8.utils.Strings;
+import org.jboss.jube.process.InstallContext;
+import org.jboss.jube.process.InstallTask;
+import org.jboss.jube.process.config.ProcessConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Downloads the given resources from a map of relative path -> URL mappings
  */
 public class DownloadResourcesTask implements InstallTask {
     private static final transient Logger LOG = LoggerFactory.getLogger(DownloadResourcesTask.class);
 
-    private final Map<String,String> localPathToURLMap;
+    private final Map<String, String> localPathToURLMap;
 
     public DownloadResourcesTask(Map<String, String> localPathToURLMap) {
         this.localPathToURLMap = localPathToURLMap;
@@ -72,4 +72,5 @@ public class DownloadResourcesTask implements InstallTask {
             }
         }
     }
+
 }

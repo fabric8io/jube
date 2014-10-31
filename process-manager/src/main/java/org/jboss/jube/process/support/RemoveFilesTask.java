@@ -15,16 +15,14 @@
  */
 package org.jboss.jube.process.support;
 
-import io.fabric8.utils.ChecksumUtils;
-import io.fabric8.utils.FileChangeInfo;
+import java.io.File;
+
 import io.fabric8.utils.Files;
 import org.jboss.jube.process.InstallContext;
 import org.jboss.jube.process.InstallTask;
 import org.jboss.jube.process.config.ProcessConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
 
 /**
  * Removes one or more files or directories from the distro after unpacking

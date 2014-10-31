@@ -15,15 +15,15 @@
  */
 package org.jboss.jube.process;
 
-import org.jboss.jube.process.config.ProcessConfig;
-
 import java.io.File;
 import java.io.Serializable;
+
+import org.jboss.jube.process.config.ProcessConfig;
 
 /**
  * Performs an installation step given the process configuration, id and install directory
  */
 public interface InstallTask extends Serializable {
 
-    public void install(InstallContext installContext, ProcessConfig config, String id, File installDir) throws Exception;
+    void install(InstallContext installContext, ProcessConfig config, String id, File installDir) throws Exception;
 }

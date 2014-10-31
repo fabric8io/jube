@@ -15,11 +15,11 @@
  */
 package org.jboss.jube.process.support;
 
+import java.util.List;
+
 import io.fabric8.utils.Processes;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.List;
 
 import static org.apache.commons.lang3.SystemUtils.IS_OS_UNIX;
 
@@ -27,7 +27,7 @@ public class ProcessUtilsTest extends Assert {
 
     @Test
     public void shouldParseProcessesIds() {
-        if(IS_OS_UNIX) {
+        if (IS_OS_UNIX) {
             // When
             List<Long> processIds = Processes.getProcessIds();
 

@@ -15,11 +15,11 @@
  */
 package org.jboss.jube.process.support;
 
+import java.util.Map;
+
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
-
-import java.util.Map;
 
 public enum ByteToStringValues implements Function<Map<String, byte[]>, Map<String, String>> {
 

@@ -15,15 +15,19 @@
  */
 package org.jboss.jube.process.support;
 
+import java.io.File;
+
 import org.jboss.jube.process.InstallContext;
 import org.jboss.jube.process.InstallTask;
 import org.jboss.jube.process.config.ProcessConfig;
 
-import java.io.File;
-
 public class CompositeTask implements InstallTask {
 
     private final InstallTask[] subTasks;
+
+    public CompositeTask(InstallTask... subTasks) {
+        this.subTasks = subTasks;
+    }
 
     /**
      * Returns a combined task of task1 and task2 if they are both not null.
@@ -46,10 +50,6 @@ public class CompositeTask implements InstallTask {
                 return null;
             }
         }
-    }
-
-    public CompositeTask(InstallTask... subTasks) {
-        this.subTasks = subTasks;
     }
 
     @Override

@@ -15,6 +15,22 @@
  */
 package org.jboss.jube.process.support.command;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -24,15 +40,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
-
 import io.fabric8.utils.Closeables;
-
-import java.io.*;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.*;
 
 public class Command {
     private static final ImmutableSet<Integer> DEFAULT_SUCCESSFUL_EXIT_CODES = ImmutableSet.of(0);
@@ -237,7 +245,7 @@ public class Command {
             for (Map.Entry<String, String> entry : entries) {
                 String name = entry.getKey();
                 String value = entry.getValue();
-				if ("__unset".equals(value)) {
+                if ("__unset".equals(value)) {
                     processenv.remove(name);
                 } else {
                     processenv.put(name, value);
@@ -287,7 +295,7 @@ public class Command {
         System.out.println(out);
     }
 
-    private static class OutputProcessor {
+    private static final class OutputProcessor {
         private final InputStream inputStream;
         private final Executor executor;
         private Future<String> outputFuture;
@@ -306,7 +314,9 @@ public class Command {
                     try {
                         while (true) {
                             String line = reader.readLine();
-                            if (line == null) break;
+                            if (line == null) {
+                                break;
+                            }
                             buffer.append(line).append("\n");
                             System.out.println(line);
                         }
