@@ -44,14 +44,13 @@ import io.fabric8.kubernetes.api.model.PodSchema;
 import io.fabric8.kubernetes.api.model.PodTemplate;
 import io.fabric8.kubernetes.api.model.PodTemplateDesiredState;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
-import io.fabric8.utils.Closeables;
-import io.fabric8.utils.Objects;
 import io.fabric8.zookeeper.ZkPath;
 import io.hawt.util.Strings;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
 import org.jboss.jube.KubernetesModel;
 import org.jboss.jube.apimaster.ApiMasterKubernetesModel;
+import org.jboss.jube.apimaster.ApiMasterService;
 import org.jboss.jube.local.NodeHelper;
 import org.jboss.jube.process.ProcessManager;
 import org.slf4j.Logger;
@@ -244,7 +243,7 @@ public class Replicator {
 
     protected ImmutableList<PodSchema> createMissingContainers(ReplicationControllerSchema replicationController, PodTemplateDesiredState podTemplateDesiredState, ControllerDesiredState desiredState, int createCount, List<PodSchema> pods) throws Exception {
         // TODO this is a hack ;) needs replacing with the real host we're creating on
-        String host = "localhost";
+        String host = ApiMasterService.getHostName();
         List<PodSchema> list = Lists.newArrayList(pods);
         for (int i = 0; i < createCount; i++) {
             PodSchema pod = new PodSchema();

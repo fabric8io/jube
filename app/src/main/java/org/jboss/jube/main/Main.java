@@ -26,6 +26,7 @@ import io.fabric8.kubernetes.api.KubernetesClient;
 import io.fabric8.kubernetes.api.KubernetesFactory;
 import io.fabric8.kubernetes.api.KubernetesManager;
 import io.fabric8.kubernetes.template.TemplateManager;
+import io.fabric8.utils.Systems;
 import io.hawt.aether.AetherFacade;
 import io.hawt.git.GitFacade;
 import io.hawt.kubernetes.KubernetesService;
@@ -36,6 +37,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.log.Slf4jLog;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.jboss.jube.apimaster.ApiMasterService;
 import org.jboss.weld.environment.servlet.BeanManagerResourceBindingListener;
 import org.jboss.weld.environment.servlet.Listener;
 
@@ -53,13 +55,7 @@ public final class Main {
             System.setProperty("hawtio.authenticationEnabled", "false");
             System.setProperty("org.eclipse.jetty.util.log.class", Slf4jLog.class.getName());
 
-            String port = System.getenv("HTTP_PORT");
-            if (port == null) {
-                port = System.getProperty("http.port");
-            }
-            if (port == null) {
-                port = "8585";
-            }
+            String port = Systems.getEnvVarOrSystemProperty("HTTP_PORT", "HTTP_PORT", "8585");
             Integer portNumber = Integer.parseInt(port);
 
             System.out.println("Starting REST server on port: " + port);
@@ -122,7 +118,7 @@ public final class Main {
     }
 
     protected static void initialiseHawtioStuff() throws Exception {
-        final String kubernetesAddress = "http://localhost:8585/";
+        final String kubernetesAddress = "http://" + ApiMasterService.getHostName() + ":8585/";
         KubernetesClient kubernetesClient = new KubernetesClient(new KubernetesFactory(kubernetesAddress));
 
         KubernetesService kubernetesService = new KubernetesService() {
@@ -200,7 +196,7 @@ public final class Main {
             if (contextPath.equals("hawtio")) {
                 System.out.println();
                 System.out.println("==================================================");
-                System.out.println("hawtio is running on http://localhost:" + port + "/" + contextPath + "/");
+                System.out.println("hawtio is running on http://" + ApiMasterService.getHostName() + ":" + port + "/" + contextPath + "/");
                 System.out.println("==================================================");
                 System.out.println();
             } else {

@@ -39,6 +39,7 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
 import io.fabric8.kubernetes.api.model.ServiceListSchema;
 import io.fabric8.kubernetes.api.model.ServiceSchema;
 import io.fabric8.utils.Objects;
+import org.apache.deltaspike.core.api.config.ConfigProperty;
 import org.jboss.jube.KubernetesModel;
 import org.jboss.jube.local.NodeHelper;
 import org.jboss.jube.local.ProcessMonitor;
@@ -58,6 +59,12 @@ import static org.jboss.jube.local.NodeHelper.getOrCreateCurrentState;
 @Produces("application/json")
 @Consumes("application/json")
 public class ApiMasterService implements Kubernetes {
+    public static final String DEFAULT_HOSTNAME = "localhost";
+    public static final String DEFAULT_HTTP_PORT = "8585";
+
+    public static String hostName = DEFAULT_HOSTNAME;
+    public static String port = DEFAULT_HTTP_PORT;
+
     private final ProcessManager processManager;
     private final KubernetesModel model;
     private final Replicator replicator;
@@ -65,8 +72,20 @@ public class ApiMasterService implements Kubernetes {
     private final KubeProxy kubeProxy;
     private final HostNodeModel hostNodeModel;
 
+    public static String getHostName() {
+        return hostName;
+    }
+
+    public static String getPort() {
+        return port;
+    }
+
     @Inject
-    public ApiMasterService(ProcessManager processManager, ApiMasterKubernetesModel model, Replicator replicator, ProcessMonitor processMonitor, KubeProxy kubeProxy, HostNodeModel hostNodeModel) {
+    public ApiMasterService(ProcessManager processManager, ApiMasterKubernetesModel model, Replicator replicator, ProcessMonitor processMonitor, KubeProxy kubeProxy, HostNodeModel hostNodeModel,
+                            @ConfigProperty(name = "JUBE_HOSTNAME", defaultValue = DEFAULT_HOSTNAME)
+                            String hostName,
+                            @ConfigProperty(name = "HTTP_PORT", defaultValue = DEFAULT_HTTP_PORT)
+                            String port) {
         this.processManager = processManager;
         this.model = model;
         this.replicator = replicator;
@@ -74,9 +93,12 @@ public class ApiMasterService implements Kubernetes {
         this.kubeProxy = kubeProxy;
         this.hostNodeModel = hostNodeModel;
 
+        ApiMasterService.hostName = hostName;
+        ApiMasterService.port = port;
+
         HostNode node = new HostNode();
-        // configure it with host name etc...
-        node.setHostName("localhost");
+        node.setHostName(hostName);
+        node.setWebUrl("http://" + hostName + ":" + port + "/");
         node.setId(UUID.randomUUID().toString());
         hostNodeModel.write(node);
     }

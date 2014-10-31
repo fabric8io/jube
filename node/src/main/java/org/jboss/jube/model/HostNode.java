@@ -23,33 +23,15 @@ package org.jboss.jube.model;
 public class HostNode {
     private String id;
     private String hostName;
+    private String webUrl;
 
     @Override
     public String toString() {
         return "HostNode{" +
                 "id='" + id + '\'' +
                 ", hostName='" + hostName + '\'' +
+                ", webUrl='" + webUrl + '\'' +
                 '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        HostNode hostNode = (HostNode) o;
-
-        if (hostName != null ? !hostName.equals(hostNode.hostName) : hostNode.hostName != null) return false;
-        if (id != null ? !id.equals(hostNode.id) : hostNode.id != null) return false;
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (hostName != null ? hostName.hashCode() : 0);
-        return result;
     }
 
     public String getId() {
@@ -66,5 +48,13 @@ public class HostNode {
 
     public void setHostName(String hostName) {
         this.hostName = hostName;
+    }
+
+    public String getWebUrl() {
+        return webUrl;
+    }
+
+    public void setWebUrl(String webUrl) {
+        this.webUrl = webUrl;
     }
 }

@@ -46,6 +46,7 @@ import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
 import io.hawt.aether.OpenMavenURL;
 import org.jboss.jube.KubernetesModel;
+import org.jboss.jube.apimaster.ApiMasterService;
 import org.jboss.jube.process.InstallOptions;
 import org.jboss.jube.process.Installation;
 import org.jboss.jube.process.ProcessController;
@@ -318,7 +319,7 @@ public final class NodeHelper {
             ServiceSchema service = entry.getValue();
 
             // TODO should we allow different service ports?
-            String host = "localhost";
+            String host = ApiMasterService.getHostName();
             Integer port = service.getPort();
             if (port != null) {
                 String hostEnvVar = envVarPrefix + "HOST";
