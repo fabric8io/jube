@@ -80,6 +80,7 @@
     <maven.checkstyle.plugin.version>2.9.1</maven.checkstyle.plugin.version>
     <maven.checkstyle.version>6.0</maven.checkstyle.version>
     <maven.license.maven.plugin.version>2.6</maven.license.maven.plugin.version>
+    <failIfNoTests>false</failIfNoTests>
   </properties>
 
   <modules>
