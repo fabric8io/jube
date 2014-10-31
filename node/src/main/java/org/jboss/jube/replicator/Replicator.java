@@ -15,11 +15,18 @@
  */
 package org.jboss.jube.replicator;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.PreDestroy;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import io.fabric8.utils.Closeables;
-import io.fabric8.utils.Objects;
 import io.fabric8.groups.Group;
 import io.fabric8.groups.GroupListener;
 import io.fabric8.groups.internal.ZooKeeperGroup;
@@ -33,6 +40,8 @@ import io.fabric8.kubernetes.api.model.PodSchema;
 import io.fabric8.kubernetes.api.model.PodTemplate;
 import io.fabric8.kubernetes.api.model.PodTemplateDesiredState;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
+import io.fabric8.utils.Closeables;
+import io.fabric8.utils.Objects;
 import io.fabric8.zookeeper.ZkPath;
 import io.hawt.util.Strings;
 import org.apache.curator.framework.CuratorFramework;
@@ -43,15 +52,6 @@ import org.jboss.jube.local.NodeHelper;
 import org.jboss.jube.process.ProcessManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Monitors the status of the current replication controllers and pods and chooses to start new pods if there are not enough replicas
@@ -98,7 +98,6 @@ public class Replicator {
         enableTimer();
     }
 
-
     @PreDestroy
     public void destroy() {
         disableTimer();
@@ -132,24 +131,25 @@ public class Replicator {
 
     protected void onGroupEvent(Group<ReplicatorNode> group, GroupListener.GroupEvent event) {
         switch (event) {
-            case CONNECTED:
-            case CHANGED:
-                if (isValid()) {
-                    try {
-                        if (group.isMaster()) {
-                            enableMaster();
-                        } else {
-                            disableMaster();
-                        }
-                    } catch (IllegalStateException e) {
-                        // Ignore
+        case CONNECTED:
+        case CHANGED:
+            if (isValid()) {
+                try {
+                    if (group.isMaster()) {
+                        enableMaster();
+                    } else {
+                        disableMaster();
                     }
-                } else {
-                    LOG.info("Not valid with master: " + group.isMaster()
-                            + " curator: " + curator);
+                } catch (IllegalStateException e) {
+                    // Ignore
                 }
-                break;
-            case DISCONNECTED:
+            } else {
+                LOG.info("Not valid with master: " + group.isMaster()
+                        + " curator: " + curator);
+            }
+            break;
+        case DISCONNECTED:
+        default:
         }
     }
 
@@ -175,8 +175,8 @@ public class Replicator {
             ControllerDesiredState desiredState = replicationController.getDesiredState();
             if (desiredState != null) {
                 Integer replicas = desiredState.getReplicas();
-                if (replicas != null && replicas.intValue() > 0) {
-                    replicaCount = replicas.intValue();
+                if (replicas != null && replicas > 0) {
+                    replicaCount = replicas;
                 }
             }
             ControllerCurrentState currentState = NodeHelper.getOrCreateCurrentState(replicationController);
@@ -208,7 +208,11 @@ public class Replicator {
     }
 
 
-    protected ImmutableList<PodSchema> createMissingContainers(ReplicationControllerSchema replicationController, PodTemplateDesiredState podTemplateDesiredState, ControllerDesiredState desiredState, int createCount, ImmutableList<PodSchema> pods) throws Exception {
+    protected ImmutableList<PodSchema> createMissingContainers(ReplicationControllerSchema replicationController,
+                                                               PodTemplateDesiredState podTemplateDesiredState,
+                                                               ControllerDesiredState desiredState,
+                                                               int createCount,
+                                                               ImmutableList<PodSchema> pods) throws Exception {
         // TODO this is a hack ;) needs replacing with the real host we're creating on
         String host = "localhost";
         List<PodSchema> list = Lists.newArrayList(pods);
@@ -286,9 +290,7 @@ public class Replicator {
 
     protected void disableTimer() {
         System.out.println("disabling the Replicator timer!");
-        if (timer != null) {
-            timer.cancel();
-        }
+        timer.cancel();
         timerEnabled.set(false);
     }
 
@@ -296,7 +298,6 @@ public class Replicator {
         ReplicatorNode state = new ReplicatorNode();
         return state;
     }
-
 
     public long getPollTime() {
         return pollTime;

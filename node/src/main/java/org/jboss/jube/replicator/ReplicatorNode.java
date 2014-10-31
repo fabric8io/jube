@@ -20,7 +20,7 @@ import io.fabric8.groups.NodeState;
 public class ReplicatorNode extends NodeState {
 
     @Override
-	public String toString() {
-		return "ReplicatorNode()";
-	}
+    public String toString() {
+        return "ReplicatorNode()";
+    }
 }

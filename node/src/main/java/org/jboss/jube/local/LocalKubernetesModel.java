@@ -15,11 +15,16 @@
  */
 package org.jboss.jube.local;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static java.util.UUID.randomUUID;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import io.fabric8.utils.Filter;
-import io.fabric8.utils.Filters;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ManifestContainer;
 import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
@@ -29,15 +34,11 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerListSchema;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
 import io.fabric8.kubernetes.api.model.ServiceListSchema;
 import io.fabric8.kubernetes.api.model.ServiceSchema;
+import io.fabric8.utils.Filter;
+import io.fabric8.utils.Filters;
 import io.hawt.util.Strings;
 import org.jboss.jube.KubernetesModel;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import static java.util.UUID.randomUUID;
 
 /**
  * A pure in memory implementation of the {@link KubernetesModel}
@@ -91,7 +92,7 @@ public class LocalKubernetesModel implements KubernetesModel {
         List<ManifestContainer> containers = KubernetesHelper.getContainers(pod);
         for (ManifestContainer container : containers) {
             String name = getOrCreateId(container.getName(), NodeHelper.KIND_POD);
-                container.setName(name);
+            container.setName(name);
             PodCurrentContainerInfo containerInfo = info.get(name);
             if (containerInfo == null) {
                 containerInfo = new PodCurrentContainerInfo();
@@ -121,7 +122,7 @@ public class LocalKubernetesModel implements KubernetesModel {
 
     /**
      * Removes the pods from the model.
-     *
+     * <p/>
      * <b>Note</b> you should make sure to delete any container processes too!
      */
     @Override

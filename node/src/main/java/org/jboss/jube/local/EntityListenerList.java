@@ -37,7 +37,6 @@ public class EntityListenerList<T> implements EntityListener<T> {
         for (EntityListener<T> listener : listeners) {
             listener.entityChanged(id, entity);
         }
-
     }
 
     @Override

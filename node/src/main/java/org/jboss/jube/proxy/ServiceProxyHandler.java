@@ -15,6 +15,10 @@
  */
 package org.jboss.jube.proxy;
 
+import java.net.URI;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
+
 import io.fabric8.gateway.loadbalancer.LoadBalancer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +31,6 @@ import org.vertx.java.core.net.NetSocket;
 import org.vertx.java.core.streams.Pump;
 import org.vertx.java.core.streams.ReadStream;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
-
 /**
  * A handler for a single service proxy
  */
@@ -41,7 +40,7 @@ public class ServiceProxyHandler implements Handler<NetSocket> {
     private final Vertx vertx;
     private final Service service;
     private final LoadBalancer loadBalancer;
-    final AtomicLong failedConnectionAttempts = new AtomicLong();
+    private final AtomicLong failedConnectionAttempts = new AtomicLong();
 
     public ServiceProxyHandler(Vertx vertx, Service service, LoadBalancer loadBalancer) {
         this.vertx = vertx;
@@ -65,7 +64,6 @@ public class ServiceProxyHandler implements Handler<NetSocket> {
         });
         clientSocket.pause();
 
-        NetClient client = null;
         TcpClientRequestFacade requestFacade = new TcpClientRequestFacade(clientSocket);
         List<ContainerService> services = service.getContainerServices();
         if (!services.isEmpty()) {
@@ -88,9 +86,10 @@ public class ServiceProxyHandler implements Handler<NetSocket> {
 
                             Handler endHandler = new Handler() {
                                 boolean closed;
+
                                 @Override
-                                synchronized public void handle(Object event) {
-                                    if( !closed ) {
+                                public synchronized void handle(Object event) {
+                                    if (!closed) {
                                         LOG.info(String.format("Disconnected client '%s' from service '%s' at %s:%d.", clientSocket.remoteAddress(), service, host, port));
                                         closed = true;
                                         clientSocket.close();
@@ -104,12 +103,11 @@ public class ServiceProxyHandler implements Handler<NetSocket> {
                             clientSocket.endHandler(endHandler);
                             clientSocket.exceptionHandler(endHandler);
 
-                            Pump.createPump(logging(clientSocket, "From "+clientSocket.remoteAddress()), serverSocket).start();
-                            Pump.createPump(logging(serverSocket, "To "+clientSocket.remoteAddress()), clientSocket).start();
+                            Pump.createPump(logging(clientSocket, "From " + clientSocket.remoteAddress()), serverSocket).start();
+                            Pump.createPump(logging(serverSocket, "To " + clientSocket.remoteAddress()), clientSocket).start();
                             clientSocket.resume();
 
                             LOG.info(String.format("Connected client '%s' to service '%s' at %s:%d.", clientSocket.remoteAddress(), service, host, port));
-
                         }
                     }
                 });
@@ -121,7 +119,7 @@ public class ServiceProxyHandler implements Handler<NetSocket> {
     }
 
     private ReadStream<?> logging(final ReadStream<?> stream, final String prefix) {
-        if( true ) { // set to false to enable proxy data logging..
+        if (true) { // set to false to enable proxy data logging..
             return stream;
         }
         return new ReadStream<Object>() {
@@ -140,11 +138,10 @@ public class ServiceProxyHandler implements Handler<NetSocket> {
 
             @Override
             public Object dataHandler(final Handler<Buffer> handler) {
-
                 stream.dataHandler(new Handler<Buffer>() {
                     @Override
                     public void handle(Buffer event) {
-                        LOG.info(prefix+": ["+event.toString()+"]");
+                        LOG.info(prefix + ": [" + event.toString() + "]");
                         handler.handle(event);
                     }
                 });
@@ -167,7 +164,7 @@ public class ServiceProxyHandler implements Handler<NetSocket> {
     }
 
     private void handleConnectFailure(NetSocket socket, String reason) {
-        if( reason!=null ) {
+        if (reason != null) {
             LOG.info(reason);
         }
         failedConnectionAttempts.incrementAndGet();

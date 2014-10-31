@@ -15,10 +15,14 @@
  */
 package org.jboss.jube.apimaster;
 
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import io.fabric8.utils.Filter;
-import io.fabric8.utils.Strings;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
 import io.fabric8.kubernetes.api.model.PodListSchema;
@@ -27,6 +31,8 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerListSchema;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
 import io.fabric8.kubernetes.api.model.ServiceListSchema;
 import io.fabric8.kubernetes.api.model.ServiceSchema;
+import io.fabric8.utils.Filter;
+import io.fabric8.utils.Strings;
 import io.fabric8.zookeeper.ZkPath;
 import io.fabric8.zookeeper.utils.ZooKeeperUtils;
 import org.apache.curator.framework.CuratorFramework;
@@ -43,12 +49,6 @@ import org.jboss.jube.local.NodeHelper;
 import org.jboss.jube.local.PodCurrentContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Mirrors ZooKeeper data into a local in memory model and all updates to the model are written directly to ZooKeeper
@@ -74,16 +74,14 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     private final EntityListenerList<ReplicationControllerSchema> replicationControllerListeners = new EntityListenerList<>();
     private final EntityListenerList<ServiceSchema> serviceListeners = new EntityListenerList<>();
 
-
     @Singleton
     @Inject
     public ApiMasterKubernetesModel(CuratorFramework curator) throws Exception {
         this.curator = curator;
-        zkPath = ZkPath.KUBERNETES_MODEL.getPath();
-        treeCache = new TreeCache(curator, zkPath, true, false, true, treeCacheExecutor);
-        treeCache.start(TreeCache.StartMode.NORMAL);
-        treeCache.getListenable().addListener(treeListener);
-
+        this.zkPath = ZkPath.KUBERNETES_MODEL.getPath();
+        this.treeCache = new TreeCache(curator, zkPath, true, false, true, treeCacheExecutor);
+        this.treeCache.start(TreeCache.StartMode.NORMAL);
+        this.treeCache.getListenable().addListener(treeListener);
     }
 
     // Add and remove listeners
@@ -113,7 +111,6 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         serviceListeners.removeListener(listener);
     }
 
-
     // Updating API which just writes to ZK and waits for ZK watches to update in memory
     // -------------------------------------------------------------------------
     @Override
@@ -123,13 +120,11 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         return answer;
     }
 
-
     @Override
     public void updatePod(String id, PodSchema entity) {
         writeEntity(zkPathForPod(id), entity);
-            // memoryModel.updatePod(id, entity);
+        // memoryModel.updatePod(id, entity);
     }
-
 
     @Override
     public boolean updatePodIfNotExist(String id, PodSchema entity) {
@@ -143,14 +138,12 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     @Override
     public void updateService(String id, ServiceSchema entity) {
         writeEntity(zkPathForService(id), entity);
-
         // memoryModel.updateService(id, entity);
     }
 
     @Override
     public void deleteService(String id) {
         deleteEntity(zkPathForService(id));
-
         //memoryModel.deleteService(id);
     }
 
@@ -163,10 +156,8 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     @Override
     public void deleteReplicationController(String id) {
         deleteEntity(zkPathForReplicationController(id));
-
         // memoryModel.deleteReplicationController(id);
     }
-
 
     // Reading API from memory
     // -------------------------------------------------------------------------
@@ -262,8 +253,6 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     }
 
 
-
-
     protected void writeEntity(String path, Object entity) {
         try {
             String json = KubernetesHelper.toJson(entity);
@@ -286,8 +275,6 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         }
     }
 
-
-
     protected void treeCacheEvent(PathChildrenCacheEvent event) {
         ChildData childData = event.getData();
         if (childData == null) {
@@ -304,14 +291,14 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         }
         boolean remove = false;
         switch (type) {
-            case CHILD_ADDED:
-            case CHILD_UPDATED:
-                break;
-            case CHILD_REMOVED:
-                remove = true;
-                break;
-            default:
-                return;
+        case CHILD_ADDED:
+        case CHILD_UPDATED:
+            break;
+        case CHILD_REMOVED:
+            remove = true;
+            break;
+        default:
+            return;
         }
         try {
             Object dto = KubernetesHelper.loadJson(data);

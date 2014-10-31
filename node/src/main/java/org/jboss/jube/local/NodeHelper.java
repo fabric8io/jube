@@ -15,10 +15,15 @@
  */
 package org.jboss.jube.local;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.google.common.collect.ImmutableSet;
-import io.fabric8.kubernetes.api.model.Port;
-import io.fabric8.utils.Objects;
-import io.fabric8.utils.Strings;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ControllerCurrentState;
 import io.fabric8.kubernetes.api.model.ControllerDesiredState;
@@ -31,10 +36,13 @@ import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
 import io.fabric8.kubernetes.api.model.PodSchema;
 import io.fabric8.kubernetes.api.model.PodTemplate;
 import io.fabric8.kubernetes.api.model.PodTemplateDesiredState;
+import io.fabric8.kubernetes.api.model.Port;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
 import io.fabric8.kubernetes.api.model.Running;
 import io.fabric8.kubernetes.api.model.ServiceSchema;
 import io.fabric8.kubernetes.api.model.State;
+import io.fabric8.utils.Objects;
+import io.fabric8.utils.Strings;
 import io.hawt.aether.OpenMavenURL;
 import org.jboss.jube.KubernetesModel;
 import org.jboss.jube.process.InstallOptions;
@@ -46,23 +54,19 @@ import org.jboss.jube.util.InstallHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 /**
  * A set of helper functions for implementing the local node
  */
-public class NodeHelper {
-    private static final transient Logger LOG = LoggerFactory.getLogger(NodeHelper.class);
-
+public final class NodeHelper {
     public static final String KIND_POD = "Pod";
     public static final String KIND_REPLICATION_CONTROLLER = "ReplicationController";
     public static final String KIND_SERVICE = "SERVICE";
+
+    private static final transient Logger LOG = LoggerFactory.getLogger(NodeHelper.class);
+
+    private NodeHelper() {
+        // utility class
+    }
 
     /**
      * Returns the desired state; lazily creating one if required
@@ -98,7 +102,7 @@ public class NodeHelper {
     }
 
     public static PodTemplateDesiredState getPodTemplateDesiredState(ControllerDesiredState desiredState) {
-        PodTemplate podTemplate = null;
+        PodTemplate podTemplate;
         PodTemplateDesiredState podTemplateDesiredState = null;
         if (desiredState != null) {
             podTemplate = desiredState.getPodTemplate();
@@ -164,7 +168,7 @@ public class NodeHelper {
     /**
      * Converts a possibly null list of Env objects into a Map of environment variables
      */
-    public static Map<String,String> createEnvironmentVariableMap(List<Env> envList) {
+    public static Map<String, String> createEnvironmentVariableMap(List<Env> envList) {
         Map<String, String> answer = new HashMap<>();
         if (envList != null) {
             for (Env env : envList) {
@@ -203,7 +207,7 @@ public class NodeHelper {
         Objects.notNull(mavenUrl, "mavenUrl");
 
         System.out.println("Creating new container " + containerName + " from: " + mavenUrl);
-        Map<String,String> envVarMap = createEnvironmentVariableMap(container.getEnv());
+        Map<String, String> envVarMap = createEnvironmentVariableMap(container.getEnv());
         // now lets copy in the service env vars...
         appendServiceEnvironmentVariables(envVarMap, model);
         System.out.println("Env variables are: " + envVarMap);
@@ -226,7 +230,7 @@ public class NodeHelper {
         controller.start();
 
         Long pid = controller.getPid();
-        containerAlive(pod, containerName, pid != null && pid.longValue() > 0);
+        containerAlive(pod, containerName, pid != null && pid > 0);
 
         Map<String, String> environment = controller.getConfig().getEnvironment();
         container.setEnv(createEnvironmentVariables(environment));
@@ -290,9 +294,9 @@ public class NodeHelper {
                 for (Port port : ports) {
                     Integer containerPort = port.getContainerPort();
                     Integer hostPort = port.getHostPort();
-                    if (containerPort != null && containerPort.intValue() == serviceContainerPort) {
+                    if (containerPort != null && containerPort == serviceContainerPort) {
                         if (hostPort != null) {
-                            return hostPort.intValue();
+                            return hostPort;
                         }
                     }
                 }
@@ -342,23 +346,21 @@ public class NodeHelper {
     }
 
 
-
-
     public static void containerAlive(PodSchema pod, String id, boolean alive) {
-         CurrentState currentState = getOrCreateCurrentState(pod);
-         if (alive) {
-             currentState.setStatus("Running");
-         } else {
-             currentState.setStatus("Waiting");
-         }
-         State state = getOrCreateContainerState(pod, id);
-         if (alive) {
-             Running running = new Running();
-             state.setRunning(running);
-         } else {
-             state.setRunning(null);
-         }
-     }
+        CurrentState currentState = getOrCreateCurrentState(pod);
+        if (alive) {
+            currentState.setStatus("Running");
+        } else {
+            currentState.setStatus("Waiting");
+        }
+        State state = getOrCreateContainerState(pod, id);
+        if (alive) {
+            Running running = new Running();
+            state.setRunning(running);
+        } else {
+            state.setRunning(null);
+        }
+    }
 
     public static ManifestContainer addOrUpdateDesiredContainer(PodSchema pod, String containerName, ManifestContainer container) {
         List<ManifestContainer> containers = getOrCreatePodDesiredContainers(pod);
@@ -395,7 +397,8 @@ public class NodeHelper {
         if (containers == null) {
             containers = new ArrayList<>();
             manifest.setContainers(containers);
-        } return containers;
+        }
+        return containers;
     }
 
     public static ManifestContainer findContainer(List<ManifestContainer> containers, String name) {
@@ -423,4 +426,5 @@ public class NodeHelper {
             NodeHelper.deleteContainers(processManager, model, pod, NodeHelper.getOrCreateCurrentState(pod), desiredContainers);
         }
     }
+
 }

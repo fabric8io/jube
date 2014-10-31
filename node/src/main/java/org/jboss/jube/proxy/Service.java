@@ -15,23 +15,21 @@
  */
 package org.jboss.jube.proxy;
 
-import io.fabric8.utils.Filter;
-import io.fabric8.utils.Objects;
-import io.fabric8.gateway.loadbalancer.LoadBalancer;
-import io.fabric8.gateway.loadbalancer.RandomLoadBalancer;
-import io.fabric8.kubernetes.api.IntOrString;
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.PodSchema;
-import io.fabric8.kubernetes.api.model.ServiceSchema;
-import io.hawt.util.Strings;
-import org.jboss.jube.local.EntityListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import io.fabric8.gateway.loadbalancer.LoadBalancer;
+import io.fabric8.gateway.loadbalancer.RandomLoadBalancer;
+import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.PodSchema;
+import io.fabric8.kubernetes.api.model.ServiceSchema;
+import io.fabric8.utils.Filter;
+import io.fabric8.utils.Objects;
+import org.jboss.jube.local.EntityListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents a running service
@@ -53,7 +51,7 @@ public class Service implements EntityListener<PodSchema> {
         this.id = service.getId();
         Integer portInt = service.getPort();
         Objects.notNull(portInt, "port for service " + id);
-        this.port = portInt.intValue();
+        this.port = portInt;
         if (this.port <= 0) {
             throw new IllegalArgumentException("Invalid port number " + this.port + " for service " + id);
         }
@@ -71,11 +69,11 @@ public class Service implements EntityListener<PodSchema> {
 
     @Override
     public String toString() {
-        return "Service{" +
-                "id='" + id + '\'' +
-                ", selector=" + selector +
-                ", containerServices=" + containerServices.values() +
-                '}';
+        return "Service{"
+                + "id='" + id + '\''
+                + ", selector=" + selector
+                + ", containerServices=" + containerServices.values()
+                + '}';
     }
 
     public List<ContainerService> getContainerServices() {

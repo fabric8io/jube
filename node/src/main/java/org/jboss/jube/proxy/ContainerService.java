@@ -15,13 +15,13 @@
  */
 package org.jboss.jube.proxy;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import io.fabric8.kubernetes.api.model.CurrentState;
 import io.fabric8.kubernetes.api.model.PodSchema;
 import io.hawt.util.Strings;
 import org.jboss.jube.local.NodeHelper;
-
-import java.net.URI;
-import java.net.URISyntaxException;
 
 /**
  * Represents a single service implementation in a container
@@ -54,10 +54,10 @@ public class ContainerService {
 
     @Override
     public String toString() {
-        return "ContainerService{" +
-                "pod=" + pod.getId() +
-                ", uri=" + uri +
-                '}';
+        return "ContainerService{"
+                + "pod=" + pod.getId()
+                + ", uri=" + uri
+                + '}';
     }
 
     public URI getURI() {

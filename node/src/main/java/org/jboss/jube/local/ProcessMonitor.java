@@ -15,24 +15,24 @@
  */
 package org.jboss.jube.local;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import org.jboss.jube.KubernetesModel;
-import org.jboss.jube.apimaster.ApiMasterKubernetesModel;
-import org.jboss.jube.process.Installation;
-import org.jboss.jube.process.ProcessManager;
-import org.apache.deltaspike.core.api.config.ConfigProperty;
-import org.jboss.jube.replicator.Replicator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import javax.annotation.PreDestroy;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import org.apache.deltaspike.core.api.config.ConfigProperty;
+import org.jboss.jube.KubernetesModel;
+import org.jboss.jube.apimaster.ApiMasterKubernetesModel;
+import org.jboss.jube.process.Installation;
+import org.jboss.jube.process.ProcessManager;
+import org.jboss.jube.replicator.Replicator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Monitors the current local processes and updates the local model to indicate started or stopped processes

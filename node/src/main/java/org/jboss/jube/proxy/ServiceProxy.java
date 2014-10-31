@@ -47,11 +47,11 @@ public class ServiceProxy implements EntityListener<PodSchema> {
 
     @Override
     public String toString() {
-        return "TcpGateway{" +
-                "service='" + service + '\'' +
-                ", port=" + port +
-                ", host='" + host + '\'' +
-                '}';
+        return "TcpGateway{"
+                + "service='" + service + '\''
+                + ", port=" + port
+                + ", host='" + host + '\''
+                + '}';
     }
 
     public void init() {

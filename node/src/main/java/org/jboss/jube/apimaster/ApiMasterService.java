@@ -15,7 +15,15 @@
  */
 package org.jboss.jube.apimaster;
 
-import io.fabric8.utils.Objects;
+import java.util.List;
+import java.util.Map;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+
 import io.fabric8.kubernetes.api.Kubernetes;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.CurrentState;
@@ -27,23 +35,13 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerListSchema;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
 import io.fabric8.kubernetes.api.model.ServiceListSchema;
 import io.fabric8.kubernetes.api.model.ServiceSchema;
-import io.hawt.util.Strings;
+import io.fabric8.utils.Objects;
 import org.jboss.jube.KubernetesModel;
-import org.jboss.jube.apimaster.ApiMasterKubernetesModel;
 import org.jboss.jube.local.NodeHelper;
 import org.jboss.jube.local.ProcessMonitor;
 import org.jboss.jube.process.ProcessManager;
 import org.jboss.jube.proxy.KubeProxy;
 import org.jboss.jube.replicator.Replicator;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import java.util.List;
-import java.util.Map;
 
 import static org.jboss.jube.local.NodeHelper.getOrCreateCurrentState;
 

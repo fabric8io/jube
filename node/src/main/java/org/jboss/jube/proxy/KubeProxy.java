@@ -15,6 +15,12 @@
  */
 package org.jboss.jube.proxy;
 
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.fabric8.gateway.loadbalancer.LoadBalancer;
@@ -24,12 +30,6 @@ import org.jboss.jube.apimaster.ApiMasterKubernetesModel;
 import org.jboss.jube.local.EntityListener;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.impl.DefaultVertxFactory;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Manages instances of {@link ServiceProxy} for each service that gets created or destroyed

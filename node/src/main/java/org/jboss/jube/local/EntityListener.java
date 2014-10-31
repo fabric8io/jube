@@ -16,15 +16,17 @@
 package org.jboss.jube.local;
 
 /**
+ * Event listener for entity events.
  */
 public interface EntityListener<T> {
+
     /**
      * Invoked when an entity has changed (either created or updated)
      */
-    public void entityChanged(String id, T entity);
+    void entityChanged(String id, T entity);
 
     /**
      * Invoked when an entity is deleted
      */
-    public void entityDeleted(String id);
+    void entityDeleted(String id);
 }
