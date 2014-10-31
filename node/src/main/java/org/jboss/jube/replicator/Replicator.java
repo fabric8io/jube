@@ -189,6 +189,11 @@ public class Replicator {
             List<PodSchema> pods = Filters.filter(allPods, podHasNotTerminated());
 
             int currentSize = pods.size();
+            Integer currentSizeInt = new Integer(currentSize);
+            if (!Objects.equal(currentSizeInt, currentState.getReplicas())) {
+                currentState.setReplicas(currentSizeInt);
+                model.updateReplicationController(rcID, replicationController);
+            }
             int createCount = replicaCount - currentSize;
             if (createCount > 0) {
                 pods = createMissingContainers(replicationController, podTemplateDesiredState, desiredState, createCount, pods);
@@ -196,9 +201,6 @@ public class Replicator {
                 int deleteCount = Math.abs(createCount);
                 pods = deleteContainers(pods, deleteCount);
             }
-
-            // TODO only show the running count?
-            currentState.setReplicas(replicaCount);
         }
     }
 

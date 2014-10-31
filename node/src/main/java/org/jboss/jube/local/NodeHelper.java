@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableSet;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ControllerCurrentState;
@@ -429,6 +430,29 @@ public final class NodeHelper {
         if (pod != null) {
             List<ManifestContainer> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);
             NodeHelper.deleteContainers(processManager, model, pod, NodeHelper.getOrCreateCurrentState(pod), desiredContainers);
+        }
+    }
+
+    /**
+     * Performs a block of code and updates the pod model if its updated
+     */
+    public static void podTransaction(KubernetesModel model, PodSchema pod, Runnable task) {
+        String oldJson = getPodJson(pod);
+        task.run();
+        String newJson = getPodJson(pod);
+
+        // lets only update the model if we've really changed the pod
+        if (!java.util.Objects.equals(oldJson, newJson)) {
+            model.updatePod(pod.getId(), pod);
+        }
+    }
+
+    protected static String getPodJson(PodSchema pod) {
+        try {
+            return KubernetesHelper.toJson(pod);
+        } catch (JsonProcessingException e) {
+            LOG.warn("Could not convert pod to json: " + e, e);
+            return null;
         }
     }
 

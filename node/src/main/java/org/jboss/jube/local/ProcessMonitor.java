@@ -74,7 +74,7 @@ public class ProcessMonitor {
         ImmutableMap<String, PodCurrentContainer> podRunningContainers = model.getPodRunningContainers(model);
 
         for (Map.Entry<String, Installation> entry : entries) {
-            String id = entry.getKey();
+            final String id = entry.getKey();
             Installation installation = entry.getValue();
             Long pid = null;
             try {
@@ -82,9 +82,9 @@ public class ProcessMonitor {
             } catch (IOException e) {
                 LOG.warn("Failed to access pid for " + id + ". " + e, e);
             }
-            boolean alive = pid != null && pid.longValue() > 0;
+            final boolean alive = pid != null && pid.longValue() > 0;
 
-            PodCurrentContainer podCurrentContainer = podRunningContainers.get(id);
+            final PodCurrentContainer podCurrentContainer = podRunningContainers.get(id);
             if (podCurrentContainer == null) {
                 File installDir = installation.getInstallDir();
                 if (installDir.exists()) {
@@ -94,7 +94,12 @@ public class ProcessMonitor {
                 }
             } else {
                 // lets mark the container as running or not...
-                podCurrentContainer.containerAlive(id, alive);
+                NodeHelper.podTransaction(model, podCurrentContainer.getPod(), new Runnable() {
+                    @Override
+                    public void run() {
+                        podCurrentContainer.containerAlive(id, alive);
+                    }
+                });
             }
         }
     }

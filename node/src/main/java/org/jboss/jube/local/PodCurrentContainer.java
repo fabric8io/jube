@@ -65,23 +65,7 @@ public class PodCurrentContainer {
         return currentContainer;
     }
 
-    public void containerAlive(String id, boolean alive) {
-        String oldJson = getPodJson();
+    public void containerAlive(final String id, final boolean alive) {
         NodeHelper.containerAlive(pod, id, alive);
-        String newJson = getPodJson();
-
-        // lets only update the model if we've really changed the pod
-        if (!Objects.equals(oldJson, newJson)) {
-            model.updatePod(podId, pod);
-        }
-    }
-
-    protected String getPodJson() {
-        try {
-            return KubernetesHelper.toJson(pod);
-        } catch (JsonProcessingException e) {
-            LOG.warn("Could not convert pod to json: " + e, e);
-            return null;
-        }
     }
 }
