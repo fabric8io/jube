@@ -52,7 +52,7 @@
   </licenses>
 
   <prerequisites>
-      <maven>3.1.1</maven>
+    <maven>3.1.1</maven>
   </prerequisites>
 
   <!-- including A developer as it's required by the maven poms going into central -->
@@ -108,10 +108,10 @@
       <name>JBoss Snapshots Repository</name>
       <url>https://repository.jboss.org/nexus/content/repositories/snapshots</url>
       <snapshots>
-       <enabled>true</enabled>
+        <enabled>true</enabled>
       </snapshots>
       <releases>
-       <enabled>false</enabled>
+        <enabled>false</enabled>
       </releases>
     </repository>
   </repositories>
@@ -122,15 +122,55 @@
       <name>JBoss Snapshots Repository</name>
       <url>https://repository.jboss.org/nexus/content/repositories/snapshots</url>
       <snapshots>
-       <enabled>true</enabled>
+        <enabled>true</enabled>
       </snapshots>
       <releases>
-       <enabled>false</enabled>
+        <enabled>false</enabled>
       </releases>
     </pluginRepository>
   </pluginRepositories>
-  
+
   <build>
     <defaultGoal>install</defaultGoal>
   </build>
+
+  <profiles>
+    <profile>
+      <id>license</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.mycila</groupId>
+            <artifactId>license-maven-plugin</artifactId>
+            <version>2.6</version>
+            <configuration>
+              <includes>
+                <include>src/main/java/**</include>
+                <include>src/test/java/**</include>
+                <include>pom.xml</include>
+                <include>**/*.xml</include>
+                <include>**/*.cfg</include>
+                <include>**/*.properties</include>
+              </includes>
+              <excludes>
+                <!-- exclude sampel data -->
+                <exclude>**/src/data/**</exclude>
+                <exclude>**/resources/data/**</exclude>
+                <!-- exclude hidden dir -->
+                <exclude>**/.*/**</exclude>
+              </excludes>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
 </project>

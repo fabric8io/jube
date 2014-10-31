@@ -10,3 +10,7 @@ Jube lets you use [fabric8](http://fabric8.io/v2/index.html) on any platform tha
 
 * [Getting Started](http://jubeio.github.io/jube/getStarted.html)
 * [User Guide](http://jubeio.github.io/jube/goals.html)
+
+### Building the code
+
+Please see the [building.md](building.md) file.
