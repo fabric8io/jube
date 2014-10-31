@@ -77,9 +77,13 @@
     <jetty-plugin.version>8.1.14.v20131031</jetty-plugin.version>
     <maven.resources.plugin.version>2.6</maven.resources.plugin.version>
     <maven.surefire.plugin.version>2.16</maven.surefire.plugin.version>
+    <maven.checkstyle.plugin.version>2.9.1</maven.checkstyle.plugin.version>
+    <maven.checkstyle.version>6.0</maven.checkstyle.version>
+    <maven.license.maven.plugin.version>2.6</maven.license.maven.plugin.version>
   </properties>
 
   <modules>
+    <module>buildingtools</module>
     <module>images</module>
     <module>jube-maven-plugin</module>
     <module>process-manager</module>
@@ -132,9 +136,69 @@
 
   <build>
     <defaultGoal>install</defaultGoal>
+
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>${maven.checkstyle.plugin.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.puppycrawl.tools</groupId>
+              <artifactId>checkstyle</artifactId>
+              <version>${maven.checkstyle.version}</version>
+              <exclusions>
+                <exclusion>
+                  <groupId>com.sun</groupId>
+                  <artifactId>tools</artifactId>
+                </exclusion>
+              </exclusions>
+            </dependency>
+            <dependency>
+              <groupId>org.jboss.jube</groupId>
+              <artifactId>jube-buildtools</artifactId>
+              <version>${project.version}</version>
+            </dependency>
+          </dependencies>
+          <executions>
+            <execution>
+              <id>validate</id>
+              <phase>validate</phase>
+              <configuration>
+                <configLocation>jube-checkstyle.xml</configLocation>
+                <consoleOutput>true</consoleOutput>
+                <failsOnError>true</failsOnError>
+                <linkXRef>false</linkXRef>
+                <suppressionsLocation>jube-checkstyle-suppressions.xml</suppressionsLocation>
+                <encoding>UTF-8</encoding>
+                <sourceDirectory>${basedir}/src</sourceDirectory>
+                <excludes>**/archetype-resources/**/*.java</excludes>
+              </configuration>
+              <goals>
+                <goal>checkstyle</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
 
   <profiles>
+
+    <profile>
+      <id>sourcecheck</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
     <profile>
       <id>license</id>
       <build>
@@ -142,7 +206,7 @@
           <plugin>
             <groupId>com.mycila</groupId>
             <artifactId>license-maven-plugin</artifactId>
-            <version>2.6</version>
+            <version>${maven.license.maven.plugin.version}</version>
             <configuration>
               <includes>
                 <include>src/main/java/**</include>
@@ -153,7 +217,7 @@
                 <include>**/*.properties</include>
               </includes>
               <excludes>
-                <!-- exclude sampel data -->
+                <!-- exclude sample data -->
                 <exclude>**/src/data/**</exclude>
                 <exclude>**/resources/data/**</exclude>
                 <!-- exclude hidden dir -->
@@ -171,6 +235,7 @@
         </plugins>
       </build>
     </profile>
+
   </profiles>
 
 </project>

@@ -35,6 +35,21 @@ Build Jube and skip tests
 Build Jube with all modules and skip tests
 
 
+Sourcecheck
+===========
+
+The source code is intended to be formatted using a `checkstyle` guideline and rules. The check can be executed from maven using the following goal
+
+    > mvn clean install -Psourcecheck
+
+The check can be executed in sub modules such as:
+
+    > cd process-manager
+    > mvn clean install -Psourcecheck
+
+You may need for the first time to run `mvn clean install` in the root project or from the `buildingtools` directory, to build the build tools module, which is needed when running the sourcecode check.
+
+
 License check
 =============
 
