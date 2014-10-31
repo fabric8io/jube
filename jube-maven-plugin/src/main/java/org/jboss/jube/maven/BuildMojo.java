@@ -15,10 +15,16 @@
  */
 package org.jboss.jube.maven;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Zips;
-import org.jboss.jube.util.ImageMavenCoords;
-import org.jboss.jube.util.InstallHelper;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.artifact.handler.ArtifactHandler;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
@@ -46,16 +52,10 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResult;
+import org.jboss.jube.util.ImageMavenCoords;
+import org.jboss.jube.util.InstallHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import static io.fabric8.utils.PropertiesHelper.findPropertiesWithPrefix;
 
@@ -64,9 +64,10 @@ import static io.fabric8.utils.PropertiesHelper.findPropertiesWithPrefix;
  */
 @Mojo(name = "build")
 public class BuildMojo extends AbstractMojo {
-    private static final transient Logger LOG = LoggerFactory.getLogger(BuildMojo.class);
     public static final String DOCKER_IMAGE_PROPERTY = "docker.dataImage";
     public static final String DOCKER_BASE_IMAGE_PROPERTY = "docker.baseImage";
+
+    private static final transient Logger LOG = LoggerFactory.getLogger(BuildMojo.class);
 
     @Parameter(property = "docker.dataImage", defaultValue = "${project.groupId}/${project.artifactId}")
     private String image;
@@ -80,19 +81,17 @@ public class BuildMojo extends AbstractMojo {
     @Parameter
     private Map<String, String> ports;
 
-
     /**
-     * A descriptor to use for building the data assembly to be exported
-     * in an Docker image
+     * A descriptor to use for building the data assembly to be exported in an Docker image
      */
     @Parameter
-    protected String assemblyDescriptor;
+    private String assemblyDescriptor;
 
     /**
      * Reference to an assembly descriptor included.
      */
     @Parameter(property = "fabric8.assemblyDescriptorRef", defaultValue = "artifact-with-dependencies")
-    protected String assemblyDescriptorRef;
+    private String assemblyDescriptorRef;
 
     /**
      * Name of the generated image zip file
@@ -116,14 +115,13 @@ public class BuildMojo extends AbstractMojo {
      * Reference to an assembly descriptor included.
      */
     @Parameter(property = "fabric8.container.name", defaultValue = "${project.artifactId}")
-    protected String service;
+    private String service;
 
     /**
      * Reference to an assembly descriptor included.
      */
     @Parameter(property = "fabric8.app.name", defaultValue = "${project.name}")
-    protected String serviceName;
-
+    private String serviceName;
 
     // ==============================================================================================================
     // Parameters required from Maven when building an assembly.
@@ -138,7 +136,7 @@ public class BuildMojo extends AbstractMojo {
     private MavenFileFilter mavenFileFilter;
 
     @Component
-    protected MavenProject project;
+    private MavenProject project;
 
     @Component
     private AssemblyArchiver assemblyArchiver;
@@ -150,20 +148,19 @@ public class BuildMojo extends AbstractMojo {
     private ArchiverManager archiverManager;
 
     @Parameter(property = "project.remoteArtifactRepositories")
-    protected List<RemoteRepository> remoteRepositories;
+    private List<RemoteRepository> remoteRepositories;
 
     @Component
-    protected RepositorySystem repoSystem;
+    private RepositorySystem repoSystem;
 
     @Parameter(defaultValue = "${repositorySystemSession}")
-    protected RepositorySystemSession repoSession;
+    private RepositorySystemSession repoSession;
 
     @Component
     private MavenProjectHelper projectHelper;
 
     @Component
     private ArtifactHandlerManager artifactHandlerManager;
-
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -189,7 +186,6 @@ public class BuildMojo extends AbstractMojo {
     protected boolean isIgnoreProject() {
         return "pom".equals(project.getPackaging());
     }
-
 
     public Map<String, String> getEnvironmentVariables() {
         if (environmentVariables == null) {
@@ -273,24 +269,24 @@ public class BuildMojo extends AbstractMojo {
         String type = artifactType;
         ArtifactHandler handler = null;
 
-        if ( type != null ) {
-            handler = artifactHandlerManager.getArtifactHandler( artifactType );
+        if (type != null) {
+            handler = artifactHandlerManager.getArtifactHandler(artifactType);
         }
-        if ( handler == null ) {
-            handler = artifactHandlerManager.getArtifactHandler( "jar" );
+        if (handler == null) {
+            handler = artifactHandlerManager.getArtifactHandler("jar");
         }
 
         org.apache.maven.artifact.Artifact imageArtifact = new org.apache.maven.artifact.DefaultArtifact(
                 mavenCoords.getGroupId(), mavenCoords.getArtifactId(), mavenCoords.getVersion(),
-        mavenCoords.getScope(), mavenCoords.getType(), mavenCoords.getClassifier(), handler);
+                mavenCoords.getScope(), mavenCoords.getType(), mavenCoords.getClassifier(), handler);
 
 /*
         org.apache.maven.artifact.Artifact artifact = new AttachedArtifact(imageArtifact, artifactType, artifactClassifier, handler );
 */
 
         org.apache.maven.artifact.Artifact artifact = imageArtifact;
-        artifact.setFile( outputZipFile );
-        artifact.setResolved( true );
+        artifact.setFile(outputZipFile);
+        artifact.setResolved(true);
 
         project.addAttachedArtifact(artifact);
     }
@@ -350,13 +346,9 @@ public class BuildMojo extends AbstractMojo {
         }
     }
 
-
     private AssemblerConfigurationSource createAssemblyConfigurationSource(String descriptor, String descriptorRef) {
         String[] descriptors = descriptor != null ? new String[]{descriptor} : null;
-
-        String[] descriptorRefs = descriptorRef != null ?
-                new String[]{descriptorRef} : null;
-
+        String[] descriptorRefs = descriptorRef != null ? new String[]{descriptorRef} : null;
         return new JubeArchiveConfigurationSource(project, session, archive, mavenFileFilter, descriptors, descriptorRefs);
     }
 
@@ -373,4 +365,5 @@ public class BuildMojo extends AbstractMojo {
             throw new MojoFailureException(assemblyReader, e.getMessage(), "Docker assembly configuration is invalid: " + e.getMessage());
         }
     }
+
 }

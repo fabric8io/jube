@@ -15,16 +15,16 @@
  */
 package org.jboss.jube.maven;
 
+import java.io.File;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.assembly.AssemblerConfigurationSource;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
-
-import java.io.File;
-import java.util.Collections;
-import java.util.List;
 
 public class JubeArchiveConfigurationSource implements AssemblerConfigurationSource {
     private final MavenProject project;
@@ -34,7 +34,8 @@ public class JubeArchiveConfigurationSource implements AssemblerConfigurationSou
     private String[] descriptors;
     private String[] descriptorRefs;
 
-    public JubeArchiveConfigurationSource(MavenProject project, MavenSession mavenSession, MavenArchiveConfiguration archiveConfiguration, MavenFileFilter mavenFilter, String[] descriptors, String[] descriptorRefs) {
+    public JubeArchiveConfigurationSource(MavenProject project, MavenSession mavenSession, MavenArchiveConfiguration archiveConfiguration,
+                                          MavenFileFilter mavenFilter, String[] descriptors, String[] descriptorRefs) {
         this.project = project;
         this.mavenSession = mavenSession;
         this.archiveConfiguration = archiveConfiguration;
@@ -67,7 +68,6 @@ public class JubeArchiveConfigurationSource implements AssemblerConfigurationSou
 
     public String getFinalName() {
         return project.getBuild().getFinalName();
-        //return ".";
     }
 
     public ArtifactRepository getLocalRepository() {
