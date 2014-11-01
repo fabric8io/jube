@@ -250,7 +250,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     // Load balancing API
     //-------------------------------------------------------------------------
 
-    public String loadBalanceCreatePod(PodSchema pod) {
+    public String remoteCreatePod(PodSchema pod) {
         Exception failed = null;
         List<HostNode> hosts = new ArrayList<>(hostNodeModel.getMap().values());
 

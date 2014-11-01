@@ -275,7 +275,7 @@ public class Replicator {
             }
             // TODO should we update the pod now we've updated it?
             List<ManifestContainer> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);
-            model.loadBalanceCreatePod(pod);
+            model.remoteCreatePod(pod);
         }
         return ImmutableList.copyOf(list);
     }

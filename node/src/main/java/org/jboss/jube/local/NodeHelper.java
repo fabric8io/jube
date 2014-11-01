@@ -243,6 +243,8 @@ public final class NodeHelper {
             }
         } catch (Exception e) {
             currentState.setStatus("Terminated: " + e);
+            System.out.println("ERROR: Failed to create pod: " + pod.getId() + ". " + e);
+            e.printStackTrace();
             LOG.error("Failed to create pod: " + pod.getId() + ". " + e, e);
         }
     }

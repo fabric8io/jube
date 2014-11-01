@@ -15,9 +15,12 @@
  */
 package org.jboss.jube.apimaster;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.constraints.NotNull;
@@ -29,6 +32,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import io.fabric8.kubernetes.api.Kubernetes;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.CurrentState;
@@ -47,9 +53,12 @@ import org.jboss.jube.local.NodeHelper;
 import org.jboss.jube.local.ProcessMonitor;
 import org.jboss.jube.model.HostNode;
 import org.jboss.jube.model.HostNodeModel;
+import org.jboss.jube.process.Installation;
 import org.jboss.jube.process.ProcessManager;
 import org.jboss.jube.proxy.KubeProxy;
 import org.jboss.jube.replicator.Replicator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.jboss.jube.local.NodeHelper.getOrCreateCurrentState;
 
@@ -61,6 +70,8 @@ import static org.jboss.jube.local.NodeHelper.getOrCreateCurrentState;
 @Produces("application/json")
 @Consumes("application/json")
 public class ApiMasterService implements KubernetesExtensions {
+    private static final transient Logger LOG = LoggerFactory.getLogger(ApiMasterService.class);
+
     public static final String DEFAULT_HOSTNAME = "localhost";
     public static final String DEFAULT_HTTP_PORT = "8585";
 
@@ -68,11 +79,12 @@ public class ApiMasterService implements KubernetesExtensions {
     public static String port = DEFAULT_HTTP_PORT;
 
     private final ProcessManager processManager;
-    private final KubernetesModel model;
+    private final ApiMasterKubernetesModel model;
     private final Replicator replicator;
     private final ProcessMonitor processMonitor;
     private final KubeProxy kubeProxy;
     private final HostNodeModel hostNodeModel;
+    private final ExecutorService localCreateThreadPool = Executors.newFixedThreadPool(10);
 
     public static String getHostName() {
         return hostName;
@@ -122,14 +134,14 @@ public class ApiMasterService implements KubernetesExtensions {
 
     @Override
     public String createPod(PodSchema entity) throws Exception {
-        String id = model.getOrCreateId(entity.getId(), NodeHelper.KIND_REPLICATION_CONTROLLER);
-        entity.setId(id);
-        return updatePod(id, entity);
+        return model.remoteCreatePod(entity);
     }
 
 
     @Override
     public String updatePod(@NotNull String podId, PodSchema pod) throws Exception {
+        // TODO needs implementing remotely!
+
         System.out.println("Updating pod " + pod);
         DesiredState desiredState = pod.getDesiredState();
         Objects.notNull(desiredState, "desiredState");
@@ -142,8 +154,8 @@ public class ApiMasterService implements KubernetesExtensions {
 
     @Override
     public String deletePod(@NotNull String podId) throws Exception {
-        NodeHelper.deletePod(processManager, model, podId);
-        return null;
+        PodSchema podSchema = model.deletePod(podId);
+        return podSchema != null ? podSchema.getId() : null;
     }
 
 
@@ -235,22 +247,65 @@ public class ApiMasterService implements KubernetesExtensions {
     // Local operations
     //-------------------------------------------------------------------------
 
-    @Override
     @POST
     @Path("local/pods")
     @Consumes("application/json")
+    @Override
     public String createLocalPod(PodSchema entity) throws Exception {
         String id = model.getOrCreateId(entity.getId(), NodeHelper.KIND_REPLICATION_CONTROLLER);
         entity.setId(id);
-        return updatePod(id, entity);
+        return updateLocalPod(id, entity);
     }
 
-    @Override
+    public String updateLocalPod(@NotNull final String podId, final PodSchema pod) throws Exception {
+        System.out.println("Updating pod " + pod);
+        DesiredState desiredState = pod.getDesiredState();
+        Objects.notNull(desiredState, "desiredState");
+
+        final CurrentState currentState = getOrCreateCurrentState(pod);
+        final List<ManifestContainer> containers = KubernetesHelper.getContainers(pod);
+        model.updatePod(podId, pod);
+        localCreateThreadPool.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    NodeHelper.createMissingContainers(processManager, model, pod, currentState, containers);
+                } catch (Exception e) {
+                    LOG.error("Failed to create container " + podId + ". " + e, e);
+                }
+
+            }
+        });
+        return pod.getId();
+    }
+
+
     @DELETE
-    @Path("pods/{id}")
+    @Path("local/pods/{id}")
     @Consumes("text/plain")
+    @Override
     public String deleteLocalPod(@PathParam("id") @NotNull String id) throws Exception {
         NodeHelper.deletePod(processManager, model, id);
         return null;
+    }
+
+    @GET
+    @Path("local/pods")
+    @Consumes("application/json")
+    @Override
+    public PodListSchema getLocalPods() {
+        ImmutableMap<String, Installation> installMap = processManager.listInstallationMap();
+        ImmutableSet<String> keys = installMap.keySet();
+        List<PodSchema> pods = new ArrayList<>();
+        for (String key : keys) {
+            PodSchema pod = model.getPod(key);
+            if (pod != null) {
+                pods.add(pod);
+            }
+        }
+        PodListSchema answer = new PodListSchema();
+        answer.setItems(pods);
+        return answer;
+
     }
 }
