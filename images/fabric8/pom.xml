@@ -38,5 +38,6 @@
   <modules>
     <module>java</module>
     <module>zookeeper</module>
+    <module>karaf</module>
   </modules>
 </project>
