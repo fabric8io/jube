@@ -79,6 +79,7 @@
       <version>3.2.6</version>
     </dependency>
 
+    <!-- include logging -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
@@ -132,16 +133,6 @@
           <env>
             <MAIN>org.apache.camel.test.blueprint.Main</MAIN>
           </env>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>1.2.1</version>
-        <configuration>
-          <mainClass>org.apache.camel.test.blueprint.Main</mainClass>
-          <includePluginDependencies>false</includePluginDependencies>
         </configuration>
       </plugin>
 
