@@ -36,6 +36,7 @@
   </properties>
 
   <modules>
+    <module>camel-cbr</module>
     <module>cxf-cdi</module>
   </modules>
 </project>
