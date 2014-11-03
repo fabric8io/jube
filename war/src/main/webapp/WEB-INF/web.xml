@@ -21,17 +21,23 @@
 	<listener>
 		<listener-class>org.jboss.weld.environment.servlet.Listener</listener-class>
 	</listener>
-	
-	<listener>
-   		<listener-class>org.jboss.weld.environment.servlet.BeanManagerResourceBindingListener</listener-class>
-	</listener>
 
 	<servlet>
 		<servlet-name>CXFServlet</servlet-name>
 		<display-name>CXF Servlet</display-name>
 		<servlet-class>org.apache.cxf.cdi.CXFCdiServlet</servlet-class>    
 		<load-on-startup>1</load-on-startup>
+                <init-param>
+                        <param-name>hide-service-list-page</param-name>
+                        <param-value>true</param-value>
+                </init-param>
 	</servlet>
+
+
+        <init-param>
+                <param-name>hide-service-list-page</param-name>
+                <param-value>true</param-value>
+        </init-param>   
 
 	<servlet-mapping>
 		<servlet-name>CXFServlet</servlet-name>

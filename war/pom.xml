@@ -65,6 +65,12 @@
     <dependency>
       <groupId>io.fabric8</groupId>
       <artifactId>fabric-cxf</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.geronimo.specs</groupId>
+          <artifactId>geronimo-servlet_3.0_spec</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
