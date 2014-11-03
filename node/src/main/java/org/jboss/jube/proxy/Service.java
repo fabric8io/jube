@@ -15,13 +15,8 @@
  */
 package org.jboss.jube.proxy;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import io.fabric8.gateway.loadbalancer.LoadBalancer;
-import io.fabric8.gateway.loadbalancer.RandomLoadBalancer;
+import io.fabric8.gateway.loadbalancer.RoundRobinLoadBalancer;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.PodSchema;
 import io.fabric8.kubernetes.api.model.ServiceSchema;
@@ -30,6 +25,11 @@ import io.fabric8.utils.Objects;
 import org.jboss.jube.local.EntityListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Represents a running service
@@ -64,7 +64,7 @@ public class Service implements EntityListener<PodSchema> {
         this.filter = KubernetesHelper.createPodFilter(selector);
 
         // TODO should we use some service metadata to choose the load balancer?
-        this.loadBalancer = new RandomLoadBalancer();
+        this.loadBalancer = new RoundRobinLoadBalancer();
     }
 
     @Override
