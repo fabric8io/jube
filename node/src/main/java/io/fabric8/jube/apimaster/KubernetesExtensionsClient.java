@@ -17,11 +17,11 @@
  */
 package io.fabric8.jube.apimaster;
 
+import javax.validation.constraints.NotNull;
+
 import io.fabric8.kubernetes.api.KubernetesClient;
 import io.fabric8.kubernetes.api.KubernetesFactory;
 import io.fabric8.kubernetes.api.model.PodSchema;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * A simple client for working with {@link KubernetesExtensions}

@@ -17,13 +17,13 @@
  */
 package io.fabric8.jube.model;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.fabric8.kubernetes.api.KubernetesFactory;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.fabric8.kubernetes.api.KubernetesFactory;
 
 /**
  * A base implementation of {@link EntityModel}

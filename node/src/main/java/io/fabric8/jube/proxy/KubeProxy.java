@@ -24,10 +24,10 @@ import javax.inject.Singleton;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.fabric8.gateway.loadbalancer.LoadBalancer;
-import io.fabric8.kubernetes.api.model.PodSchema;
-import io.fabric8.kubernetes.api.model.ServiceSchema;
 import io.fabric8.jube.apimaster.ApiMasterKubernetesModel;
 import io.fabric8.jube.local.EntityListener;
+import io.fabric8.kubernetes.api.model.PodSchema;
+import io.fabric8.kubernetes.api.model.ServiceSchema;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.impl.DefaultVertxFactory;
 

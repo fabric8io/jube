@@ -26,6 +26,14 @@ import java.util.concurrent.Callable;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableSet;
+import io.fabric8.jube.KubernetesModel;
+import io.fabric8.jube.apimaster.ApiMasterService;
+import io.fabric8.jube.process.InstallOptions;
+import io.fabric8.jube.process.Installation;
+import io.fabric8.jube.process.ProcessController;
+import io.fabric8.jube.process.ProcessManager;
+import io.fabric8.jube.util.ImageMavenCoords;
+import io.fabric8.jube.util.InstallHelper;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ControllerCurrentState;
 import io.fabric8.kubernetes.api.model.ControllerDesiredState;
@@ -46,14 +54,6 @@ import io.fabric8.kubernetes.api.model.State;
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
 import io.hawt.aether.OpenMavenURL;
-import io.fabric8.jube.KubernetesModel;
-import io.fabric8.jube.apimaster.ApiMasterService;
-import io.fabric8.jube.process.InstallOptions;
-import io.fabric8.jube.process.Installation;
-import io.fabric8.jube.process.ProcessController;
-import io.fabric8.jube.process.ProcessManager;
-import io.fabric8.jube.util.ImageMavenCoords;
-import io.fabric8.jube.util.InstallHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -158,7 +158,8 @@ public final class NodeHelper {
     /**
      * Creates any missing containers; updating the currentState with the new values.
      */
-    public static String createMissingContainers(final ProcessManager processManager, final KubernetesModel model, final PodSchema pod, final CurrentState currentState, List<ManifestContainer> containers) throws Exception {
+    public static String createMissingContainers(final ProcessManager processManager, final KubernetesModel model, final PodSchema pod,
+                                                 final CurrentState currentState, List<ManifestContainer> containers) throws Exception {
         Map<String, PodCurrentContainerInfo> currentContainers = KubernetesHelper.getCurrentContainers(currentState);
 
         for (final ManifestContainer container : containers) {

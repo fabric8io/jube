@@ -17,10 +17,6 @@
  */
 package io.fabric8.jube.apimaster;
 
-import io.fabric8.kubernetes.api.Kubernetes;
-import io.fabric8.kubernetes.api.model.PodListSchema;
-import io.fabric8.kubernetes.api.model.PodSchema;
-
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -28,6 +24,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+
+import io.fabric8.kubernetes.api.Kubernetes;
+import io.fabric8.kubernetes.api.model.PodListSchema;
+import io.fabric8.kubernetes.api.model.PodSchema;
 
 /**
  */

@@ -27,11 +27,11 @@ public class HostNode {
 
     @Override
     public String toString() {
-        return "HostNode{" +
-                "id='" + id + '\'' +
-                ", hostName='" + hostName + '\'' +
-                ", webUrl='" + webUrl + '\'' +
-                '}';
+        return "HostNode{"
+                + "id='" + id + '\''
+                + ", hostName='" + hostName + '\''
+                + ", webUrl='" + webUrl + '\''
+                + '}';
     }
 
     public String getId() {

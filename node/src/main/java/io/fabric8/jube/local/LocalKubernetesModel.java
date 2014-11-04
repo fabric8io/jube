@@ -25,6 +25,7 @@ import static java.util.UUID.randomUUID;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import io.fabric8.jube.KubernetesModel;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ManifestContainer;
 import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
@@ -37,8 +38,6 @@ import io.fabric8.kubernetes.api.model.ServiceSchema;
 import io.fabric8.utils.Filter;
 import io.fabric8.utils.Filters;
 import io.hawt.util.Strings;
-import io.fabric8.jube.KubernetesModel;
-
 
 /**
  * A pure in memory implementation of the {@link KubernetesModel}
@@ -58,7 +57,6 @@ public class LocalKubernetesModel implements KubernetesModel {
     public ImmutableMap<String, PodSchema> getPodMap() {
         return ImmutableMap.copyOf(podMap);
     }
-
 
     @Override
     public PodListSchema getPods() {
@@ -109,7 +107,6 @@ public class LocalKubernetesModel implements KubernetesModel {
         }
         return id;
     }
-
 
     /**
      * Updates the pod if one does not already exist

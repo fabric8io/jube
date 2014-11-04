@@ -18,10 +18,10 @@ package io.fabric8.jube.proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import io.fabric8.jube.local.NodeHelper;
 import io.fabric8.kubernetes.api.model.CurrentState;
 import io.fabric8.kubernetes.api.model.PodSchema;
 import io.hawt.util.Strings;
-import io.fabric8.jube.local.NodeHelper;
 
 /**
  * Represents a single service implementation in a container

@@ -19,6 +19,11 @@ package io.fabric8.jube;
 
 /**
  */
-public class JubeZKPaths {
+public final class JubeZKPaths {
+
     public static final String LOCAL_NODES = "/jube/hostNodes";
+
+    private JubeZKPaths() {
+        // no public ctr
+    }
 }

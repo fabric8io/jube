@@ -34,6 +34,14 @@ import javax.ws.rs.Produces;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import io.fabric8.jube.local.NodeHelper;
+import io.fabric8.jube.local.ProcessMonitor;
+import io.fabric8.jube.model.HostNode;
+import io.fabric8.jube.model.HostNodeModel;
+import io.fabric8.jube.process.Installation;
+import io.fabric8.jube.process.ProcessManager;
+import io.fabric8.jube.proxy.KubeProxy;
+import io.fabric8.jube.replicator.Replicator;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.CurrentState;
 import io.fabric8.kubernetes.api.model.DesiredState;
@@ -46,14 +54,6 @@ import io.fabric8.kubernetes.api.model.ServiceListSchema;
 import io.fabric8.kubernetes.api.model.ServiceSchema;
 import io.fabric8.utils.Objects;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
-import io.fabric8.jube.local.NodeHelper;
-import io.fabric8.jube.local.ProcessMonitor;
-import io.fabric8.jube.model.HostNode;
-import io.fabric8.jube.model.HostNodeModel;
-import io.fabric8.jube.process.Installation;
-import io.fabric8.jube.process.ProcessManager;
-import io.fabric8.jube.proxy.KubeProxy;
-import io.fabric8.jube.replicator.Replicator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,13 +67,14 @@ import static io.fabric8.jube.local.NodeHelper.getOrCreateCurrentState;
 @Produces("application/json")
 @Consumes("application/json")
 public class ApiMasterService implements KubernetesExtensions {
-    private static final transient Logger LOG = LoggerFactory.getLogger(ApiMasterService.class);
 
     public static final String DEFAULT_HOSTNAME = "localhost";
     public static final String DEFAULT_HTTP_PORT = "8585";
 
     public static String hostName = DEFAULT_HOSTNAME;
     public static String port = DEFAULT_HTTP_PORT;
+
+    private static final transient Logger LOG = LoggerFactory.getLogger(ApiMasterService.class);
 
     private final ProcessManager processManager;
     private final ApiMasterKubernetesModel model;
@@ -82,14 +83,6 @@ public class ApiMasterService implements KubernetesExtensions {
     private final KubeProxy kubeProxy;
     private final HostNodeModel hostNodeModel;
     private final ExecutorService localCreateThreadPool = Executors.newFixedThreadPool(10);
-
-    public static String getHostName() {
-        return hostName;
-    }
-
-    public static String getPort() {
-        return port;
-    }
 
     @Inject
     public ApiMasterService(ProcessManager processManager, ApiMasterKubernetesModel model, Replicator replicator, ProcessMonitor processMonitor, KubeProxy kubeProxy, HostNodeModel hostNodeModel,
@@ -112,6 +105,14 @@ public class ApiMasterService implements KubernetesExtensions {
         node.setWebUrl("http://" + hostName + ":" + port + "/");
         node.setId(UUID.randomUUID().toString());
         hostNodeModel.write(node);
+    }
+
+    public static String getHostName() {
+        return hostName;
+    }
+
+    public static String getPort() {
+        return port;
     }
 
     // Pods
@@ -229,7 +230,7 @@ public class ApiMasterService implements KubernetesExtensions {
     @GET
     @Path("hostNodes")
     @Produces("application/json")
-    public Map<String,HostNode> getHostNodes() {
+    public Map<String, HostNode> getHostNodes() {
         return hostNodeModel.getMap();
     }
 

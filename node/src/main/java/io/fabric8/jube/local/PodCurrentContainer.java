@@ -15,9 +15,9 @@
  */
 package io.fabric8.jube.local;
 
+import io.fabric8.jube.KubernetesModel;
 import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
 import io.fabric8.kubernetes.api.model.PodSchema;
-import io.fabric8.jube.KubernetesModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

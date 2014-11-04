@@ -22,6 +22,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
+import io.fabric8.jube.apimaster.ApiMasterService;
 import io.fabric8.kubernetes.api.KubernetesClient;
 import io.fabric8.kubernetes.api.KubernetesFactory;
 import io.fabric8.kubernetes.api.KubernetesManager;
@@ -37,7 +38,6 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.log.Slf4jLog;
 import org.eclipse.jetty.webapp.WebAppContext;
-import io.fabric8.jube.apimaster.ApiMasterService;
 import org.jboss.weld.environment.servlet.BeanManagerResourceBindingListener;
 import org.jboss.weld.environment.servlet.Listener;
 

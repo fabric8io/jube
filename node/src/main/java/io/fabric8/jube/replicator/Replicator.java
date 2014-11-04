@@ -27,13 +27,14 @@ import javax.inject.Singleton;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import io.fabric8.utils.Closeables;
-import io.fabric8.utils.Filter;
-import io.fabric8.utils.Filters;
-import io.fabric8.utils.Objects;
 import io.fabric8.groups.Group;
 import io.fabric8.groups.GroupListener;
 import io.fabric8.groups.internal.ZooKeeperGroup;
+import io.fabric8.jube.KubernetesModel;
+import io.fabric8.jube.apimaster.ApiMasterKubernetesModel;
+import io.fabric8.jube.apimaster.ApiMasterService;
+import io.fabric8.jube.local.NodeHelper;
+import io.fabric8.jube.process.ProcessManager;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ControllerCurrentState;
 import io.fabric8.kubernetes.api.model.ControllerDesiredState;
@@ -44,15 +45,14 @@ import io.fabric8.kubernetes.api.model.PodSchema;
 import io.fabric8.kubernetes.api.model.PodTemplate;
 import io.fabric8.kubernetes.api.model.PodTemplateDesiredState;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
+import io.fabric8.utils.Closeables;
+import io.fabric8.utils.Filter;
+import io.fabric8.utils.Filters;
+import io.fabric8.utils.Objects;
 import io.fabric8.zookeeper.ZkPath;
 import io.hawt.util.Strings;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
-import io.fabric8.jube.KubernetesModel;
-import io.fabric8.jube.apimaster.ApiMasterKubernetesModel;
-import io.fabric8.jube.apimaster.ApiMasterService;
-import io.fabric8.jube.local.NodeHelper;
-import io.fabric8.jube.process.ProcessManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -242,7 +242,8 @@ public class Replicator {
     }
 
 
-    protected ImmutableList<PodSchema> createMissingContainers(ReplicationControllerSchema replicationController, PodTemplateDesiredState podTemplateDesiredState, ControllerDesiredState desiredState, int createCount, List<PodSchema> pods) throws Exception {
+    protected ImmutableList<PodSchema> createMissingContainers(ReplicationControllerSchema replicationController, PodTemplateDesiredState podTemplateDesiredState,
+                                                               ControllerDesiredState desiredState, int createCount, List<PodSchema> pods) throws Exception {
         // TODO this is a hack ;) needs replacing with the real host we're creating on
         String host = ApiMasterService.getHostName();
         List<PodSchema> list = Lists.newArrayList(pods);

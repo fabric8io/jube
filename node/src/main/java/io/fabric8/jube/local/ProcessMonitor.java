@@ -26,12 +26,12 @@ import javax.inject.Singleton;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import org.apache.deltaspike.core.api.config.ConfigProperty;
 import io.fabric8.jube.KubernetesModel;
 import io.fabric8.jube.apimaster.ApiMasterKubernetesModel;
 import io.fabric8.jube.process.Installation;
 import io.fabric8.jube.process.ProcessManager;
 import io.fabric8.jube.replicator.Replicator;
+import org.apache.deltaspike.core.api.config.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

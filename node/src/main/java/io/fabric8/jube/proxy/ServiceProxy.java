@@ -16,8 +16,8 @@
 package io.fabric8.jube.proxy;
 
 import io.fabric8.gateway.loadbalancer.LoadBalancer;
-import io.fabric8.kubernetes.api.model.PodSchema;
 import io.fabric8.jube.local.EntityListener;
+import io.fabric8.kubernetes.api.model.PodSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;

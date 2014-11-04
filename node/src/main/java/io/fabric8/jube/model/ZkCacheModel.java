@@ -15,6 +15,12 @@
  */
 package io.fabric8.jube.model;
 
+import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import io.fabric8.jube.local.EntityListener;
+import io.fabric8.jube.local.EntityListenerList;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.utils.Objects;
 import io.fabric8.zookeeper.utils.ZooKeeperUtils;
@@ -25,14 +31,8 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
-import io.fabric8.jube.local.EntityListener;
-import io.fabric8.jube.local.EntityListenerList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Mirrors ZooKeeper data into a local in memory model and all updates to the model are written directly to ZooKeeper

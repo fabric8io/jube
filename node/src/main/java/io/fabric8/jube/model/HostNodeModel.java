@@ -17,12 +17,12 @@
  */
 package io.fabric8.jube.model;
 
+import java.util.Map;
+import javax.inject.Inject;
+
+import io.fabric8.jube.JubeZKPaths;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
-import io.fabric8.jube.JubeZKPaths;
-
-import javax.inject.Inject;
-import java.util.Map;
 
 /**
  * Represents the model for {@link HostNode} instances

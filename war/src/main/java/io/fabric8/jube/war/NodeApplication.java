@@ -25,8 +25,9 @@ import javax.ws.rs.core.Application;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import io.fabric8.cxf.endpoint.EnableJMXFeature;
-import org.apache.cxf.feature.LoggingFeature;
 import io.fabric8.jube.apimaster.ApiMasterService;
+
+import org.apache.cxf.feature.LoggingFeature;
 
 @ApplicationPath("/cheese")
 public class NodeApplication extends Application {

@@ -23,10 +23,10 @@ import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import io.fabric8.jube.apimaster.ApiMasterService;
 import org.apache.cxf.feature.LoggingFeature;
 import org.apache.cxf.jaxrs.swagger.SwaggerFeature;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
-import io.fabric8.jube.apimaster.ApiMasterService;
 
 @ApplicationPath("/")
 public class NodeApplication extends Application {
