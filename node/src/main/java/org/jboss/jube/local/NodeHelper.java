@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableSet;
@@ -157,13 +158,20 @@ public final class NodeHelper {
     /**
      * Creates any missing containers; updating the currentState with the new values.
      */
-    public static String createMissingContainers(ProcessManager processManager, KubernetesModel model, PodSchema pod, CurrentState currentState, List<ManifestContainer> containers) throws Exception {
+    public static String createMissingContainers(final ProcessManager processManager, final KubernetesModel model, final PodSchema pod, final CurrentState currentState, List<ManifestContainer> containers) throws Exception {
         Map<String, PodCurrentContainerInfo> currentContainers = KubernetesHelper.getCurrentContainers(currentState);
 
-        for (ManifestContainer container : containers) {
-            // TODO check if we already have a working container
-            createContainer(processManager, model, container, pod, currentState);
+        for (final ManifestContainer container : containers) {
+            // lets update the pod model if we update the ports
+            podTransaction(model, pod, new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    createContainer(processManager, model, container, pod, currentState);
+                    return null;
+                }
+            });
         }
+
         return null;
     }
 
@@ -237,10 +245,7 @@ public final class NodeHelper {
 
             Map<String, String> environment = controller.getConfig().getEnvironment();
             container.setEnv(createEnvironmentVariables(environment));
-            List<Port> installationPorts = createInstallationPorts(environment, installation);
-            if (installationPorts != null) {
-                container.setPorts(installationPorts);
-            }
+            createInstallationPorts(environment, installation, container);
         } catch (Exception e) {
             currentState.setStatus("Terminated: " + e);
             System.out.println("ERROR: Failed to create pod: " + pod.getId() + ". " + e);
@@ -249,9 +254,13 @@ public final class NodeHelper {
         }
     }
 
-    protected static List<Port> createInstallationPorts(Map<String, String> environment, Installation installation) {
+    protected static List<Port> createInstallationPorts(Map<String, String> environment, Installation installation, ManifestContainer container) {
         try {
-            List<Port> answer = new ArrayList<>();
+            List<Port> answer = container.getPorts();
+            if (answer == null) {
+                answer = new ArrayList<>();
+                container.setPorts(answer);
+            }
             File installDir = installation.getInstallDir();
             Map<String, String> portMap = InstallHelper.readPortsFromDirectory(installDir);
             Set<Map.Entry<String, String>> entries = portMap.entrySet();
@@ -264,17 +273,21 @@ public final class NodeHelper {
                 if (Strings.isNullOrBlank(hostPort)) {
                     LOG.warn("Cannot find env var value for $" + envVarName + " so cannot define the host port");
                 } else {
-                    Port port = new Port();
-                    port.setName(key);
                     int containerPortNumber = toPortNumber(value, key, "container");
                     int hostPortNumber = toPortNumber(hostPort, key, "host");
                     if (containerPortNumber > 0) {
-                        port.setContainerPort(containerPortNumber);
+                        // lets find a port object for the given number
+                        Port port = findPortWithContainerPort(answer, containerPortNumber);
+                        if (port == null) {
+                            port = new Port();
+                            port.setContainerPort(containerPortNumber);
+                            answer.add(port);
+                        }
+                        port.setName(key);
+                        if (hostPortNumber > 0) {
+                            port.setHostPort(hostPortNumber);
+                        }
                     }
-                    if (hostPortNumber > 0) {
-                        port.setHostPort(hostPortNumber);
-                    }
-                    answer.add(port);
                 }
             }
             return answer;
@@ -282,6 +295,16 @@ public final class NodeHelper {
             LOG.warn("Failed to load ports for installation " + installation + ". " + e, e);
             return null;
         }
+    }
+
+    public static Port findPortWithContainerPort(List<Port> ports, int containerPortNumber) {
+        for (Port port : ports) {
+            Integer containerPort = port.getContainerPort();
+            if (containerPort != null && containerPort.intValue() == containerPortNumber) {
+                return port;
+            }
+        }
+        return null;
     }
 
     protected static int toPortNumber(String text, String key, String description) {
@@ -451,6 +474,21 @@ public final class NodeHelper {
         if (!java.util.Objects.equals(oldJson, newJson)) {
             model.updatePod(pod.getId(), pod);
         }
+    }
+
+    /**
+     * Performs a block of code and updates the pod model if its updated
+     */
+    public static <T> T podTransaction(KubernetesModel model, PodSchema pod, Callable<T> task) throws Exception {
+        String oldJson = getPodJson(pod);
+        T answer = task.call();
+        String newJson = getPodJson(pod);
+
+        // lets only update the model if we've really changed the pod
+        if (!java.util.Objects.equals(oldJson, newJson)) {
+            model.updatePod(pod.getId(), pod);
+        }
+        return answer;
     }
 
     protected static String getPodJson(PodSchema pod) {
