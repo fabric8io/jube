@@ -24,12 +24,12 @@ import static java.util.concurrent.Executors.newFixedThreadPool;
 
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import io.fabric8.utils.ExecParseUtils;
-import io.fabric8.utils.Files;
-import io.fabric8.utils.Processes;
 import io.fabric8.jube.process.ProcessController;
 import io.fabric8.jube.process.config.ProcessConfig;
 import io.fabric8.jube.process.support.command.CommandFailedException;
+import io.fabric8.utils.ExecParseUtils;
+import io.fabric8.utils.Files;
+import io.fabric8.utils.Processes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
  * A default implementation of {@link io.fabric8.jube.process.ProcessController} which assumes a launch script which
  * takes operations as the first argument such as for the
  * <a href="http://refspecs.freestandards.org/LSB_3.1.1/LSB-Core-generic/LSB-Core-generic/iniscrptact.html">Init Script Actions spec</a>
- * .
  */
 public class DefaultProcessController implements ProcessController {
 
@@ -200,8 +199,7 @@ public class DefaultProcessController implements ProcessController {
 
         File pidDir = new File(baseDir, "var/run");
         if (pidDir.exists() && pidDir.isDirectory()) {
-            String launchScript = getLaunchScript();
-            String script = launchScript;
+            String script = getLaunchScript();
             int idx = script.lastIndexOf("/");
             if (idx < 0) {
                 idx = script.lastIndexOf("\\");
@@ -218,11 +216,13 @@ public class DefaultProcessController implements ProcessController {
             // otherwise lets just find a /var/run/*.pid file
             if (answer == null) {
                 File[] files = pidDir.listFiles();
-                for (File file : files) {
-                    if (file.getName().toLowerCase().endsWith(".pid")) {
-                        answer = extractPidFromFile(file);
-                        if (answer != null) {
-                            break;
+                if (files != null) {
+                    for (File file : files) {
+                        if (file.getName().toLowerCase().endsWith(".pid")) {
+                            answer = extractPidFromFile(file);
+                            if (answer != null) {
+                                break;
+                            }
                         }
                     }
                 }

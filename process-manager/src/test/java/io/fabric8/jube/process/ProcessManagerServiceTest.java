@@ -19,8 +19,8 @@ import java.io.File;
 import java.nio.charset.Charset;
 
 import com.google.common.io.Files;
-import io.hawt.aether.OpenMavenURL;
 import io.fabric8.jube.process.service.ProcessManagerService;
+import io.hawt.aether.OpenMavenURL;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

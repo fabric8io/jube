@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.fabric8.jube.util.ImageMavenCoords;
+import io.fabric8.jube.util.InstallHelper;
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Zips;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
@@ -52,8 +54,6 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResult;
-import io.fabric8.jube.util.ImageMavenCoords;
-import io.fabric8.jube.util.InstallHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -13,7 +13,6 @@
  *  implied.  See the License for the specific language governing
  *  permissions and limitations under the License.
  */
-
 package io.jube.images.wildfly;
 
 import java.io.IOException;
@@ -25,9 +24,6 @@ import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.sasl.RealmCallback;
 
-/**
- * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
- */
 public class SimpleCallbackHandler implements CallbackHandler {
     static String username;
     static String password;

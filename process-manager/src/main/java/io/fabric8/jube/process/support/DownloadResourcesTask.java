@@ -24,12 +24,12 @@ import java.net.URL;
 import java.util.Map;
 import java.util.Set;
 
-import io.fabric8.utils.FileChangeInfo;
-import io.fabric8.utils.Files;
-import io.fabric8.utils.Strings;
 import io.fabric8.jube.process.InstallContext;
 import io.fabric8.jube.process.InstallTask;
 import io.fabric8.jube.process.config.ProcessConfig;
+import io.fabric8.utils.FileChangeInfo;
+import io.fabric8.utils.Files;
+import io.fabric8.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

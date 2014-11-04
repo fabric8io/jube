@@ -20,9 +20,9 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 
+import io.fabric8.jube.process.config.ProcessConfig;
 import io.fabric8.utils.Processes;
 import io.hawt.aether.OpenMavenURL;
-import io.fabric8.jube.process.config.ProcessConfig;
 
 /**
  * Represents a locally installed managed process.

@@ -13,7 +13,6 @@
  *  implied.  See the License for the specific language governing
  *  permissions and limitations under the License.
  */
-
 package io.jube.images.wildfly;
 
 import java.io.File;
@@ -32,10 +31,12 @@ import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentActionR
 import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentManager;
 import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentPlanResult;
 
-/**
- * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
- */
-public class Deployer {
+public final class Deployer {
+
+    private Deployer() {
+        // run as main
+    }
+
     public static void main(String[] args) throws Throwable {
         if (args == null || args.length == 0) {
             throw new IllegalArgumentException("Missing arguments!");
@@ -43,7 +44,7 @@ public class Deployer {
 
         File rootDir = new File(args[0]);
         File mavenDir = new File(rootDir, "maven");
-        if (mavenDir.exists() == false) {
+        if (!mavenDir.exists()) {
             System.out.println("No maven dir, nothing to deploy.");
             return;
         }
@@ -71,9 +72,12 @@ public class Deployer {
             }
             ServerDeploymentManager deploymentManager = ServerDeploymentManager.Factory.create(client);
 
-            for (File file : mavenDir.listFiles()) {
-                try (InputStream fs = new FileInputStream(file)) {
-                    deploy(deploymentManager, file.getName(), fs);
+            File[] files = mavenDir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    try (InputStream fs = new FileInputStream(file)) {
+                        deploy(deploymentManager, file.getName(), fs);
+                    }
                 }
             }
         } finally {

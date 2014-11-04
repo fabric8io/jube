@@ -17,10 +17,10 @@ package io.fabric8.jube.process.support;
 
 import java.io.File;
 
-import io.fabric8.utils.Files;
 import io.fabric8.jube.process.InstallContext;
 import io.fabric8.jube.process.InstallTask;
 import io.fabric8.jube.process.config.ProcessConfig;
+import io.fabric8.utils.Files;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
