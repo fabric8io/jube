@@ -212,7 +212,7 @@ public class BuildMojo extends AbstractMojo {
             ports = new HashMap<>();
         }
         if (ports.isEmpty()) {
-            ports = findPropertiesWithPrefix(project.getProperties(), "docker.port.");
+            ports = findPropertiesWithPrefix(project.getProperties(), "docker.port.container.");
         }
         return ports;
     }

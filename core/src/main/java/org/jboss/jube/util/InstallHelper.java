@@ -170,7 +170,7 @@ public final class InstallHelper {
      * Writes the ports to the ports.properties file
      */
     public static void writePorts(File portFile, Map<String, String> portMap) throws FileNotFoundException {
-        PrintStream writer = new PrintStream(new FileOutputStream(portFile, true));
+        PrintStream writer = new PrintStream(new FileOutputStream(portFile));
         try {
             writer.println();
 
@@ -179,7 +179,7 @@ public final class InstallHelper {
                 String name = entry.getKey();
                 String value = entry.getValue();
 
-                writer.println(name + " = " + value);
+                writer.println(name.toUpperCase() + " = " + value);
             }
             writer.println();
         } finally {
