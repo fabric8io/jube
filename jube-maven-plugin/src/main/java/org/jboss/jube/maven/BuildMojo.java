@@ -171,7 +171,7 @@ public class BuildMojo extends AbstractMojo {
 
         getLog().info("Assembly reference: " + assemblyDescriptorRef);
 
-        if (assemblyDescriptor != null && assemblyDescriptorRef != null) {
+        if (assemblyDescriptor == null && assemblyDescriptorRef == null) {
             throw new MojoExecutionException("No assemblyDescriptor or assemblyDescriptorRef has been given");
         }
 
