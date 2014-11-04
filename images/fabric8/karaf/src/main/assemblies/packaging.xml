@@ -29,6 +29,10 @@
       <outputDirectory>/</outputDirectory>
       <fileMode>0755</fileMode>
     </fileSet>
+    <fileSet>
+      <directory>target/dependency/apache-karaf-${karaf.version}</directory>
+      <outputDirectory>/</outputDirectory>
+    </fileSet>
   </fileSets>
   <dependencySets>
     <dependencySet>
@@ -38,13 +42,6 @@
         <include>org.jolokia:jolokia-jvm:jar:*</include>
       </includes>
       <unpack>false</unpack>
-    </dependencySet>
-    <dependencySet>
-      <outputDirectory>/</outputDirectory>
-      <includes>
-        <include>org.apache.karaf:apache-karaf:tar.gz:*</include>
-      </includes>
-      <unpack>true</unpack>
     </dependencySet>
   </dependencySets>
 </assembly>

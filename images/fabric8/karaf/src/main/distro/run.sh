@@ -26,5 +26,5 @@ fi
 
 source ${APP_BASE}/env.sh
 
-$APP_BASE/apache-karaf-2.4.0/bin/karaf
+$APP_BASE/bin/karaf
 

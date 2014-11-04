@@ -24,5 +24,5 @@ if [ -z "$APP_BASE" ] ; then
   export APP_BASE
 fi
 
-$APP_BASE/apache-karaf-2.4.0/bin/stop
+$APP_BASE/bin/stop
 
