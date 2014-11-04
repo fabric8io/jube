@@ -34,6 +34,7 @@
       <outputDirectory>/</outputDirectory>
       <excludes>
         <exclude>demos/**</exclude>
+        <exclude>karaf-manual*</exclude>
       </excludes>
     </fileSet>
   </fileSets>
