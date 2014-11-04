@@ -22,9 +22,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.jboss</groupId>
-    <artifactId>jboss-parent</artifactId>
-    <version>14</version>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>9</version>
   </parent>
 
   <groupId>io.fabric8.jube</groupId>
@@ -51,6 +51,12 @@
     </license>
   </licenses>
 
+  <scm>
+    <connection>scm:git:git@github.com:jubeio/jube.git</connection>
+    <developerConnection>scm:git:git@github.com:jubeio/jube.git</developerConnection>
+    <url>http://github.com/jubeio/jube</url>
+  </scm>
+
   <!-- including A developer as it's required by the maven poms going into central -->
   <developers>
     <developer>
@@ -62,6 +68,8 @@
   </developers>
 
   <properties>
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
     <maven.enforcer.version>3.1.1</maven.enforcer.version>
     <fabric8.version>2.0.0-SNAPSHOT</fabric8.version>
     <hawtio.version>1.4.29</hawtio.version>
@@ -137,8 +145,29 @@
   <build>
     <defaultGoal>install</defaultGoal>
 
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.5</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>1.5</version>
+        <configuration>
+          <passphrase>${gpg.passphrase}</passphrase>
+          <useAgent>true</useAgent>
+        </configuration>
+      </plugin>
+    </plugins>
+
     <pluginManagement>
       <plugins>
+        <plugin>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.2</version>
+        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-checkstyle-plugin</artifactId>
@@ -255,7 +284,6 @@
         </plugins>
       </build>
     </profile>
-
   </profiles>
 
 </project>
