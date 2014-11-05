@@ -53,6 +53,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -230,11 +231,17 @@ public class BuildMojo extends AbstractMojo {
         File buildDir = new File(project.getBasedir(), "target/jube");
         try {
             buildDir.mkdirs();
-            unpackBaseImage(buildDir);
+            try {
+                unpackBaseImage(buildDir, false);
+            } catch (ArtifactResolutionException e) {
+                unpackBaseImage(buildDir, true);
+            }
+
             writeEnvironmentVariables(buildDir);
             writePorts(buildDir);
 
             assembly = extractAssembly(projectConfig);
+
             assembly.setId("docker");
             assemblyArchiver.createArchive(assembly, "maven", "dir", projectConfig, false);
 
@@ -273,11 +280,11 @@ public class BuildMojo extends AbstractMojo {
         InstallHelper.writePorts(envScript, portMap);
     }
 
-    protected void unpackBaseImage(File buildDir) throws Exception {
+    protected void unpackBaseImage(File buildDir, boolean useDefaultPrefix) throws Exception {
         String imageName = project.getProperties().getProperty(DOCKER_BASE_IMAGE_PROPERTY);
         Objects.notNull(imageName, DOCKER_BASE_IMAGE_PROPERTY);
 
-        ImageMavenCoords baseImageCoords = ImageMavenCoords.parse(imageName);
+        ImageMavenCoords baseImageCoords = ImageMavenCoords.parse(imageName, useDefaultPrefix);
         String coords = baseImageCoords.getAetherCoords();
         getLog().info("Looking up Jube: " + coords);
         Artifact artifact = new DefaultArtifact(coords);

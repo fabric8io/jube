@@ -230,7 +230,21 @@ public final class NodeHelper {
         InstallOptions installOptions = builder.build();
 
         try {
-            Installation installation = processManager.install(installOptions, null);
+            Installation installation;
+            try {
+                installation = processManager.install(installOptions, null);
+            } catch (IOException ioe) {
+                LOG.debug("Couldn't find image at {} - trying with default prefix", mavenUrl);
+                mavenUrl = ImageMavenCoords.dockerImageToMavenURL(image, true);
+                Objects.notNull(mavenUrl, "mavenUrl");
+                builder = new InstallOptions.InstallOptionsBuilder().
+                        url(mavenUrl).environment(envVarMap);
+                if (Strings.isNotBlank(containerName)) {
+                    builder = builder.name(containerName).id(containerName);
+                }
+                installOptions = builder.build();
+                installation = processManager.install(installOptions, null);
+            }
             File installDir = installation.getInstallDir();
 
             PodCurrentContainerInfo containerInfo = NodeHelper.getOrCreateContainerInfo(pod, containerName);

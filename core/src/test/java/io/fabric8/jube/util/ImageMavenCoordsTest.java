@@ -30,11 +30,23 @@ public class ImageMavenCoordsTest {
     private static Logger LOG = LoggerFactory.getLogger(ImageMavenCoordsTest.class);
 
     @Test
+    public void testParseMavenCoordsUseDefaultPrefix() throws Exception {
+        ImageMavenCoords coords = ImageMavenCoords.parse("fabric8/java", true);
+        System.out.println("Parsed: " + coords);
+
+        assertEquals("getGroupId()", "io.fabric8.jube.images.fabric8", coords.getGroupId());
+        assertEquals("getArtifactId()", "java", coords.getArtifactId());
+        assertTrue("Should have a valid version", Strings.isNotBlank(coords.getVersion()));
+        assertEquals("getType()", "zip", coords.getType());
+        assertEquals("getClassifier()", "image", coords.getClassifier());
+    }
+
+    @Test
     public void testParseMavenCoords() throws Exception {
         ImageMavenCoords coords = ImageMavenCoords.parse("fabric8/java");
         LOG.info("Parsed image maven coords: {}", coords);
 
-        assertEquals("getGroupId()", "io.fabric8.jube.images.fabric8", coords.getGroupId());
+        assertEquals("getGroupId()", "fabric8", coords.getGroupId());
         assertEquals("getArtifactId()", "java", coords.getArtifactId());
         assertTrue("Should have a valid version", Strings.isNotBlank(coords.getVersion()));
         assertEquals("getVersion", JubeVersionUtils.getReleaseVersion(), coords.getVersion());
