@@ -17,6 +17,8 @@ package io.fabric8.jube.util;
 
 import io.fabric8.utils.Strings;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -25,14 +27,17 @@ import static org.junit.Assert.assertTrue;
  */
 public class ImageMavenCoordsTest {
 
+    private static Logger LOG = LoggerFactory.getLogger(ImageMavenCoordsTest.class);
+
     @Test
     public void testParseMavenCoords() throws Exception {
         ImageMavenCoords coords = ImageMavenCoords.parse("fabric8/java");
-        System.out.println("Parsed: " + coords);
+        LOG.info("Parsed image maven coords: {}", coords);
 
         assertEquals("getGroupId()", "io.fabric8.jube.images.fabric8", coords.getGroupId());
         assertEquals("getArtifactId()", "java", coords.getArtifactId());
         assertTrue("Should have a valid version", Strings.isNotBlank(coords.getVersion()));
+        assertEquals("getVersion", JubeVersionUtils.getReleaseVersion(), coords.getVersion());
         assertEquals("getType()", "zip", coords.getType());
         assertEquals("getClassifier()", "image", coords.getClassifier());
     }

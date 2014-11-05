@@ -17,6 +17,8 @@ package io.fabric8.jube.local;
 
 import io.fabric8.kubernetes.api.model.PodSchema;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -25,6 +27,9 @@ import static org.junit.Assert.assertTrue;
 /**
  */
 public class LocalKubernetesModelTest {
+
+    private static Logger LOG = LoggerFactory.getLogger(LocalKubernetesModelTest.class);
+
     protected LocalKubernetesModel model = new LocalKubernetesModel();
 
     @Test
@@ -49,6 +54,6 @@ public class LocalKubernetesModelTest {
         assertEquals("should have created an 'b'", podB, model.getPod(b));
         assertTrue("should have created an 'b'", podB == model.getPod(b));
 
-        System.out.println("Created pods: " + model.getPodMap());
+        LOG.info("Created pods: {}", model.getPodMap());
     }
 }

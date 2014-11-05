@@ -25,11 +25,15 @@ import io.hawt.aether.OpenMavenURL;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class ProcessManagerServiceTest {
+
+    private static Logger LOG = LoggerFactory.getLogger(ProcessManagerServiceTest.class);
 
     protected File installDir;
     protected ProcessManagerService processManagerService;
@@ -42,7 +46,7 @@ public class ProcessManagerServiceTest {
     public void setUp() throws Exception {
         String basedir = System.getProperty("basedir", ".");
         installDir = new File(basedir + "/target/processes/" + getClass().getName()).getCanonicalFile();
-        System.out.println("Installing processes to " + installDir.getAbsolutePath());
+        LOG.info("Installing processes to {}", installDir.getAbsolutePath());
 
         processManagerService = new ProcessManagerService(installDir);
 
@@ -51,10 +55,13 @@ public class ProcessManagerServiceTest {
         installOptions = new InstallOptions.InstallOptionsBuilder().
                 jvmOptions(firstJvmOption, secondJvmOption).
                 url(new OpenMavenURL("io.fabric8.jube.itests/cxf-cdi/" + version + "/zip/image")).build();
+
+        LOG.info("Installation options: {}", installOptions);
     }
 
     @After
     public void destroy() throws Exception {
+        // noop
     }
 
     @Test
@@ -62,13 +69,13 @@ public class ProcessManagerServiceTest {
         Installation installation = processManagerService.install(installOptions, postInstall);
         String generatedEnvSh = Files.toString(new File(installDir, "1/env.sh"), Charset.forName("UTF-8"));
 
-        System.out.println("Found env.sh: " + generatedEnvSh);
+        LOG.info("Found env.sh: {}", generatedEnvSh);
 
         ProcessController controller = installation.getController();
         assertNotNull("controller", controller);
         controller.start();
 
-        System.out.println("Started process!");
+        LOG.info("Started process");
 
         Thread.sleep(1000);
 
@@ -76,6 +83,8 @@ public class ProcessManagerServiceTest {
         assertNotEquals("Should have a PID!", pid);
 
         controller.stop();
+
+        LOG.info("Stopped process");
     }
 
 }
