@@ -20,6 +20,7 @@ import java.nio.charset.Charset;
 
 import com.google.common.io.Files;
 import io.fabric8.jube.process.service.ProcessManagerService;
+import io.fabric8.jube.util.JubeVersionUtils;
 import io.hawt.aether.OpenMavenURL;
 import org.junit.After;
 import org.junit.Before;
@@ -45,10 +46,11 @@ public class ProcessManagerServiceTest {
 
         processManagerService = new ProcessManagerService(installDir);
 
-        // TODO: read project version dynamic
+        String version = JubeVersionUtils.getReleaseVersion();
+
         installOptions = new InstallOptions.InstallOptionsBuilder().
                 jvmOptions(firstJvmOption, secondJvmOption).
-                url(new OpenMavenURL("io.fabric8.jube.itests/cxf-cdi/2.0.1-SNAPSHOT/zip/image")).build();
+                url(new OpenMavenURL("io.fabric8.jube.itests/cxf-cdi/" + version + "/zip/image")).build();
     }
 
     @After

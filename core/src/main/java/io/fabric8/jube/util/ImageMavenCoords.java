@@ -15,22 +15,12 @@
  */
 package io.fabric8.jube.util;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import io.fabric8.utils.IOHelpers;
-import io.fabric8.utils.Strings;
 import io.hawt.aether.OpenMavenURL;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Parses docker image names and converts them to maven coordinates
  */
 public class ImageMavenCoords {
-    private static final transient Logger LOG = LoggerFactory.getLogger(ImageMavenCoords.class);
-
-    private static String defaultVersion = findJubeVersion();
 
     private final String dockerImage;
     private final String groupId;
@@ -74,7 +64,7 @@ public class ImageMavenCoords {
         String[] split = imageName.split("/");
         String groupId = "io.fabric8.jube.images";
         String artifactId;
-        String version = getDefaultVersion();
+        String version = JubeVersionUtils.getReleaseVersion();
 
         if (split.length == 0) {
             throw new IllegalArgumentException("Invalid docker image name '" + imageName + "'");
@@ -96,28 +86,6 @@ public class ImageMavenCoords {
         String classifier = "image";
 
         return new ImageMavenCoords(imageName, groupId, artifactId, version, type, classifier);
-    }
-
-    protected static String getDefaultVersion() {
-        return defaultVersion;
-    }
-
-    private static String findJubeVersion() {
-        String answer = null;
-        String name = "io/fabric8/jube/version";
-        InputStream in = ImageMavenCoords.class.getClassLoader().getResourceAsStream(name);
-        if (in != null) {
-            try {
-                answer = IOHelpers.readFully(in).trim();
-            } catch (IOException e) {
-                LOG.error("Failed to load default version from " + name + ". " + e, e);
-            }
-        }
-        if (Strings.isNullOrBlank(answer)) {
-            LOG.warn("Could not load the default version!");
-            answer = "2.0.0-SNAPSHOT";
-        }
-        return answer;
     }
 
     @Override
