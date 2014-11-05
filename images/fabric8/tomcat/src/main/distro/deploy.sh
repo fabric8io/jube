@@ -15,11 +15,8 @@
 #  permissions and limitations under the License.
 #
 
-# setup tomcat users
-
-
 # deploy WAR files
 
-if [ -d "$APP_BASE/maven/wars" ]; then
-  ln -s $APP_BASE/maven/wars/* $i $APP_BASE/deploy/
+if [ -d "$APP_BASE/maven/" ]; then
+  ln -s $APP_BASE/maven/*.war $i $APP_BASE/webapps/
 fi
