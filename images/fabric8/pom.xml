@@ -36,7 +36,9 @@
 
   <modules>
     <module>java</module>
-    <module>zookeeper</module>
     <module>karaf</module>
+    <module>tomcat</module>
+    <module>zookeeper</module>
   </modules>
+
 </project>
