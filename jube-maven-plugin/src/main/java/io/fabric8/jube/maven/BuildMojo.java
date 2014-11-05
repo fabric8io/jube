@@ -255,40 +255,7 @@ public class BuildMojo extends AbstractMojo {
     }
 
     protected void attachArtifactToBuild() {
-        // projectHelper.attachArtifact(project, artifactType, artifactClassifier, outputZipFile);
-
-        String imageName = project.getProperties().getProperty(DOCKER_IMAGE_PROPERTY);
-        Objects.notNull(imageName, DOCKER_IMAGE_PROPERTY);
-
-        ImageMavenCoords mavenCoords = ImageMavenCoords.parse(imageName);
-
-        getLog().info("Attaching image zip to maven coords: " + mavenCoords.getMavenCoords());
-
-        Objects.notNull(artifactHandlerManager, "artifactHandlerManager");
-
-        String type = artifactType;
-        ArtifactHandler handler = null;
-
-        if (type != null) {
-            handler = artifactHandlerManager.getArtifactHandler(artifactType);
-        }
-        if (handler == null) {
-            handler = artifactHandlerManager.getArtifactHandler("jar");
-        }
-
-        org.apache.maven.artifact.Artifact imageArtifact = new org.apache.maven.artifact.DefaultArtifact(
-                mavenCoords.getGroupId(), mavenCoords.getArtifactId(), mavenCoords.getVersion(),
-                mavenCoords.getScope(), mavenCoords.getType(), mavenCoords.getClassifier(), handler);
-
-/*
-        org.apache.maven.artifact.Artifact artifact = new AttachedArtifact(imageArtifact, artifactType, artifactClassifier, handler );
-*/
-
-        org.apache.maven.artifact.Artifact artifact = imageArtifact;
-        artifact.setFile(outputZipFile);
-        artifact.setResolved(true);
-
-        project.addAttachedArtifact(artifact);
+        projectHelper.attachArtifact(project, artifactType, artifactClassifier, outputZipFile);
     }
 
     protected void writeEnvironmentVariables(File buildDir) throws IOException {

@@ -48,7 +48,7 @@ public class ProcessManagerServiceTest {
         // TODO: read project version dynamic
         installOptions = new InstallOptions.InstallOptionsBuilder().
                 jvmOptions(firstJvmOption, secondJvmOption).
-                url(new OpenMavenURL("io.fabric8.jube.images.examples/cxf-cdi/2.0.1-SNAPSHOT/zip/image")).build();
+                url(new OpenMavenURL("io.fabric8.jube.itests/cxf-cdi/2.0.1-SNAPSHOT/zip/image")).build();
     }
 
     @After
