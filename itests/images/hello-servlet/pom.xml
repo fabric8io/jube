@@ -30,7 +30,7 @@
   <artifactId>hello-servlet</artifactId>
   <packaging>war</packaging>
   <name>Jube :: Integration Tests :: Images :: Hello Servlet</name>
-  <description>A web application with a hello world serlvet</description>
+  <description>A web application with a hello world servlet</description>
 
   <properties>
     <!-- fabric8 configuration -->
