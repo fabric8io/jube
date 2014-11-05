@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 #  Copyright 2005-2014 Red Hat, Inc.
 #
@@ -16,7 +17,4 @@
 
 ## defines the default environment settings
 
-# TODO add something like this:
-#
-# export MAIN="MyClassName"
 
