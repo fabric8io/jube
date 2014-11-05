@@ -15,14 +15,9 @@
  */
 package io.fabric8.jube.util;
 
-import io.fabric8.utils.IOHelpers;
-import io.fabric8.utils.Strings;
 import io.hawt.aether.OpenMavenURL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * Parses docker image names and converts them to maven coordinates
@@ -31,8 +26,6 @@ public class ImageMavenCoords {
     private static final transient Logger LOG = LoggerFactory.getLogger(ImageMavenCoords.class);
 
     public static final String DEFAULT_GROUP_ID = "io.fabric8.jube.images";
-
-    private static String defaultVersion = findJubeVersion();
 
     private final String dockerImage;
     private final String groupId;
@@ -112,28 +105,6 @@ public class ImageMavenCoords {
         String classifier = "image";
 
         return new ImageMavenCoords(imageName, groupId, artifactId, version, type, classifier);
-    }
-
-    protected static String getDefaultVersion() {
-        return defaultVersion;
-    }
-
-    private static String findJubeVersion() {
-        String answer = null;
-        String name = "io/fabric8/jube/version";
-        InputStream in = ImageMavenCoords.class.getClassLoader().getResourceAsStream(name);
-        if (in != null) {
-            try {
-                answer = IOHelpers.readFully(in).trim();
-            } catch (IOException e) {
-                LOG.error("Failed to load default version from " + name + ". " + e, e);
-            }
-        }
-        if (Strings.isNullOrBlank(answer)) {
-            LOG.warn("Could not load the default version!");
-            answer = "2.0.0-SNAPSHOT";
-        }
-        return answer;
     }
 
     @Override
