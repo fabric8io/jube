@@ -22,6 +22,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
@@ -153,12 +154,18 @@ public final class InstallHelper {
     /**
      * Writes the ports to the ports.properties file
      */
-    public static void writePorts(File portFile, Map<String, String> portMap) throws FileNotFoundException {
+    public static void writePorts(File portFile, Map<String, String> portMap) throws IOException {
+        // lets add the old ports if there were any
+        Map<String, String> oldPorts = readPorts(portFile);
+
+        Map<String, String> fullPortMap = new HashMap<>(oldPorts);
+        fullPortMap.putAll(portMap);
+
         PrintStream writer = new PrintStream(new FileOutputStream(portFile));
         try {
             writer.println();
 
-            Set<Map.Entry<String, String>> entries = portMap.entrySet();
+            Set<Map.Entry<String, String>> entries = fullPortMap.entrySet();
             for (Map.Entry<String, String> entry : entries) {
                 String name = entry.getKey();
                 String value = entry.getValue();
