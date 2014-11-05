@@ -112,7 +112,7 @@
     <module>node</module>
     <module>war</module>
     <module>console</module>
-    <module>app</module>
+    <module>jube</module>
   </modules>
 
   <dependencyManagement>

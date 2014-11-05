@@ -5,7 +5,7 @@ To run jube:
     git clone https://github.com/jubeio/jube.git
     cd jube
     mvn install
-    cd app
+    cd jube
     mvn install
     target/jube/run.sh
 

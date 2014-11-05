@@ -26,13 +26,14 @@
     <version>2.0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>app</artifactId>
+  <groupId>io.fabric8.jube.images.jube</groupId>
+  <artifactId>jube</artifactId>
 
-  <name>Jube :: App</name>
+  <name>Jube :: Jube</name>
 
   <properties>
     <!-- fabric8 configuration -->
-    <docker.dataImage>${env.DOCKER_REGISTRY}/main/${project.artifactId}:${project.version}</docker.dataImage>
+    <docker.dataImage>jube/${project.artifactId}:${project.version}</docker.dataImage>
     <fabric8.label.group>node</fabric8.label.group>
 
     <!-- jube properties -->
@@ -319,13 +320,6 @@
             </configuration>
 
             <dependencies>
-              <!--
-              <dependency>
-                <groupId>io.fabric8</groupId>
-                <artifactId>kubernetes-war</artifactId>
-                <type>war</type>
-              </dependency>
--->
               <dependency>
                 <groupId>io.fabric8.jube</groupId>
                 <artifactId>console</artifactId>
@@ -352,19 +346,6 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <dependencies>
-        <!--
-        <dependency>
-          <groupId>io.fabric8</groupId>
-          <artifactId>kubernetes-war</artifactId>
-          <type>war</type>
-          <exclusions>
-            <exclusion>
-              <groupId>org.slf4j</groupId>
-              <artifactId>slf4j-api</artifactId>
-            </exclusion>
-          </exclusions>
-        </dependency>
-          -->
         <dependency>
           <groupId>io.fabric8.jube</groupId>
           <artifactId>console</artifactId>
