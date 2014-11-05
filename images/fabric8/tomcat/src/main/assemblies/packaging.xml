@@ -33,9 +33,17 @@
       <directory>target/dependency/apache-tomcat-${tomcat.version}</directory>
       <outputDirectory>/</outputDirectory>
       <excludes>
-        <exclude>webapps/examples/**</exclude>
         <exclude>webapps/docs/**</exclude>
+        <exclude>webapps/examples/**</exclude>
+        <exclude>webapps/host-manager/**</exclude>
+        <exclude>webapps/manager/**</exclude>
+        <exclude>webapps/ROOT/**</exclude>
+        <exclude>conf/tomcat-users.xml</exclude>
       </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>src/main/overlay</directory>
+      <outputDirectory>/</outputDirectory>
     </fileSet>
   </fileSets>
   <dependencySets>

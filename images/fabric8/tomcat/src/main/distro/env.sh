@@ -17,5 +17,5 @@
 
 ## defines the default environment settings
 
-export CATALINA_OPTS="$CATALINA_OPTS -javaagent:jolokia-agent.jar=host=0.0.0.0,port=${JOLOKIA_PORT:-8778},user=admin,password=admin"
+export CATALINA_OPTS="$CATALINA_OPTS -javaagent:jolokia-agent.jar=host=0.0.0.0,port=${JOLOKIA_PORT:-8778},user=${TOMCAT_USERNAME:-admin},password=${TOMCAT_PASSWORD:-admin}"
 

@@ -17,10 +17,6 @@
 
 ## defines the default environment settings
 
-# TODO add something like this:
-#
-# export MAIN="MyClassName"
-
 export KARAF_OPTS="-Dkaraf.shutdown.pid.file=process.pid"
 export KARAF_OPTS="$KARAF_OPTS -javaagent:jolokia-agent.jar=host=0.0.0.0,port=${JOLOKIA_PORT:-8778},authMode=jaas,realm=karaf,user=${KARAF_USERNAME:-admin},password=${KARAF_PASSWORD:-admin}"
 
