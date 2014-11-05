@@ -105,14 +105,15 @@
 
   <modules>
     <module>buildingtools</module>
-    <module>images</module>
     <module>jube-maven-plugin</module>
+    <module>images</module>
     <module>process-manager</module>
     <module>core</module>
     <module>node</module>
     <module>war</module>
     <module>console</module>
     <module>jube</module>
+    <module>itests</module>
   </modules>
 
   <dependencyManagement>

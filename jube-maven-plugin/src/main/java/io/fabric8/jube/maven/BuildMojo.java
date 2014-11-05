@@ -60,7 +60,7 @@ import org.slf4j.LoggerFactory;
 import static io.fabric8.utils.PropertiesHelper.findPropertiesWithPrefix;
 
 /**
- * Builds a Jube from a known base image.
+ * Builds a Jube  image from a known base image.
  */
 @Mojo(name = "build")
 public class BuildMojo extends AbstractMojo {

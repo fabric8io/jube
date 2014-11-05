@@ -21,14 +21,15 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>io.fabric8.jube.images.examples</groupId>
-    <artifactId>parent-project</artifactId>
+    <groupId>io.fabric8.jube.itests</groupId>
+    <artifactId>images</artifactId>
     <version>2.0.1-SNAPSHOT</version>
+    <relativePath>..</relativePath>
   </parent>
 
   <artifactId>camel-cbr</artifactId>
   <packaging>bundle</packaging>
-  <name>Jube :: Examples :: Camel Content-Based Router</name>
+  <name>Jube :: Integration Tests :: Images :: Camel Content-Based Router</name>
   <description>Apache Camel Content-Based Router Example running in simulated standalone OSGi container (POJOsr)
   </description>
 

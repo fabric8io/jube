@@ -20,23 +20,24 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>io.fabric8.jube.images</groupId>
+    <groupId>io.fabric8.jube</groupId>
     <artifactId>parent-project</artifactId>
     <version>2.0.1-SNAPSHOT</version>
+    <relativePath>..</relativePath>
   </parent>
 
-  <groupId>io.fabric8.jube.images.examples</groupId>
+  <groupId>io.fabric8.jube.itests</groupId>
   <artifactId>parent-project</artifactId>
   <packaging>pom</packaging>
 
-  <name>Jube :: Images :: Examples</name>
+  <name>Jube :: Integration Tests</name>
 
   <properties>
   </properties>
 
   <modules>
-    <module>camel-cbr</module>
-    <module>cxf-cdi</module>
-    <module>hello-servlet</module>
+    <module>images</module>
+    <module>process-manager</module>
   </modules>
+
 </project>

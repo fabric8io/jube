@@ -21,15 +21,15 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>io.fabric8.jube.images.examples</groupId>
-    <artifactId>parent-project</artifactId>
+    <groupId>io.fabric8.jube.itests</groupId>
+    <artifactId>images</artifactId>
     <version>2.0.1-SNAPSHOT</version>
+    <relativePath>..</relativePath>
   </parent>
 
   <artifactId>cxf-cdi</artifactId>
   <packaging>jar</packaging>
-
-  <name>Jube :: Examples :: CXF JAX-RS with CDI Java Container</name>
+  <name>Jube :: Integration Tests :: Images :: CXF JAX-RS with CDI Java Container</name>
   <description>CXF JAX-RS using CDI running in a standalone Java Container</description>
 
   <properties>
