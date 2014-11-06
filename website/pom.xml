@@ -170,7 +170,7 @@
         <configuration>
           <targetDirectory>${project.build.directory}/site</targetDirectory>
           <remoteServerId>github-project-site</remoteServerId>
-          <remoteServerUrl>gitsite:git@github.com/jubeio/jube.git</remoteServerUrl>
+          <remoteServerUrl>gitsite:git@github.com/fabric8io/fabric8.git</remoteServerUrl>
         </configuration>
         <executions>
           <execution>
@@ -305,7 +305,7 @@
 
     <site>
       <id>github-project-site</id>
-      <url>gitsite:git@github.com/jubeio/jube.git</url>
+      <url>gitsite:git@github.com/fabric8io/fabric8.git</url>
     </site>
   </distributionManagement>
 
