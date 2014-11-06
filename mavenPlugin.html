@@ -50,7 +50,7 @@
 
 
         
-    <div class="book" data-github="jubeio/jube" data-level="2.2" data-basepath="." data-revision="1414729813311">
+    <div class="book" data-github="jubeio/jube" data-level="2.2" data-basepath="." data-revision="1415260615395">
     <div class="book-header">
     <!-- Actions Left -->
     <a href="#" class="btn pull-left toggle-summary" aria-label="Toggle summary"><i class="fa fa-align-justify"></i></a>
@@ -282,7 +282,7 @@
 <h3 id="adding-the-plugin-to-your-project"><a name="adding-the-plugin-to-your-project" class="anchor" href="#adding-the-plugin-to-your-project"><span class="fa fa-link"></span></a>Adding the plugin to your project</h3>
 <p>To enable this maven plugin and to automatically generate an <a href="imageZips.html">Image Zip</a> as part of your build</p>
 <pre><code>  &lt;plugin&gt;
-    &lt;groupId&gt;org.jboss.jube&lt;/groupId&gt;
+    &lt;groupId&gt;io.fabric8.jube&lt;/groupId&gt;
     &lt;artifactId&gt;jube-maven-plugin&lt;/artifactId&gt;
     &lt;version&gt;${jube.version}&lt;/version&gt;
     &lt;executions&gt;
@@ -318,7 +318,7 @@
 <td>The environmental variable, FOO, which should be defined by default in the image zip. This value is written on the  <strong>env.sh</strong> file.</td>
 </tr>
 <tr>
-<td>docker.port.FOO</td>
+<td>docker.port.container.FOO</td>
 <td>The container port name and default value which is written to <strong>ports.properties</strong> and then mapped to a dynamically allocated (host) port at installation time and exposed as <strong>FOO_PORT</strong> environment variable
 </td></tr>
 </table>

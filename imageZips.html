@@ -50,7 +50,7 @@
 
 
         
-    <div class="book" data-github="jubeio/jube" data-level="3" data-basepath="." data-revision="1414729813311">
+    <div class="book" data-github="jubeio/jube" data-level="3" data-basepath="." data-revision="1415260615395">
     <div class="book-header">
     <!-- Actions Left -->
     <a href="#" class="btn pull-left toggle-summary" aria-label="Toggle summary"><i class="fa fa-align-justify"></i></a>
@@ -284,7 +284,7 @@
 <p>Jube then maps those docker image names to be Maven coordinates of Image Zips.</p>
 <p>e.g. the docker container name <strong>fabric8/java:version</strong> is mapped to be</p>
 <ul>
-<li>group ID <strong>org.jboss.jube.images.fabric8</strong> (i.e. adding the <em>org.jboss.jube.images.</em> prefix to the docker user name)</li>
+<li>group ID <strong>io.fabric8.jube.images.fabric8</strong> (i.e. adding the <em>io.fabric8.jube.images.</em> prefix to the docker user name)</li>
 <li>artifact Id: <strong>java</strong></li>
 <li>version is the version specified or defaults to the latest one</li>
 <li>classifier: <strong>image</strong></li>
@@ -296,15 +296,15 @@
 <p>The Zip can contain whatever files are required to run a container; the idea is all the files for an Image Zip should be inside the Zip.</p>
 <p>There are some required files in the root directory:</p>
 <ul>
-<li>start.(sh|bat) starts the process in the background and returns</li>
-<li>stop.(sh|bat) stops the process</li>
-<li>kill.(sh|bat) forces the process to stop</li>
-<li>restart.(sh|bat) restarts a dead process</li>
-<li>status.(sh|bat) returns the running status</li>
-<li>run.(sh|bat) starts the process in the foreground so you can see the logs and can easiy Ctrl-C it to stop</li>
-<li>env.sh contains any environment variables defined inside the image; its also where any additional container environment variables from Kubernetes are appended when an App is installed</li>
-<li>ports.properties contains the list of container port names and default values; these port names are then mapped to environment variables <strong>FOO_PORT</strong> with the actual host port number (which is a dynamically generated value per container) so that you can run multiple instances of a container on a single host</li>
-<li>process.pid is where the start script should write the process PID</li>
+<li><strong>start.(sh|bat)</strong> starts the process in the background and returns</li>
+<li><strong>stop.(sh|bat)</strong> stops the process</li>
+<li><strong>kill.(sh|bat)</strong> forces the process to stop</li>
+<li><strong>restart.(sh|bat)</strong> restarts a dead process</li>
+<li><strong>status.(sh|bat)</strong> returns the running status</li>
+<li><strong>run.(sh|bat)</strong> starts the process in the foreground so you can see the logs and can easiy Ctrl-C it to stop</li>
+<li><strong>env.sh</strong> contains any environment variables defined inside the image; its also where any additional container environment variables from Kubernetes are appended when an App is installed</li>
+<li><strong>ports.properties</strong> contains the list of container port names and default values; these port names are then mapped to environment variables <strong>FOO_PORT</strong> with the actual host port number (which is a dynamically generated value per container) so that you can run multiple instances of a container on a single host</li>
+<li><strong>process.pid</strong> is where the start script should write the process PID</li>
 </ul>
 <h3 id="image-zips-are-usable"><a name="image-zips-are-usable" class="anchor" href="#image-zips-are-usable"><span class="fa fa-link"></span></a>Image Zips are usable</h3>
 <p>You can take any image zip created by any Jube-enabled project and use it from the command line. From an unzipped image, just run start.(sh|bat)</p>
