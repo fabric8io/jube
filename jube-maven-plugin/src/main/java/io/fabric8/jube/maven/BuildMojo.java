@@ -15,21 +15,19 @@
  */
 package io.fabric8.jube.maven;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import io.fabric8.jube.util.ImageMavenCoords;
 import io.fabric8.jube.util.InstallHelper;
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Zips;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
-import org.apache.maven.artifact.handler.ArtifactHandler;
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.repository.ArtifactRepositoryFactory;
+import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
+import org.apache.maven.artifact.resolver.ArtifactResolutionException;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -47,16 +45,15 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.resolution.ArtifactRequest;
-import org.eclipse.aether.resolution.ArtifactResolutionException;
-import org.eclipse.aether.resolution.ArtifactResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static io.fabric8.utils.PropertiesHelper.findPropertiesWithPrefix;
 
@@ -126,9 +123,11 @@ public class BuildMojo extends AbstractMojo {
 
     // ==============================================================================================================
     // Parameters required from Maven when building an assembly.
-    // See also here: http://maven.40175.n5.nabble.com/Mojo-Java-1-5-Component-MavenProject-returns-null-vs-JavaDoc-parameter-expression-quot-project-quot-s-td5733805.html
     @Parameter
     private MavenArchiveConfiguration archive;
+
+    @Component
+    private MavenProject project;
 
     @Component
     private MavenSession session;
@@ -137,7 +136,19 @@ public class BuildMojo extends AbstractMojo {
     private MavenFileFilter mavenFileFilter;
 
     @Component
-    private MavenProject project;
+    private ArtifactResolver artifactResolver;
+
+    @Component
+    private ArtifactFactory artifactFactory;
+
+    @Component
+    private ArtifactRepositoryFactory artifactRepositoryFactory;
+
+    @Parameter(defaultValue = "${localRepository}", readonly = true)
+    private ArtifactRepository localRepository;
+
+    @Parameter(defaultValue = "${project.remoteArtifactRepositories}", readonly = true, required = true)
+    private List<ArtifactRepository> pomRemoteRepositories;
 
     @Component
     private AssemblyArchiver assemblyArchiver;
@@ -147,15 +158,6 @@ public class BuildMojo extends AbstractMojo {
 
     @Component
     private ArchiverManager archiverManager;
-
-    @Parameter(property = "project.remoteArtifactRepositories")
-    private List<RemoteRepository> remoteRepositories;
-
-    @Component
-    private RepositorySystem repoSystem;
-
-    @Parameter(defaultValue = "${repositorySystemSession}")
-    private RepositorySystemSession repoSession;
 
     @Component
     private MavenProjectHelper projectHelper;
@@ -235,6 +237,8 @@ public class BuildMojo extends AbstractMojo {
                 unpackBaseImage(buildDir, false);
             } catch (ArtifactResolutionException e) {
                 unpackBaseImage(buildDir, true);
+            } catch (ArtifactNotFoundException e) {
+                unpackBaseImage(buildDir, true);
             }
 
             writeEnvironmentVariables(buildDir);
@@ -287,29 +291,16 @@ public class BuildMojo extends AbstractMojo {
         ImageMavenCoords baseImageCoords = ImageMavenCoords.parse(imageName, useDefaultPrefix);
         String coords = baseImageCoords.getAetherCoords();
         getLog().info("Looking up Jube: " + coords);
-        Artifact artifact = new DefaultArtifact(coords);
+        Artifact artifact = artifactFactory.createArtifactWithClassifier(baseImageCoords.getGroupId(),
+                baseImageCoords.getArtifactId(), baseImageCoords.getVersion(), baseImageCoords.getType(),
+                baseImageCoords.getClassifier());
 
-        ArtifactRequest request = new ArtifactRequest();
-        request.setArtifact(artifact);
+        artifactResolver.resolve(artifact, pomRemoteRepositories, localRepository);
 
-        List<RemoteRepository> filteredRepos = new ArrayList<>();
-        if (remoteRepositories != null) {
-            for (Object remoteRepository : remoteRepositories) {
-                if (remoteRepository instanceof RemoteRepository) {
-                    filteredRepos.add((RemoteRepository) remoteRepository);
-                } else {
-                    getLog().warn("Invalid Remote Repository " + remoteRepository + " of type: " + remoteRepository.getClass());
-                }
-            }
-        }
-        request.setRepositories(filteredRepos);
+        System.out.println(artifact.getFile());
 
-        ArtifactResult result = repoSystem.resolveArtifact(repoSession, request);
-
-        Artifact foundArtifact = result.getArtifact();
-        getLog().info("Found Artifact: " + foundArtifact);
-        if (foundArtifact != null) {
-            File file = foundArtifact.getFile();
+        if (artifact.getFile() != null) {
+            File file = artifact.getFile();
             getLog().info("File: " + file);
 
             if (!file.exists() || file.isDirectory()) {
