@@ -142,6 +142,9 @@ public final class Main {
 
     private static void initaliseGitStuff() throws Exception {
         GitFacade gitFacade = new GitFacade();
+        gitFacade.setCloneRemoteRepoOnStartup(false);
+        gitFacade.setPullOnStartup(false);
+        gitFacade.setConfigDirName("hawtio-config");
         gitFacade.init();
     }
 
