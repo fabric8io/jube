@@ -152,8 +152,8 @@ public class ApiMasterService implements KubernetesExtensions {
 
     @Override
     public String deletePod(@NotNull String podId) throws Exception {
-        PodSchema podSchema = model.deletePod(podId);
-        return podSchema != null ? podSchema.getId() : null;
+        model.deletePod(podId);
+        return null;
     }
 
 
