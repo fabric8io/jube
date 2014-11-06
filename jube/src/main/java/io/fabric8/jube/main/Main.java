@@ -46,6 +46,9 @@ import org.jboss.weld.environment.servlet.Listener;
  */
 public final class Main {
 
+    private static final String JUBE_VERSION = System.getenv("JUBE_VERSION") != null ? System.getenv("JUBE_VERSION") : "LATEST";
+    private static final String FABRIC8_VERSION = System.getenv("FABRIC8_VERSION") != null ? System.getenv("FABRIC8E_VERSION") : "LATEST";
+
     private Main() {
         // run as main class
     }
@@ -145,6 +148,12 @@ public final class Main {
         gitFacade.setCloneRemoteRepoOnStartup(false);
         gitFacade.setPullOnStartup(false);
         gitFacade.setConfigDirName("hawtio-config");
+
+        String importUrls = System.getenv("JUBE_IMPORT_URLS");
+        if (importUrls != null) {
+            gitFacade.setInitialImportURLs(importUrls);
+        }
+
         gitFacade.init();
     }
 
