@@ -2,6 +2,15 @@
 
 There are a few different ways to try figure out whats going on if things don't behave as you expect:
 
+### Are your environment variables set up?
+
+A common cause of issues; particularly with maven and command line tools is not [setting up the environment variables](getStarted.html#setting-environment-variables) correctly in your shell.
+
+You need to ensure any Fabric8, OpenShift or Kuberentes tools are pointing at your Jube installation:
+
+    export KUBERNETES_MASTER=http://localhost:8585/
+    export FABRIC8_CONSOLE=http://localhost:8585/hawtio/
+
 ### Checking whats happening
 
 To check on what happens after each command you can watch the JSON in your browser:
