@@ -2,6 +2,7 @@
 * [Getting Started](getStarted.md)
     * [Using Fabric8](usingFabric8.md)
     * [Troubleshooting](troubleshooting.md)
+    * [Web Console](console.md)
     * [Maven Plugin](mavenPlugin.md)
     * [Using Forge](forge.md)
 * [Image Zips](imageZips.md)
