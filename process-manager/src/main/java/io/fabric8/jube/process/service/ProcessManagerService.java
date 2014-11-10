@@ -253,7 +253,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
             LOGGER.warn("Failed to allocate port " + key + ". " + e, e);
             return fallbackPortGenerator.incrementAndGet();
         } finally {
-            Closeables.closeQuitely(ss);
+            Closeables.closeQuietly(ss);
         }
     }
 
