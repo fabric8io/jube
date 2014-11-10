@@ -1,5 +1,6 @@
 package io.fabric8.jube.registry;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
@@ -11,7 +12,8 @@ import java.util.Map;
 @Consumes("application/json")
 public class RegistryFacadeService {
 
-    private RegistryFacade facade = new RegistryFacade();
+    @Inject
+    private RegistryFacade facade;
 
     @GET
     @Path("search")

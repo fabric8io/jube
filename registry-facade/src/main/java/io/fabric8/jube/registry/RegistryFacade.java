@@ -9,9 +9,14 @@ import io.hawt.maven.indexer.MavenIndexerFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.inject.Singleton;
+
 /**
  * Simple fake docker registry that searches maven for app zips
  */
+@Singleton
 public class RegistryFacade {
 
     private static final transient Logger LOG = LoggerFactory.getLogger(RegistryFacade.class);
@@ -23,6 +28,7 @@ public class RegistryFacade {
 
     }
 
+    @PostConstruct
     public void init() {
         try {
             mavenIndexerFacade.init();
@@ -31,6 +37,7 @@ public class RegistryFacade {
         }
     }
 
+    @PreDestroy
     public void destroy() {
         try {
             mavenIndexerFacade.destroy();
