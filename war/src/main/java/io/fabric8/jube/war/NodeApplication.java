@@ -29,7 +29,7 @@ import io.fabric8.jube.apimaster.ApiMasterService;
 
 import org.apache.cxf.feature.LoggingFeature;
 
-@ApplicationPath("/cheese")
+@ApplicationPath("/api")
 public class NodeApplication extends Application {
 
     @Produces
