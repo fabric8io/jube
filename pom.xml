@@ -110,6 +110,7 @@
     <module>images</module>
     <module>process-manager</module>
     <module>core</module>
+    <module>registry-facade</module>
     <module>node</module>
     <module>war</module>
     <module>console</module>
