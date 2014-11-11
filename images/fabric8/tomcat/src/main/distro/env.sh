@@ -17,5 +17,7 @@
 
 ## defines the default environment settings
 
+export CATALINA_PID=${APP_BASE:-.}/process.pid
+
 export CATALINA_OPTS="$CATALINA_OPTS -DhttpPort=${HTTP_PORT:-8080} -DshutdownPort=${SHUTDOWN_PORT:-8085} -javaagent:jolokia-agent.jar=host=0.0.0.0,port=${JOLOKIA_PORT:-8778},user=${TOMCAT_USERNAME:-admin},password=${TOMCAT_PASSWORD:-admin}"
 
