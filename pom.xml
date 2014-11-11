@@ -140,6 +140,7 @@
         <version>2.5</version>
         <configuration>
           <preparationGoals>clean install</preparationGoals>
+          <developmentVersion>2.0-SNAPSHOT</developmentVersion>
         </configuration>
       </plugin>
       <plugin>
