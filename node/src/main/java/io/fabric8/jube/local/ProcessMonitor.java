@@ -88,7 +88,7 @@ public class ProcessMonitor {
             if (podCurrentContainer == null) {
                 File installDir = installation.getInstallDir();
                 if (installDir.exists()) {
-                    System.out.println("No pod container for id: " + id);
+                    LOG.debug("No pod container for id: " + id);
                 } else {
                     processManager.uninstall(installation);
                 }

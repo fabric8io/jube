@@ -15,20 +15,20 @@
  */
 package io.fabric8.jube.process.support;
 
+import static java.util.concurrent.Executors.newFixedThreadPool;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Executor;
-
-import static java.util.concurrent.Executors.newFixedThreadPool;
 
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.fabric8.jube.process.ProcessController;
 import io.fabric8.jube.process.config.ProcessConfig;
 import io.fabric8.jube.process.support.command.CommandFailedException;
+import io.fabric8.jube.util.FilesHelper;
 import io.fabric8.utils.ExecParseUtils;
-import io.fabric8.utils.Files;
 import io.fabric8.utils.Processes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +54,7 @@ public class DefaultProcessController implements ProcessController {
      */
     private final String id;
 
-    private final File rootDir;
+    private File rootDir;
     private final File baseDir;
     private final ProcessConfig config;
     private transient Executor executor;
@@ -89,7 +89,7 @@ public class DefaultProcessController implements ProcessController {
     }
 
     @Override
-    public int uninstall() {
+    public synchronized int uninstall() {
         // we should uninstall from the root dir, so we uninstall it all
         String name = rootDir.getName();
 
@@ -99,9 +99,11 @@ public class DefaultProcessController implements ProcessController {
         } else {
             File newName = new File(rootDir.getParentFile(), "." + name);
             // delete any existing directory first
-            Files.recursiveDelete(newName);
+            FilesHelper.recursiveDelete(newName);
             // and then rename
-            rootDir.renameTo(newName);
+            if (FilesHelper.renameTo(rootDir, newName)) {
+                rootDir = newName;
+            }
         }
         return 0;
     }
@@ -241,7 +243,7 @@ public class DefaultProcessController implements ProcessController {
     }
 
     private Long extractPidFromFile(File file) throws IOException {
-        List<String> lines = Files.readLines(file);
+        List<String> lines = FilesHelper.readLines(file);
         for (String line : lines) {
             String text = line.trim();
             if (text.matches("\\d+")) {
