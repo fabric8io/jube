@@ -233,8 +233,8 @@ public class Replicator {
 
     private ImmutableList<PodSchema> deleteContainers(List<PodSchema> pods, int deleteCount) throws Exception {
         List<PodSchema> list = Lists.newArrayList(pods);
-        for (int i = 1, size = list.size(); i <= deleteCount && i <= size; i++) {
-            PodSchema removePod = list.remove(size - 1);
+        for (int i = 0, size = list.size(); i < deleteCount && i < size; i++) {
+            PodSchema removePod = list.remove(size);
             String id = removePod.getId();
             model.deleteRemotePod(removePod);
         }
