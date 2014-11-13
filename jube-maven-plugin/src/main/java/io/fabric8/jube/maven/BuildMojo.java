@@ -73,6 +73,9 @@ public class BuildMojo extends AbstractMojo {
     @Parameter(property = "docker.baseImage", defaultValue = "fabric8/java")
     private String baseImage;
 
+    @Parameter(property = "exportDir", defaultValue = "/maven")
+    private String exportDir;
+
     @Parameter
     private Map<String, String> environmentVariables;
 
@@ -247,7 +250,12 @@ public class BuildMojo extends AbstractMojo {
             assembly = extractAssembly(projectConfig);
 
             assembly.setId("docker");
-            assemblyArchiver.createArchive(assembly, "maven", "dir", projectConfig, false);
+
+            if (exportDir.startsWith("/")) {
+                exportDir = exportDir.substring(1);
+            }
+
+            assemblyArchiver.createArchive(assembly, exportDir, "dir", projectConfig, false);
 
             InstallHelper.chmodAllScripts(buildDir);
 
