@@ -37,16 +37,14 @@
   <properties>
     <skipTests>true</skipTests>
 
-    <!-- fabric8 configuration -->
-    <docker.dataImage>${env.DOCKER_REGISTRY}/examples/${project.artifactId}:${project.version}</docker.dataImage>
+    <docker.image>${env.DOCKER_REGISTRY}/examples/${project.artifactId}:${project.version}</docker.image>
+    <docker.from>fabric8/java</docker.from>
+    <docker.env.MAIN>org.apache.camel.test.blueprint.Main</docker.env.MAIN>
+    <docker.port.JOLOKIA>8778</docker.port.JOLOKIA>
+
     <fabric8.port.host.jolokia>9803</fabric8.port.host.jolokia>
     <fabric8.label.container>java</fabric8.label.container>
     <fabric8.label.group>quickstarts</fabric8.label.group>
-
-    <!-- jube properties -->
-    <docker.baseImage>fabric8/java</docker.baseImage>
-    <docker.env.MAIN>org.apache.camel.test.blueprint.Main</docker.env.MAIN>
-    <docker.port.JOLOKIA>8778</docker.port.JOLOKIA>
   </properties>
 
   <dependencyManagement>

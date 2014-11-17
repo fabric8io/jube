@@ -40,11 +40,11 @@ You can use maven properties to customize the generation of the JSON:
 <th>Description</th>
 </tr>
 <tr>
-<td>docker.baseImage</td>
+<td>docker.from</td>
 <td>The name of the base docker image used to generate the new image zip.</td>
 </tr>
 <tr>
-<td>docker.dataImage</td>
+<td>docker.image</td>
 <td>The name of the image to generate.</td>
 </tr>
 <tr>

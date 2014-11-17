@@ -34,13 +34,13 @@
   <properties>
     <!-- fabric8 configuration -->
 <!--
-    <docker.dataImage>${env.DOCKER_REGISTRY}/main/${project.artifactId}:${project.version}</docker.dataImage>
+    <docker.image>${env.DOCKER_REGISTRY}/main/${project.artifactId}:${project.version}</docker.image>
     <fabric8.label.group>node</fabric8.label.group>
 -->
 
     <!-- jube properties -->
 <!--
-    <docker.baseImage>fabric8/java</docker.baseImage>
+    <docker.from>fabric8/java</docker.from>
     <docker.env.MAIN>io.fabric8.jube.main.Main</docker.env.MAIN>
 -->
 

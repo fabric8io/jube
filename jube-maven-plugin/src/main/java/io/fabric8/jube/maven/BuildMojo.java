@@ -62,15 +62,15 @@ import static io.fabric8.utils.PropertiesHelper.findPropertiesWithPrefix;
  */
 @Mojo(name = "build")
 public class BuildMojo extends AbstractMojo {
-    public static final String DOCKER_IMAGE_PROPERTY = "docker.dataImage";
-    public static final String DOCKER_BASE_IMAGE_PROPERTY = "docker.baseImage";
+    public static final String DOCKER_IMAGE_PROPERTY = "docker.image";
+    public static final String DOCKER_BASE_IMAGE_PROPERTY = "docker.from";
 
     private static final transient Logger LOG = LoggerFactory.getLogger(BuildMojo.class);
 
-    @Parameter(property = "docker.dataImage", defaultValue = "${project.groupId}/${project.artifactId}")
+    @Parameter(property = "docker.image", defaultValue = "${project.groupId}/${project.artifactId}")
     private String image;
 
-    @Parameter(property = "docker.baseImage", defaultValue = "fabric8/java")
+    @Parameter(property = "docker.from", defaultValue = "fabric8/java")
     private String baseImage;
 
     @Parameter(property = "exportDir", defaultValue = "/maven")
