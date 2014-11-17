@@ -36,8 +36,8 @@
 
   <modules>
     <module>java</module>
-    <module>karaf</module>
-    <module>tomcat</module>
+    <module>karaf-2.4</module>
+    <module>tomcat-8.0</module>
     <module>zookeeper</module>
   </modules>
 

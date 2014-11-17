@@ -25,7 +25,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.fabric8.jube.images.fabric8</groupId>
-  <artifactId>karaf</artifactId>
+  <artifactId>karaf-2.4</artifactId>
   <packaging>pom</packaging>
   <name>Jube :: Images :: Fabric8 :: Karaf</name>
 
