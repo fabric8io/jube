@@ -20,7 +20,7 @@
   <parent>
     <artifactId>parent-project</artifactId>
     <groupId>io.fabric8.jube.images.fabric8</groupId>
-    <version>2.0-SNAPSHOT</version>
+    <version>2.0.6</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -74,28 +74,13 @@
                 <target>
                   <echo>replacing ports in ${basedir}/target/dependency/apache-karaf-${karaf.version}/etc/org.apache.karaf.shell.cfg</echo>
 
-                  <replaceregexp
-                          file="${basedir}/target/dependency/apache-karaf-${karaf.version}/etc/org.apache.karaf.shell.cfg"
-                          match="(sshPort = 8101)"
-                          replace="sshPort = ${ssh.port}"
-                          byline="true"
-                          />
+                  <replaceregexp file="${basedir}/target/dependency/apache-karaf-${karaf.version}/etc/org.apache.karaf.shell.cfg" match="(sshPort = 8101)" replace="sshPort = ${ssh.port}" byline="true" />
 
                   <echo>replacing ports in ${basedir}/target/dependency/apache-karaf-${karaf.version}/etc/org.apache.karaf.management.cfg</echo>
 
-                  <replaceregexp
-                          file="${basedir}/target/dependency/apache-karaf-${karaf.version}/etc/org.apache.karaf.management.cfg"
-                          match="(rmiRegistryPort = 1099)"
-                          replace="rmiRegistryPort = ${rmi.registry.port}"
-                          byline="true"
-                          />
+                  <replaceregexp file="${basedir}/target/dependency/apache-karaf-${karaf.version}/etc/org.apache.karaf.management.cfg" match="(rmiRegistryPort = 1099)" replace="rmiRegistryPort = ${rmi.registry.port}" byline="true" />
 
-                  <replaceregexp
-                          file="${basedir}/target/dependency/apache-karaf-${karaf.version}/etc/org.apache.karaf.management.cfg"
-                          match="(rmiServerPort = 44444)"
-                          replace="rmiServerPort = ${rmi.server.port}"
-                          byline="true"
-                          />
+                  <replaceregexp file="${basedir}/target/dependency/apache-karaf-${karaf.version}/etc/org.apache.karaf.management.cfg" match="(rmiServerPort = 44444)" replace="rmiServerPort = ${rmi.server.port}" byline="true" />
                 </target>
               </configuration>
               <goals>
