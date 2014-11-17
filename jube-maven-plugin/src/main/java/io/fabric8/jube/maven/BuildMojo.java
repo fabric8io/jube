@@ -85,13 +85,13 @@ public class BuildMojo extends AbstractMojo {
     /**
      * A descriptor to use for building the data assembly to be exported in an Docker image
      */
-    @Parameter
+    @Parameter(property = "docker.assemblyDescriptor")
     private String assemblyDescriptor;
 
     /**
      * Reference to an assembly descriptor included.
      */
-    @Parameter(property = "fabric8.assemblyDescriptorRef", defaultValue = "artifact-with-dependencies")
+    @Parameter(property = "docker.assemblyDescriptorRef", defaultValue = "artifact-with-dependencies")
     private String assemblyDescriptorRef;
 
     /**
@@ -113,15 +113,15 @@ public class BuildMojo extends AbstractMojo {
     private String artifactClassifier = "image";
 
     /**
-     * Reference to an assembly descriptor included.
+     * Generates the SERVICE environment variable
      */
-    @Parameter(property = "fabric8.container.name", defaultValue = "${project.artifactId}")
+    @Parameter(property = "fabric8.service", defaultValue = "${project.artifactId}")
     private String service;
 
     /**
-     * Reference to an assembly descriptor included.
+     * Generates the SERVICE_NAME environment variable
      */
-    @Parameter(property = "fabric8.app.name", defaultValue = "${project.name}")
+    @Parameter(property = "fabric8.serviceName", defaultValue = "${project.name}")
     private String serviceName;
 
     // ==============================================================================================================
