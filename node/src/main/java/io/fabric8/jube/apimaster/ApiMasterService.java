@@ -214,6 +214,9 @@ public class ApiMasterService implements KubernetesExtensions {
 
     @Override
     public String updateService(@NotNull String id, ServiceSchema entity) throws Exception {
+        // lets set the IP
+        // TODO switch to proper property on the DTO
+        entity.setAdditionalProperty("portalIP", getHostName());
         model.updateService(id, entity);
         return null;
     }
