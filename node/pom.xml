@@ -59,6 +59,16 @@
     <dependency>
       <groupId>io.fabric8</groupId>
       <artifactId>zookeeper-client</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss.weld</groupId>
+          <artifactId>weld-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.fabric8</groupId>
@@ -113,10 +123,26 @@
       <artifactId>weld-se</artifactId>
     </dependency>
 -->
+
+<!--
+    <dependency>
+        <groupId>org.jboss.weld.servlet</groupId>
+        <artifactId>weld-servlet-core</artifactId>
+      <version>${weld.version}</version>
+    </dependency>
+-->
+
+<!--
     <dependency>
       <groupId>org.jboss.weld.servlet</groupId>
       <artifactId>weld-servlet</artifactId>
     </dependency>
+-->
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+
 <!--
     <dependency>
       <groupId>org.jboss.weld</groupId>
@@ -172,6 +198,12 @@
     <dependency>
       <groupId>com.wordnik</groupId>
       <artifactId>swagger-jaxrs_2.10</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- testing -->

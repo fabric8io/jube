@@ -38,6 +38,12 @@
       <groupId>io.hawt</groupId>
       <artifactId>hawtio-aether</artifactId>
       <version>${hawtio.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.collections</groupId>
+          <artifactId>google-collections</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.fabric8</groupId>
