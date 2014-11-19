@@ -165,12 +165,6 @@
       <artifactId>jetty-security</artifactId>
       <version>${jetty9.version}</version>
     </dependency>
-    <!--
-        <dependency>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </dependency>
-    -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-jdk14</artifactId>
