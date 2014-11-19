@@ -48,7 +48,7 @@ public class ProcessManagerServiceTest {
         installDir = new File(basedir + "/target/processes/" + getClass().getName()).getCanonicalFile();
         LOG.info("Installing processes to {}", installDir.getAbsolutePath());
 
-        processManagerService = new ProcessManagerService(installDir);
+        processManagerService = new ProcessManagerService(installDir, null);
 
         String version = JubeVersionUtils.getReleaseVersion();
 

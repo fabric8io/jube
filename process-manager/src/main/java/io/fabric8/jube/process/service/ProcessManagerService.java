@@ -24,6 +24,8 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -67,9 +69,11 @@ import static io.fabric8.jube.process.support.ProcessUtils.findInstallDir;
 @Singleton
 @MBean(objectName = "io.fabric8.jube:type=LocalProcesses", description = "Manages local processes on this node")
 public class ProcessManagerService implements ProcessManagerServiceMBean {
+    public static final String DEFAULT_MAVEN_REPOS = "http://repo1.maven.org/maven2@id=central,http://repository.jboss.org/nexus/content/groups/public@id=jboss-public";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcessManagerService.class);
     private static final String INSTALLED_BINARY = "install.bin";
+    private final String remoteRepositoryUrls;
 
     private Executor executor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setDaemon(true).setNameFormat("jube-process-manager-%s").build());
     private File storageLocation;
@@ -83,12 +87,19 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     private AtomicInteger fallbackPortGenerator = new AtomicInteger(30000);
 
     @Inject
-    public ProcessManagerService(@ConfigProperty(name = "process_dir", defaultValue = "./processes") String storageLocation) throws MalformedObjectNameException, IOException {
-        this(new File(storageLocation));
+    public ProcessManagerService(@ConfigProperty(name = "JUBE_PROCESS_DIR", defaultValue = "./processes") String storageLocation,
+                                 @ConfigProperty(name = "JUBE_REMOTE_MAVEN_REPOS", defaultValue = DEFAULT_MAVEN_REPOS) String remoteRepositoryUrls) throws MalformedObjectNameException, IOException {
+        this(new File(storageLocation), remoteRepositoryUrls);
     }
 
-    public ProcessManagerService(File storageLocation) throws MalformedObjectNameException, IOException {
+    public ProcessManagerService(File storageLocation, String remoteRepositoryUrls) throws MalformedObjectNameException, IOException {
         this.storageLocation = storageLocation;
+        if (Strings.isNullOrBlank(remoteRepositoryUrls)) {
+            remoteRepositoryUrls = DEFAULT_MAVEN_REPOS;
+        }
+        this.remoteRepositoryUrls = remoteRepositoryUrls;
+
+        LOGGER.info("Using remote maven repositories: " + remoteRepositoryUrls + " to find Jube image zips");
 
         // lets find the largest number in the current directory as we are on startup
         lastId = 0;
@@ -119,7 +130,6 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
             }
         }
     }
-
 
     @Override
     public String toString() {
@@ -324,7 +334,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
                 Objects.notNull(sourceUrl, "sourceUrl");
                 // copy the URL to the install dir
                 File archive = new File(installDir, INSTALLED_BINARY);
-                InputStream from = sourceUrl.getInputStream();
+                InputStream from = sourceUrl.getInputStream(remoteRepositoryUrls);
                 if (from == null) {
                     throw new FileNotFoundException("Could not open URL: " + sourceUrl);
                 }
