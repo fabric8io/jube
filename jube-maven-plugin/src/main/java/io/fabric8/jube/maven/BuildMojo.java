@@ -283,7 +283,10 @@ public class BuildMojo extends AbstractMojo {
 
     protected void writeEnvironmentVariables(File buildDir) throws IOException {
         Map<String, String> envMap = getEnvironmentVariables();
+        // make sure to write for both kind of platforms
         File envScript = new File(buildDir, InstallHelper.ENVIRONMENT_VARIABLE_SCRIPT);
+        InstallHelper.writeEnvironmentVariables(envScript, envMap);
+        envScript = new File(buildDir, InstallHelper.ENVIRONMENT_VARIABLE_SCRIPT_WINDOWS);
         InstallHelper.writeEnvironmentVariables(envScript, envMap);
     }
 

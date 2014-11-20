@@ -32,27 +32,32 @@ public final class ConfigHelper {
         // utility class
     }
 
-    public static ProcessConfig loadProcessConfig(File installDir) throws IOException {
-        File file = createControllerConfigFile(installDir);
+    public static ProcessConfig loadProcessConfig(File installDir, boolean windows) throws IOException {
+        File file = createControllerConfigFile(installDir, windows ? "env.bat" : "env.sh");
         ProcessConfig answer = new ProcessConfig(installDir);
         if (!file.exists()) {
             LOG.warn("Process configuration file " + file.getPath() + " does not exist");
             return answer;
         }
-        // TODO load the env vars from the env.sh file?
         return answer;
     }
 
     /**
-     * Writes the environment variables to the env.sh
+     * Writes the environment variables to the env.sh/env.bat
      */
     public static void saveProcessConfig(ProcessConfig config, File installDir) throws IOException {
-        File file = createControllerConfigFile(installDir);
+        // make sure to save for both kind of platforms
+        File file = createControllerConfigFile(installDir, InstallHelper.ENVIRONMENT_VARIABLE_SCRIPT);
+        InstallHelper.writeEnvironmentVariables(file, config.getEnvironment());
+        file = createControllerConfigFile(installDir, InstallHelper.ENVIRONMENT_VARIABLE_SCRIPT_WINDOWS);
         InstallHelper.writeEnvironmentVariables(file, config.getEnvironment());
     }
 
-    public static File createControllerConfigFile(File installDir) {
-        return new File(installDir, "env.sh");
+    public static File createControllerConfigFile(File installDir, String name) {
+        if (name == null) {
+            name = "env.sh";
+        }
+        return new File(installDir, name);
     }
 
 }

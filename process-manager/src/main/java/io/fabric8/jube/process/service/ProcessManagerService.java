@@ -85,6 +85,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
 
     private MBeanServer mbeanServer;
     private AtomicInteger fallbackPortGenerator = new AtomicInteger(30000);
+    private boolean isWindows;
 
     @Inject
     public ProcessManagerService(@ConfigProperty(name = "JUBE_PROCESS_DIR", defaultValue = "./processes") String storageLocation,
@@ -98,6 +99,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
             remoteRepositoryUrls = DEFAULT_MAVEN_REPOS;
         }
         this.remoteRepositoryUrls = remoteRepositoryUrls;
+        this.isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
 
         LOGGER.info("Using remote maven repositories: " + remoteRepositoryUrls + " to find Jube image zips");
 
@@ -124,7 +126,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
                     }
                     // TODO: we do not have the url this installation was created from
                     OpenMavenURL url = null;
-                    ProcessConfig config = ConfigHelper.loadProcessConfig(file);
+                    ProcessConfig config = ConfigHelper.loadProcessConfig(file, isWindows);
                     createInstallation(url, name, findInstallDir(file), config);
                 }
             }
@@ -345,7 +347,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     }
 
     protected ProcessConfig loadControllerJson(File installDir, InstallOptions options) throws IOException {
-        return ConfigHelper.loadProcessConfig(installDir);
+        return ConfigHelper.loadProcessConfig(installDir, isWindows);
     }
 
     /**

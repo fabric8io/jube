@@ -17,7 +17,6 @@ package io.fabric8.jube.util;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,6 +39,7 @@ import io.fabric8.utils.Objects;
 public final class InstallHelper {
     public static final String PORTS_PROPERTIES_FILE = "ports.properties";
     public static final String ENVIRONMENT_VARIABLE_SCRIPT = "env.sh";
+    public static final String ENVIRONMENT_VARIABLE_SCRIPT_WINDOWS = "env.bat";
 
     private static final Logger LOG = Logger.getLogger(InstallHelper.class.getName());
     private static final Matcher DEFAULT_MATCHER = new DefaultMatcher();
@@ -101,7 +101,7 @@ public final class InstallHelper {
     }
 
     /**
-     * Appends the environment variables to the env.sh script file
+     * Appends the environment variables to the env.sh/env.bat script file
      */
     public static void writeEnvironmentVariables(File envScriptFile, Map<String, String> environmentVariables) throws IOException {
         PrintStream writer = new PrintStream(new FileOutputStream(envScriptFile, true));
@@ -113,7 +113,12 @@ public final class InstallHelper {
                 String name = entry.getKey();
                 String value = entry.getValue();
 
-                writer.println("export " + name + "=\"" + value + "\"");
+                if (envScriptFile.getName().endsWith(".bat")) {
+                    // do not quote on windows
+                    writer.println("set " + name + "=" + value);
+                } else {
+                    writer.println("export " + name + "=\"" + value + "\"");
+                }
             }
             writer.println();
         } finally {
