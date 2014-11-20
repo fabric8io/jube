@@ -15,8 +15,12 @@
  */
 package io.fabric8.jube.proxy;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -24,6 +28,7 @@ import javax.inject.Singleton;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.fabric8.gateway.loadbalancer.LoadBalancer;
+import io.fabric8.jube.ServiceIDs;
 import io.fabric8.jube.apimaster.ApiMasterKubernetesModel;
 import io.fabric8.jube.local.EntityListener;
 import io.fabric8.kubernetes.api.model.PodSchema;
@@ -38,6 +43,7 @@ public class KubeProxy {
     private final Vertx vertx;
     private final ApiMasterKubernetesModel model;
     private Map<String, ServiceProxy> serviceMap = new ConcurrentHashMap<>();
+    private Set<String> ignoredServiceIDs = new HashSet<>(Arrays.asList(ServiceIDs.KUBERNETES_RO_SERVICE_ID, ServiceIDs.KUBERNETES_SERVICE_ID));
 
     @Singleton
     @Inject
@@ -77,6 +83,10 @@ public class KubeProxy {
     }
 
     protected synchronized void serviceChanged(String id, ServiceSchema serviceEntity) {
+        if (ignoredServiceIDs.contains(id)) {
+            return;
+        }
+
         // lets delete the old service as we may have changed the port or selector
         serviceDeleted(id);
 

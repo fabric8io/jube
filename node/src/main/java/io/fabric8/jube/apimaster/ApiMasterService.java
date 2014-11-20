@@ -34,6 +34,7 @@ import javax.ws.rs.Produces;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import io.fabric8.jube.ServiceIDs;
 import io.fabric8.jube.local.NodeHelper;
 import io.fabric8.jube.local.ProcessMonitor;
 import io.fabric8.jube.model.HostNode;
@@ -42,6 +43,7 @@ import io.fabric8.jube.process.Installation;
 import io.fabric8.jube.process.ProcessManager;
 import io.fabric8.jube.proxy.KubeProxy;
 import io.fabric8.jube.replicator.Replicator;
+import io.fabric8.kubernetes.api.IntOrString;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.CurrentState;
 import io.fabric8.kubernetes.api.model.DesiredState;
@@ -105,6 +107,8 @@ public class ApiMasterService implements KubernetesExtensions {
         node.setWebUrl("http://" + hostName + ":" + port + "/");
         node.setId(UUID.randomUUID().toString());
         hostNodeModel.write(node);
+
+        ensureModelHasKubernetesServices(hostName, port);
     }
 
     public static String getHostName() {
@@ -308,4 +312,49 @@ public class ApiMasterService implements KubernetesExtensions {
         return answer;
 
     }
+
+
+    /**
+     * Lets ensure that the "kubernetes" and "kubernetes-ro" services are defined so that folks can access the core
+     * REST API via kubernetes services
+     */
+    protected void ensureModelHasKubernetesServices(String hostName, String port) {
+        ImmutableMap<String, ServiceSchema> serviceMap = model.getServiceMap();
+        ServiceSchema service = null;
+        try {
+            service = serviceMap.get(ServiceIDs.KUBERNETES_SERVICE_ID);
+            if (service == null) {
+                service = createService(hostName, port);
+                service.setId(ServiceIDs.KUBERNETES_SERVICE_ID);
+                createService(service);
+            }
+            service = serviceMap.get(ServiceIDs.KUBERNETES_RO_SERVICE_ID);
+            if (service == null) {
+                service = createService(hostName, port);
+                service.setId(ServiceIDs.KUBERNETES_RO_SERVICE_ID);
+                createService(service);
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to create service " + service + ". " + e, e);
+        }
+    }
+
+    protected ServiceSchema createService(String hostName, String port) {
+        ServiceSchema service = new ServiceSchema();
+        service.setKind("Service");
+        try {
+            Integer portNumber = Integer.parseInt(port);
+            if (portNumber != null) {
+                service.setPort(portNumber);
+                IntOrString containerPort = new IntOrString();
+                containerPort.setIntValue(portNumber);
+                service.setContainerPort(containerPort);
+            }
+        } catch (NumberFormatException e) {
+            LOG.warn("Failed to parse port text: " + port + ". " + e, e);
+        }
+        service.setPortalIP(hostName);
+        return service;
+    }
+
 }
