@@ -88,15 +88,15 @@ if not "%JOLOKIA_ARGS%" == "" (
 rem set SYSTEM_PROPERTIES="%SYSTEM_PROPERTIES%"
 rem set STOP_TIMEOUT="%PROCESS_STOP_TIMEOUT%"
 if "%STOP_TIMEOUT%" == "" (
-  set STOP_TIMEOUT="30"
+  set STOP_TIMEOUT=30
 )
-
-rem figure out what command option was and do that, eg run|start|status etc
 
 if "%1" == "" goto :USAGE
 if "%1" == "run" goto :RUN
 if "%1" == "start" goto :START
 if "%1" == "status" goto :STATUS
+if "%1" == "stop" goto :STOP
+if "%1" == "force-stop" goto :FORCE_STOP
 goto :USAGE
 
 :RUN
@@ -104,7 +104,7 @@ goto :USAGE
 
   call %APP_BASE%\bin\pidstatus.bat
   if NOT "%PID_STATUS%" == "No" (
-    echo "Already running."
+    echo Already running
     goto :END1
   )
 
@@ -147,8 +147,8 @@ goto :USAGE
   echo "Starting %SERVICE_NAME%"
 
   call %APP_BASE%\bin\pidstatus.bat
-  if NOT "%PID_STATUS%" == "No" (
-    echo "Already running."
+  if not "%PID_STATUS%" == "No" (
+    echo Already running
     goto :END1
   )
 
@@ -186,7 +186,7 @@ goto :USAGE
 
   rem see if we got started
   timeout /T 2 > NUL
-  FOR /F "tokens=2 delims= " %%A in ('TASKLIST /FI "WINDOWTITLE eq %APP_BASENAME%" /NH') DO SET PID=%%A
+  for /F "tokens=2 delims= " %%A in ('tasklist /FI "WINDOWTITLE eq %APP_BASENAME%" /NH') do set PID=%%A
   if "%PID%" == "No" (
      echo "Could not start %SERVICE_NAME%"
      goto :END1
@@ -195,6 +195,63 @@ goto :USAGE
 
   rem write PID to pid file
   echo %PID% > %PID_FILE%
+
+  goto :END
+
+:STOP
+
+  echo Gracefully Stopping %SERVICE_NAME% within %STOP_TIMEOUT% second(s)
+
+  call %APP_BASE%\bin\pidstatus.bat
+  if "%PID_STATUS%" == "No" (
+    echo Already stopped
+    goto :END
+  )
+
+  if not "%PID%" == "" (
+    taskkill /PID %PID%
+  )
+
+  for /L %%L in (1,1,%STOP_TIMEOUT%) do (
+    rem cannot call pidstatus in this for loop
+    set PID_STOP_STATUS=No
+    for /F "tokens=2 delims= " %%A in ('TASKLIST /FI "PID eq %PID%" /NH') do set PID_STOP_STATUS=%%A
+    if "%PID_STOP_STATUS%" == "No" (
+      rem delete pid file now its stopped
+      if exist %PID_FILE% del %PID_FILE%
+      goto :END
+    )
+    rem sleep for 1 second
+    timeout /T 1 /NOBREAK > NUL
+  )
+
+  echo Could not gracefully stop %SERVICE_NAME% with PID=%pid% within %STOP_TIMEOUT% second(s)
+  goto :END1
+
+:FORCE_STOP
+
+  echo Forcibly stopping %SERVICE_NAME%
+
+  call %APP_BASE%\bin\pidstatus.bat
+  if "%PID_STATUS%" == "No" (
+    echo Already stopped
+    goto :END
+  )
+
+  if not "%PID%" == "" (
+    taskkill /F /PID %PID%
+  )
+
+  call %APP_BASE%\bin\pidstatus.bat
+  if "%PID_STATUS%" == "No" (
+    rem delete pid file now its stopped
+    if exist %PID_FILE% del %PID_FILE%
+  )
+
+  if not "%PID_STATUS%" == "No" (
+    echo Could not forcibly stop %SERVICE_NAME% with PID=%pid%
+    goto :END1
+  )
 
   goto :END
 

@@ -25,5 +25,12 @@ if "%APP_BASE%" == "" (
   set APP_BASE=%CD%
 )
 
-call %APP_BASE%\bin\launcher.bat restart
+call %APP_BASE%\bin\launcher.bat stop
+
+call %APP_BASE%\bin\launcher.bat status
+if not "%PID_STATUS%" == "No" (
+  call %APP_BASE%\bin\launcher.bat force-stop
+)
+
+call %APP_BASE%\bin\launcher.bat start
 
