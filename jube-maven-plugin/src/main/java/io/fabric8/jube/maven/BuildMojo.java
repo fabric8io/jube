@@ -19,9 +19,6 @@ import io.fabric8.jube.util.ImageMavenCoords;
 import io.fabric8.jube.util.InstallHelper;
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Zips;
-
-
-import org.apache.commons.io.FileUtils;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
@@ -258,9 +255,8 @@ public class BuildMojo extends AbstractMojo {
                 exportDir = exportDir.substring(1);
             }
 
-            File assemblyDir = assemblyArchiver.createArchive(assembly, exportDir, "dir", projectConfig, false);
-            FileUtils.copyDirectory(assemblyDir, buildDir);
-            
+            assemblyArchiver.createArchive(assembly, exportDir, "dir", projectConfig, false);
+
             InstallHelper.chmodAllScripts(buildDir);
 
             Zips.createZipFile(LOG, buildDir, outputZipFile);
