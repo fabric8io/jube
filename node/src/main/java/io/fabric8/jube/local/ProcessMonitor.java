@@ -18,8 +18,10 @@ package io.fabric8.jube.local;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CopyOnWriteArraySet;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -46,6 +48,7 @@ public class ProcessMonitor {
     private final ProcessManager processManager;
     private final long pollTime;
     private Timer timer = new Timer();
+    private Set<String> excludedPodIds = new CopyOnWriteArraySet<>();
 
     @Inject
     public ProcessMonitor(ApiMasterKubernetesModel model,
@@ -75,6 +78,9 @@ public class ProcessMonitor {
 
         for (Map.Entry<String, Installation> entry : entries) {
             final String id = entry.getKey();
+            if (excludedPodIds.contains(id)) {
+                continue;
+            }
             Installation installation = entry.getValue();
             Long pid = null;
             try {
@@ -118,5 +124,13 @@ public class ProcessMonitor {
 
     public KubernetesModel getModel() {
         return model;
+    }
+
+    public void addExcludedPodId(String podId) {
+        excludedPodIds.add(podId);
+    }
+
+    public void removeExcludedPodId(String podId) {
+        excludedPodIds.remove(podId);
     }
 }

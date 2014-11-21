@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.inject.Inject;
@@ -35,6 +36,7 @@ import javax.ws.rs.Produces;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.fabric8.jube.ServiceIDs;
+import io.fabric8.jube.Statuses;
 import io.fabric8.jube.local.NodeHelper;
 import io.fabric8.jube.local.ProcessMonitor;
 import io.fabric8.jube.model.HostNode;
@@ -141,17 +143,23 @@ public class ApiMasterService implements KubernetesExtensions {
 
 
     @Override
-    public String updatePod(@NotNull String podId, PodSchema pod) throws Exception {
+    public String updatePod(final @NotNull String podId, final PodSchema pod) throws Exception {
         // TODO needs implementing remotely!
 
-        System.out.println("Updating pod " + pod);
-        DesiredState desiredState = pod.getDesiredState();
-        Objects.notNull(desiredState, "desiredState");
+        return NodeHelper.excludeFromProcessMonitor(processMonitor, pod, new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                System.out.println("Updating pod " + pod);
+                DesiredState desiredState = pod.getDesiredState();
+                Objects.notNull(desiredState, "desiredState");
 
-        CurrentState currentState = getOrCreateCurrentState(pod);
-        List<ManifestContainer> containers = KubernetesHelper.getContainers(pod);
-        model.updatePod(podId, pod);
-        return NodeHelper.createMissingContainers(processManager, model, pod, currentState, containers);
+                CurrentState currentState = getOrCreateCurrentState(pod);
+                List<ManifestContainer> containers = KubernetesHelper.getContainers(pod);
+                model.updatePod(podId, pod);
+
+                return NodeHelper.createMissingContainers(processManager, model, pod, currentState, containers);
+            }
+        });
     }
 
     @Override
@@ -268,16 +276,26 @@ public class ApiMasterService implements KubernetesExtensions {
 
         final CurrentState currentState = getOrCreateCurrentState(pod);
         final List<ManifestContainer> containers = KubernetesHelper.getContainers(pod);
+
+        NodeHelper.setPodStatus(pod, Statuses.WAITING);
+        NodeHelper.setContainerRunningState(pod, podId, false);
+
         model.updatePod(podId, pod);
         localCreateThreadPool.submit(new Runnable() {
             @Override
             public void run() {
-                try {
-                    NodeHelper.createMissingContainers(processManager, model, pod, currentState, containers);
-                } catch (Exception e) {
-                    LOG.error("Failed to create container " + podId + ". " + e, e);
-                }
+                Runnable task = new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            NodeHelper.createMissingContainers(processManager, model, pod, currentState, containers);
+                        } catch (Exception e) {
+                            LOG.error("Failed to create container " + podId + ". " + e, e);
+                        }
 
+                    }
+                };
+                NodeHelper.excludeFromProcessMonitor(processMonitor, pod, task);
             }
         });
         return pod.getId();

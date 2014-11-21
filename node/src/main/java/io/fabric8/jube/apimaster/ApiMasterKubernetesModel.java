@@ -280,7 +280,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     }
 
     protected String tryCreatePod(HostNode hostNode, PodSchema pod) throws Exception {
-        System.out.println("===== attempting to create pod on host: " + hostNode.getWebUrl());
+        LOG.info("attempting to create pod on host: " + hostNode.getWebUrl());
         KubernetesExtensionsClient client = createClient(hostNode);
         return client.createLocalPod(pod);
     }
@@ -299,7 +299,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
 
     protected String tryDeletePod(HostNode hostNode, PodSchema pod) throws Exception {
         String id = pod.getId();
-        System.out.println("===== attempting to delete pod: " + id + " on host: " + hostNode.getWebUrl());
+        LOG.info("attempting to delete pod: " + id + " on host: " + hostNode.getWebUrl());
         KubernetesExtensionsClient client = createClient(hostNode);
         return client.deleteLocalPod(id);
     }
@@ -332,8 +332,11 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     protected void writeEntity(String path, Object entity) {
         try {
             String json = KubernetesHelper.toJson(entity);
-            System.out.println("Writing to path: " + path + " json: " + json);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Writing to path: " + path + " json: " + json);
+            }
             ZooKeeperUtils.setData(curator, path, json);
+            updateLocalModel(entity, false);
         } catch (Exception e) {
             throw new RuntimeException("Failed to update object at path: " + path + ". " + e, e);
         }
@@ -345,7 +348,6 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
             if (stat != null) {
                 ZooKeeperUtils.delete(curator, path);
             }
-
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete object at path: " + path + ". " + e, e);
         }
@@ -392,7 +394,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         } else if (dto instanceof ServiceSchema) {
             serviceChanged((ServiceSchema) dto, remove);
         } else {
-            System.out.println("Unrecognised DTO: " + dto);
+            LOG.warn("Unrecognised DTO: " + dto);
         }
     }
 
@@ -406,8 +408,13 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
             }
         } else {
             String id = memoryModel.getOrCreateId(entity.getId(), NodeHelper.KIND_POD);
-            memoryModel.updatePod(id, entity);
-            podListeners.entityChanged(id, entity);
+            PodSchema old = memoryModel.getPod(id);
+            // lets only replace the Pod if it really has changed to avoid overwriting
+            // pods which are being installed
+            if (NodeHelper.podHasChanged(entity, old)) {
+                memoryModel.updatePod(id, entity);
+                podListeners.entityChanged(id, entity);
+            }
         }
     }
 

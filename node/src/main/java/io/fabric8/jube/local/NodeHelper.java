@@ -27,6 +27,7 @@ import java.util.concurrent.Callable;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableSet;
 import io.fabric8.jube.KubernetesModel;
+import io.fabric8.jube.Statuses;
 import io.fabric8.jube.apimaster.ApiMasterService;
 import io.fabric8.jube.process.InstallOptions;
 import io.fabric8.jube.process.Installation;
@@ -250,17 +251,16 @@ public final class NodeHelper {
             PodCurrentContainerInfo containerInfo = NodeHelper.getOrCreateContainerInfo(pod, containerName);
 
             LOG.info("Installed new process at: " + installDir);
-
-            // TODO add a container to the current state
             ProcessController controller = installation.getController();
-            controller.start();
-
-            Long pid = controller.getPid();
-            containerAlive(pod, containerName, pid != null && pid > 0);
-
             Map<String, String> environment = controller.getConfig().getEnvironment();
             container.setEnv(createEnvironmentVariables(environment));
             createInstallationPorts(environment, installation, container);
+            model.updatePod(pod.getId(), pod);
+
+            // TODO add a container to the current state
+            controller.start();
+            Long pid = controller.getPid();
+            containerAlive(pod, containerName, pid != null && pid > 0);
         } catch (Exception e) {
             currentState.setStatus("Terminated: " + e);
             System.out.println("ERROR: Failed to create pod: " + pod.getId() + ". " + e);
@@ -395,14 +395,23 @@ public final class NodeHelper {
         CurrentState currentState = getOrCreateCurrentState(pod);
         String status = currentState.getStatus();
         if (alive) {
-            currentState.setStatus("Running");
+            currentState.setStatus(Statuses.RUNNING);
         } else {
             if (Strings.isNullOrBlank(status)) {
-                currentState.setStatus("Waiting");
-            } else {
-                currentState.setStatus("Terminated");
+                currentState.setStatus(Statuses.WAITING);
+            } else if (!Objects.equal(Statuses.WAITING, status)) {
+                currentState.setStatus(Statuses.TERMINATED);
             }
         }
+        setContainerRunningState(pod, id, alive);
+    }
+
+    public static void setPodStatus(PodSchema pod, String status) {
+        CurrentState currentState = getOrCreateCurrentState(pod);
+        currentState.setStatus(status);
+    }
+
+    public static void setContainerRunningState(PodSchema pod, String id, boolean alive) {
         State state = getOrCreateContainerState(pod, id);
         if (alive) {
             Running running = new Running();
@@ -506,6 +515,34 @@ public final class NodeHelper {
         return answer;
     }
 
+
+    /**
+     * Performs a block of code and updates the pod model if its updated
+     */
+    public static void excludeFromProcessMonitor(ProcessMonitor monitor, PodSchema pod, Runnable task) {
+        String id = pod.getId();
+        monitor.addExcludedPodId(id);
+        try {
+            task.run();
+        } finally {
+            monitor.removeExcludedPodId(id);
+        }
+    }
+
+    /**
+     * Performs a block of code and updates the pod model if its updated
+     */
+    public static <T> T excludeFromProcessMonitor(ProcessMonitor monitor, PodSchema pod,  Callable<T> task) throws Exception {
+        String id = pod.getId();
+        monitor.addExcludedPodId(id);
+        try {
+            return task.call();
+        } finally {
+            monitor.removeExcludedPodId(id);
+        }
+    }
+
+
     protected static String getPodJson(PodSchema pod) {
         try {
             return KubernetesHelper.toJson(pod);
@@ -515,4 +552,15 @@ public final class NodeHelper {
         }
     }
 
+    /**
+     * Returns true if there has been a change in the JSON of the given entity
+     */
+    public static boolean podHasChanged(PodSchema currentEntity, PodSchema oldEntity) {
+        if (currentEntity == null || oldEntity == null) {
+            return true;
+        }
+        String oldJson = getPodJson(oldEntity);
+        String newJson = getPodJson(currentEntity);
+        return !java.util.Objects.equals(oldJson, newJson);
+    }
 }
