@@ -145,11 +145,16 @@
       </exclusions>
     </dependency>
 
-    <!-- TODO we should consider moving to weld-servlet-core instead to avoid the bundling of guava and other stuff inside this jar -->
+    <!-- lets use an old version so it works ok ;) -->
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>13.0</version>
+    </dependency>
+
     <dependency>
       <groupId>org.jboss.weld.servlet</groupId>
-      <artifactId>weld-servlet</artifactId>
-      <version>2.2.4.Final</version>
+      <artifactId>weld-servlet-core</artifactId>
     </dependency>
 
     <!-- testing -->
