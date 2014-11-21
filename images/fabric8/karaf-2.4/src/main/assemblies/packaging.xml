@@ -37,6 +37,11 @@
         <exclude>karaf-manual*</exclude>
       </excludes>
     </fileSet>
+    <fileSet>
+      <directory>src/main/overlay</directory>
+      <outputDirectory>/</outputDirectory>
+      <fileMode>0755</fileMode>
+    </fileSet>
   </fileSets>
   <dependencySets>
     <dependencySet>
