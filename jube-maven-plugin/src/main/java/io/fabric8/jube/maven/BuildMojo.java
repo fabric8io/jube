@@ -19,6 +19,8 @@ import io.fabric8.jube.util.ImageMavenCoords;
 import io.fabric8.jube.util.InstallHelper;
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Zips;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
@@ -64,6 +66,7 @@ import static io.fabric8.utils.PropertiesHelper.findPropertiesWithPrefix;
 public class BuildMojo extends AbstractMojo {
     public static final String DOCKER_IMAGE_PROPERTY = "docker.image";
     public static final String DOCKER_BASE_IMAGE_PROPERTY = "docker.from";
+    public static final String JUBE_ASSEMBLY_DIR = "jube-assembly";
 
     private static final transient Logger LOG = LoggerFactory.getLogger(BuildMojo.class);
 
@@ -256,7 +259,9 @@ public class BuildMojo extends AbstractMojo {
             }
 
             assemblyArchiver.createArchive(assembly, exportDir, "dir", projectConfig, false);
-
+            File assemblyDir = new File(project.getBasedir(), "target/" + JUBE_ASSEMBLY_DIR);
+            FileUtils.copyDirectory(assemblyDir, buildDir);
+            
             InstallHelper.chmodAllScripts(buildDir);
 
             Zips.createZipFile(LOG, buildDir, outputZipFile);
