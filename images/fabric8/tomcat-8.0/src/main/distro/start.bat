@@ -38,7 +38,8 @@ set TITLE=%APP_BASENAME%
 call %APP_BASE%\bin\catalina.bat start
 
 rem see if we got started
-timeout /T 2 > NUL
+rem need to use ping as timeout causing issue when being controlled from Java/Jube
+ping -n 2 127.0.0.1 > NUL
 for /F "tokens=2 delims= " %%A in ('tasklist /FI "WINDOWTITLE eq %APP_BASENAME%" /NH') do set PID=%%A
 if "%PID%" == "No" (
    echo Could not start Tomcat
@@ -52,7 +53,9 @@ echo %PID% > %PID_FILE%
 goto :END
 
 :END1
-set ERROR_CODE=1
+rem exit with error code 1
+endlocal
+exit /B 1
 
 :END
-
+endlocal
