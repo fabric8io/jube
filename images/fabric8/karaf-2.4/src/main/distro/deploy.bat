@@ -15,8 +15,12 @@ rem  implied.  See the License for the specific language governing
 rem  permissions and limitations under the License.
 rem
 
-rem deploy WAR files
-
-if exist %APP_BASE%\maven (
-  xcopy /y %APP_BASE%\maven\*.war %APP_BASE%\webapps > NUL
+if exist %APP_BASE%\maven\repository (
+  echo Copying offline repo
+  xcopy /y %APP_BASE%\maven\repository\* %APP_BASE%\system > NUL
 )
+
+if exist %APP_BASE%\maven\kars (
+  xcopy /y %APP_BASE%\maven\kars\* %APP_BASE%\deploy > NUL
+)
+

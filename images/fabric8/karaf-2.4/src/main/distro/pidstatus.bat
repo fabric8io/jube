@@ -15,8 +15,23 @@ rem  implied.  See the License for the specific language governing
 rem  permissions and limitations under the License.
 rem
 
-rem deploy WAR files
+rem to get the status of a pid
 
-if exist %APP_BASE%\maven (
-  xcopy /y %APP_BASE%\maven\*.war %APP_BASE%\webapps > NUL
+rem clear variables first
+set PID_STATUS=No
+set PID=
+
+if not exist %PID_FILE% (
+  goto :END
 )
+
+set /p PID_TMP=<%PID_FILE%
+if not "%PID_TMP%" == "" (
+  set PID=%PID_TMP%
+  for /F "tokens=2 delims= " %%A in ('TASKLIST /FI "PID eq %PID_TMP%" /NH') do set PID_STATUS=%%A
+) else (
+  set PID=
+)
+set PID_TMP=
+
+:END

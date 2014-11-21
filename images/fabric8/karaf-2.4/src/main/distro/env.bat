@@ -15,8 +15,15 @@ rem  implied.  See the License for the specific language governing
 rem  permissions and limitations under the License.
 rem
 
-rem deploy WAR files
+rem defines the default environment settings
 
-if exist %APP_BASE%\maven (
-  xcopy /y %APP_BASE%\maven\*.war %APP_BASE%\webapps > NUL
-)
+set PID_FILE=%APP_BASE%\process.pid
+
+if not defined JOLOKIA_PORT set JOLOKIA_PORT=8778
+if not defined KARAF_USERNAME set KARAF_USERNAME=admin
+if not defined KARAF_PASSWORD set KARAF_PASSWORD=admin
+
+set KARAF_OPTS=-Dkaraf.shutdown.pid.file=process.pid -javaagent:jolokia-agent.jar=host=0.0.0.0,port=%JOLOKIA_PORT%,authMode=jaas,realm=karaf,user=%KARAF_USERNAME%,password=%KARAF_PASSWORD
+
+rem export the ports as system properties
+set KARAF_OPTS=%KARAF_OPTS% -Dhttp.port=$HTTP_PORT -Drmi.registry.port=$RMI_REGISTRY_PORT -Drmi.server.port=$RMI_SERVER_PORT -Dssh.port=$SSH_PORT

@@ -20,3 +20,6 @@
 export KARAF_OPTS="-Dkaraf.shutdown.pid.file=process.pid"
 export KARAF_OPTS="$KARAF_OPTS -javaagent:jolokia-agent.jar=host=0.0.0.0,port=${JOLOKIA_PORT:-8778},authMode=jaas,realm=karaf,user=${KARAF_USERNAME:-admin},password=${KARAF_PASSWORD:-admin}"
 
+# export the ports as system properties
+export KARAF_OPTS="$KARAF_OPTS -Dhttp.port=$HTTP_PORT -Drmi.registry.port=$RMI_REGISTRY_PORT -Drmi.server.port=$RMI_SERVER_PORT -Dssh.port=$SSH_PORT"
+

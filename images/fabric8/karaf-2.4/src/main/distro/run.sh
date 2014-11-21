@@ -26,9 +26,6 @@ fi
 
 source ${APP_BASE}/env.sh
 
-# export the ports as system properties
-export KARAF_OPTS="$KARAF_OPTS -Dhttp.port=$HTTP_PORT -Drmi.registry.port=$RMI_REGISTRY_PORT -Drmi.server.port=$RMI_SERVER_PORT -Dssh.port=$SSH_PORT"
-
 $APP_BASE/deploy.sh
 
 $APP_BASE/bin/karaf

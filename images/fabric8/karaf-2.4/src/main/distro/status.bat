@@ -15,8 +15,25 @@ rem  implied.  See the License for the specific language governing
 rem  permissions and limitations under the License.
 rem
 
-rem deploy WAR files
+rem
+rem Discover the APP_BASE from the location of this script.
+rem
 
-if exist %APP_BASE%\maven (
-  xcopy /y %APP_BASE%\maven\*.war %APP_BASE%\webapps > NUL
+setlocal
+
+if "%APP_BASE%" == "" (
+  set APP_BASE=%CD%
 )
+
+call %APP_BASE%\env.bat
+
+call %APP_BASE%\pidstatus.bat
+
+if "%PID_STATUS%" == "No" (
+  echo Karaf is stopped
+) else (
+  echo Karaf is running: PID=%PID%
+)
+
+:END
+
