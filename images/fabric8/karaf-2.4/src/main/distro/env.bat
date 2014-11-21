@@ -26,4 +26,4 @@ if not defined KARAF_PASSWORD set KARAF_PASSWORD=admin
 set KARAF_OPTS=-Dkaraf.shutdown.pid.file=process.pid -javaagent:jolokia-agent.jar=host=0.0.0.0,port=%JOLOKIA_PORT%,authMode=jaas,realm=karaf,user=%KARAF_USERNAME%,password=%KARAF_PASSWORD
 
 rem export the ports as system properties
-set KARAF_OPTS=%KARAF_OPTS% -Dhttp.port=$HTTP_PORT -Drmi.registry.port=$RMI_REGISTRY_PORT -Drmi.server.port=$RMI_SERVER_PORT -Dssh.port=$SSH_PORT
+set KARAF_OPTS=%KARAF_OPTS% -Dhttp.port=%HTTP_PORT% -Drmi.registry.port=%RMI_REGISTRY_PORT% -Drmi.server.port=%RMI_SERVER_PORT% -Dssh.port=%SSH_PORT%
