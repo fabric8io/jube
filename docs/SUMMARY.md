@@ -10,3 +10,4 @@
 * [Developing](developing.md)
 * [FAQ](FAQ.md)
   * [General Questions](faqGeneral.md)
+  * [Configuration Questions](faqConfig.md)

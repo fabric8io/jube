@@ -22,3 +22,5 @@ Jube runs on Java 7 and 8.
 #### Which platforms are supported?
 
 Any platform that has a Java Virtual Machine
+
+
