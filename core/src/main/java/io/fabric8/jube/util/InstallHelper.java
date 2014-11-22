@@ -26,6 +26,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -155,7 +156,6 @@ public final class InstallHelper {
         return answer;
     }
 
-
     /**
      * Writes the ports to the ports.properties file
      */
@@ -163,7 +163,9 @@ public final class InstallHelper {
         // lets add the old ports if there were any
         Map<String, String> oldPorts = readPorts(portFile);
 
-        Map<String, String> fullPortMap = new HashMap<>(oldPorts);
+        // new ports should override the old
+        Map<String, String> fullPortMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        fullPortMap.putAll(oldPorts);
         fullPortMap.putAll(portMap);
 
         PrintStream writer = new PrintStream(new FileOutputStream(portFile));
