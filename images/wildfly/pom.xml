@@ -32,7 +32,7 @@
     <name>Jube :: Images :: WildFly</name>
 
     <properties>
-        <wildfly.version>8.1.0.Final</wildfly.version>
+        <wildfly.version>8.2.0.Final</wildfly.version>
     </properties>
 
     <modules>
