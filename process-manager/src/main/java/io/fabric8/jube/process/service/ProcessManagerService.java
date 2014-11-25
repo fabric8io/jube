@@ -51,6 +51,7 @@ import io.fabric8.jube.process.config.ConfigHelper;
 import io.fabric8.jube.process.config.ProcessConfig;
 import io.fabric8.jube.process.support.DefaultProcessController;
 import io.fabric8.jube.process.support.command.Duration;
+import io.fabric8.jube.util.FilesHelper;
 import io.fabric8.jube.util.InstallHelper;
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
@@ -94,7 +95,9 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     }
 
     public ProcessManagerService(File storageLocation, String remoteRepositoryUrls) throws MalformedObjectNameException, IOException {
-        this.storageLocation = storageLocation;
+        // make sure the install directory path is absolute and compact as there can be troubles with having foo/./bar paths
+        String path = FilesHelper.compactPath(storageLocation.getAbsolutePath());
+        this.storageLocation = new File(path);
         if (Strings.isNullOrBlank(remoteRepositoryUrls)) {
             remoteRepositoryUrls = DEFAULT_MAVEN_REPOS;
         }
