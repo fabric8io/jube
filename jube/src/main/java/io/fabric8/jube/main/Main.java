@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import io.fabric8.jube.apimaster.ApiMasterService;
+import io.fabric8.jube.util.JubeVersionUtils;
 import io.fabric8.kubernetes.api.KubernetesClient;
 import io.fabric8.kubernetes.api.KubernetesFactory;
 import io.fabric8.kubernetes.api.KubernetesManager;
@@ -49,6 +50,16 @@ public final class Main {
     private static final String JUBE_VERSION = System.getenv("JUBE_VERSION") != null ? System.getenv("JUBE_VERSION") : "LATEST";
     private static final String FABRIC8_VERSION = System.getenv("FABRIC8_VERSION") != null ? System.getenv("FABRIC8E_VERSION") : "LATEST";
 
+    private static final String JUL_LOGGING_FORMAT = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS %4$s %2$s %5$s%6$s%n";
+
+    private static final String LOGO =
+            "\t________         ______\n" +
+            "\t______(_)____  _____  /_ _____\n" +
+            "\t_____  / _  / / /__  __ \\_  _ \\\n" +
+            "\t____  /  / /_/ / _  /_/ //  __/\n" +
+            "\t___  /   \\__,_/  /_.___/ \\___/\n" +
+            "\t/___/\n";
+
     private Main() {
         // run as main class
     }
@@ -57,7 +68,7 @@ public final class Main {
         try {
             System.setProperty("hawtio.authenticationEnabled", "false");
             System.setProperty("org.eclipse.jetty.util.log.class", Slf4jLog.class.getName());
-
+            System.setProperty("java.util.logging.SimpleFormatter.format", JUL_LOGGING_FORMAT);
             String port = Systems.getEnvVarOrSystemProperty("HTTP_PORT", "HTTP_PORT", "8585");
             Integer portNumber = Integer.parseInt(port);
 
@@ -71,13 +82,12 @@ public final class Main {
 
             // lets find wars on the classpath
             Set<String> foundURLs = new HashSet<>();
-            findWarsOnClassPath(server, handlers, Thread.currentThread().getContextClassLoader(), foundURLs, portNumber);
+            String hawtio1 = findWarsOnClassPath(server, handlers, Thread.currentThread().getContextClassLoader(), foundURLs, portNumber);
 
             ClassLoader classLoader = Main.class.getClassLoader();
             Thread.currentThread().setContextClassLoader(classLoader);
 
-
-            findWarsOnClassPath(server, handlers, classLoader, foundURLs, portNumber);
+            String hawtio2 = findWarsOnClassPath(server, handlers, classLoader, foundURLs, portNumber);
 
             // In case you want to run in an IDE, and it does not setup the classpath right.. lets
             // find the .war files in the maven dir.  Assumes you set the working dir to the target/jube dir.
@@ -114,6 +124,22 @@ public final class Main {
             handlers.addHandler(context);
 
             server.start();
+
+            System.out.println("\n\n");
+            System.out.println(LOGO);
+
+            String version = JubeVersionUtils.getReleaseVersion();
+            if (version != null) {
+                System.out.println("\t    Version " + version + "\n");
+            }
+            if (hawtio1 != null) {
+                System.out.println("\t    Web console: http://" + ApiMasterService.getHostName() + ":" + port + "/" + hawtio1 + "/");
+            } else if (hawtio2 != null) {
+                System.out.println("\t    Web console: http://" + ApiMasterService.getHostName() + ":" + port + "/" + hawtio2 + "/");
+            }
+            System.out.println("\t    REST api:    http://" + ApiMasterService.getHostName() + ":" + port + "/api/");
+            System.out.println("\n\n");
+
             server.join();
         } catch (Throwable e) {
             logException(e);
@@ -183,7 +209,8 @@ public final class Main {
         }
     }
 
-    protected static void findWarsOnClassPath(Server server, HandlerCollection handlers, ClassLoader classLoader, Set<String> foundURLs, Integer port) {
+    protected static String findWarsOnClassPath(Server server, HandlerCollection handlers, ClassLoader classLoader, Set<String> foundURLs, Integer port) {
+        String answer = null;
         try {
             Enumeration<URL> resources = classLoader.getResources("WEB-INF/web.xml");
             while (resources.hasMoreElements()) {
@@ -192,16 +219,22 @@ public final class Main {
                 if (text.startsWith("jar:")) {
                     text = text.substring(4);
                 }
-                createWebapp(handlers, foundURLs, port, text);
+                String path = createWebapp(handlers, foundURLs, port, text);
+                if (path != null) {
+                    answer = path;
+                }
             }
         } catch (Exception e) {
             System.out.println("Failed to find web.xml on classpath: " + e);
             e.printStackTrace();
         }
 
+        return answer;
     }
 
-    private static void createWebapp(HandlerCollection handlers, Set<String> foundURLs, Integer port, String war) {
+    private static String createWebapp(HandlerCollection handlers, Set<String> foundURLs, Integer port, String war) {
+        String answer = null;
+
         if (foundURLs.add(war)) {
             String contextPath = createContextPath(war);
             String filePath = createFilePath(war);
@@ -211,6 +244,7 @@ public final class Main {
                 System.out.println("hawtio is running on http://" + ApiMasterService.getHostName() + ":" + port + "/" + contextPath + "/");
                 System.out.println("==================================================");
                 System.out.println();
+                answer = contextPath;
             } else {
                 System.out.println("adding web context path: /" + contextPath + " war: " + filePath);
             }
@@ -227,6 +261,8 @@ public final class Main {
                 logException(e);
             }
         }
+
+        return answer;
     }
 
     /**

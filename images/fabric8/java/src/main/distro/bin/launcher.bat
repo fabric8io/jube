@@ -44,10 +44,11 @@ set APP_CONSOLE_OUT=%APP_BASE%\logs\out.log
 set APP_CONSOLE_ERR=%APP_BASE%\logs\err.log
 
 rem Add the files in the maven dir using wildcard style
+rem (this is needed on windows as the command line can get too large otherwise)
 if "%CLASSPATH%" == "" (
-  set CLASSPATH=%APP_BASE%\maven\*;classes
+  set CLASSPATH=%APP_BASE%\maven\*;%APP_BASE%\classes
 ) else (
-  set CLASSPATH=%CLASSPATH%;%APP_BASE%\maven\*;classes
+  set CLASSPATH=%CLASSPATH%;%APP_BASE%\maven\*;%APP_BASE%\classes
 )
 
 rem get current dir name only (which is a bit odd way to do in windows bat)
