@@ -273,12 +273,8 @@ public class ProcessConfig implements Serializable {
             return 0;
         }
 
-        // make sure to compact the baseDir as Windows does not work with dirs processes/./myapp etc.
-        String compact = FilesHelper.compactPath(baseDir.getAbsolutePath());
-        File path = new File(compact);
-
-        System.out.println("--- running command " + Arrays.asList(arguments) + " in directory " + path.getAbsolutePath());
-        Command command = new Command(arguments).setDirectory(path);
+        System.out.println("--- running command " + Arrays.asList(arguments) + " in directory " + baseDir.getAbsolutePath());
+        Command command = new Command(arguments).setDirectory(baseDir);
         Map<String, String> environment = getEnvironment();
         if (environment != null && environment.size() > 0) {
             command = command.addEnvironment(environment);
