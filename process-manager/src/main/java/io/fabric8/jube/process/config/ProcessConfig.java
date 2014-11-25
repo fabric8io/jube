@@ -27,6 +27,7 @@ import java.util.concurrent.Executor;
 
 import io.fabric8.jube.process.support.command.Command;
 import io.fabric8.jube.process.support.command.CommandFailedException;
+import io.fabric8.jube.util.FilesHelper;
 
 /**
  * The configuration DTO stored as JSON so that the system can be restarted and remember how to run & control a managed process
@@ -271,8 +272,13 @@ public class ProcessConfig implements Serializable {
         if (arguments == null || arguments.length == 0) {
             return 0;
         }
-        System.out.println("--- running command " + Arrays.asList(arguments) + " in directory " + baseDir.getAbsolutePath());
-        Command command = new Command(arguments).setDirectory(baseDir);
+
+        // make sure to compact the baseDir as Windows does not work with dirs processes/./myapp etc.
+        String compact = FilesHelper.compactPath(baseDir.getAbsolutePath());
+        File path = new File(compact);
+
+        System.out.println("--- running command " + Arrays.asList(arguments) + " in directory " + path.getAbsolutePath());
+        Command command = new Command(arguments).setDirectory(path);
         Map<String, String> environment = getEnvironment();
         if (environment != null && environment.size() > 0) {
             command = command.addEnvironment(environment);

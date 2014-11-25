@@ -41,11 +41,14 @@ public class ProcessManagerServiceTest {
     InstallTask postInstall;
     String firstJvmOption = "-Dfoo=bar";
     String secondJvmOption = "-server";
+    boolean isWindows;
 
     @Before
     public void setUp() throws Exception {
+        isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
+
         String basedir = System.getProperty("basedir", ".");
-        installDir = new File(basedir + "/target/processes/" + getClass().getName()).getCanonicalFile();
+        installDir = new File(basedir + "/target/processes");
         LOG.info("Installing processes to {}", installDir.getAbsolutePath());
 
         processManagerService = new ProcessManagerService(installDir, null);
@@ -67,9 +70,11 @@ public class ProcessManagerServiceTest {
     @Test
     public void shouldGenerateJvmConfig() throws Exception {
         Installation installation = processManagerService.install(installOptions, postInstall);
-        String generatedEnvSh = Files.toString(new File(installDir, "1/env.sh"), Charset.forName("UTF-8"));
 
-        LOG.info("Found env.sh: {}", generatedEnvSh);
+        String env = isWindows ? "1/env.bat" : "1/env.sh";
+        String generatedEnvSh = Files.toString(new File(installDir, env), Charset.forName("UTF-8"));
+
+        LOG.info("Found {}:\n{}", env, generatedEnvSh);
 
         ProcessController controller = installation.getController();
         assertNotNull("controller", controller);
@@ -85,6 +90,9 @@ public class ProcessManagerServiceTest {
         controller.stop();
 
         LOG.info("Stopped process");
+
+        controller.kill();
+        LOG.info("Killed process");
     }
 
 }
