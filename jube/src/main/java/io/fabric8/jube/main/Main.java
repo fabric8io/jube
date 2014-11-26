@@ -60,6 +60,8 @@ public final class Main {
             "\t___  /   \\__,_/  /_.___/ \\___/\n" +
             "\t/___/\n";
 
+    private static boolean hawtioEnabled;
+
     private Main() {
         // run as main class
     }
@@ -82,12 +84,12 @@ public final class Main {
 
             // lets find wars on the classpath
             Set<String> foundURLs = new HashSet<>();
-            String hawtio1 = findWarsOnClassPath(server, handlers, Thread.currentThread().getContextClassLoader(), foundURLs, portNumber);
+            findWarsOnClassPath(server, handlers, Thread.currentThread().getContextClassLoader(), foundURLs, portNumber);
 
             ClassLoader classLoader = Main.class.getClassLoader();
             Thread.currentThread().setContextClassLoader(classLoader);
 
-            String hawtio2 = findWarsOnClassPath(server, handlers, classLoader, foundURLs, portNumber);
+            findWarsOnClassPath(server, handlers, classLoader, foundURLs, portNumber);
 
             // In case you want to run in an IDE, and it does not setup the classpath right.. lets
             // find the .war files in the maven dir.  Assumes you set the working dir to the target/jube dir.
@@ -132,10 +134,8 @@ public final class Main {
             if (version != null) {
                 System.out.println("\t    Version " + version + "\n");
             }
-            if (hawtio1 != null) {
-                System.out.println("\t    Web console: http://" + ApiMasterService.getHostName() + ":" + port + "/" + hawtio1 + "/");
-            } else if (hawtio2 != null) {
-                System.out.println("\t    Web console: http://" + ApiMasterService.getHostName() + ":" + port + "/" + hawtio2 + "/");
+            if (hawtioEnabled) {
+                System.out.println("\t    Web console: http://" + ApiMasterService.getHostName() + ":" + port + "/hawtio/");
             }
             System.out.println("\t    REST api:    http://" + ApiMasterService.getHostName() + ":" + port + "/api/");
             System.out.println("\n\n");
@@ -209,8 +209,7 @@ public final class Main {
         }
     }
 
-    protected static String findWarsOnClassPath(Server server, HandlerCollection handlers, ClassLoader classLoader, Set<String> foundURLs, Integer port) {
-        String answer = null;
+    protected static void findWarsOnClassPath(Server server, HandlerCollection handlers, ClassLoader classLoader, Set<String> foundURLs, Integer port) {
         try {
             Enumeration<URL> resources = classLoader.getResources("WEB-INF/web.xml");
             while (resources.hasMoreElements()) {
@@ -219,22 +218,15 @@ public final class Main {
                 if (text.startsWith("jar:")) {
                     text = text.substring(4);
                 }
-                String path = createWebapp(handlers, foundURLs, port, text);
-                if (path != null) {
-                    answer = path;
-                }
+                createWebapp(handlers, foundURLs, port, text);
             }
         } catch (Exception e) {
             System.out.println("Failed to find web.xml on classpath: " + e);
             e.printStackTrace();
         }
-
-        return answer;
     }
 
-    private static String createWebapp(HandlerCollection handlers, Set<String> foundURLs, Integer port, String war) {
-        String answer = null;
-
+    private static void createWebapp(HandlerCollection handlers, Set<String> foundURLs, Integer port, String war) {
         if (foundURLs.add(war)) {
             String contextPath = createContextPath(war);
             String filePath = createFilePath(war);
@@ -244,7 +236,7 @@ public final class Main {
                 System.out.println("hawtio is running on http://" + ApiMasterService.getHostName() + ":" + port + "/" + contextPath + "/");
                 System.out.println("==================================================");
                 System.out.println();
-                answer = contextPath;
+                hawtioEnabled = true;
             } else {
                 System.out.println("adding web context path: /" + contextPath + " war: " + filePath);
             }
@@ -261,8 +253,6 @@ public final class Main {
                 logException(e);
             }
         }
-
-        return answer;
     }
 
     /**
