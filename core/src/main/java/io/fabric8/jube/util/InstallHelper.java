@@ -21,18 +21,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import io.fabric8.utils.Closeables;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Objects;
+import io.fabric8.utils.Strings;
 
 /**
  * Utilities for install apps.
@@ -102,29 +98,54 @@ public final class InstallHelper {
     }
 
     /**
-     * Appends the environment variables to the env.sh/env.bat script file
+     * Inserts the environment variables to the env.sh/env.bat script file in the top
      */
     public static void writeEnvironmentVariables(File envScriptFile, Map<String, String> environmentVariables) throws IOException {
-        PrintStream writer = new PrintStream(new FileOutputStream(envScriptFile, true));
-        try {
-            writer.println();
+        // make sure to create file
+        if (!envScriptFile.exists()) {
+            envScriptFile.createNewFile();
 
-            Set<Map.Entry<String, String>> entries = environmentVariables.entrySet();
-            for (Map.Entry<String, String> entry : entries) {
-                String name = entry.getKey();
-                String value = entry.getValue();
-
-                if (envScriptFile.getName().endsWith(".bat")) {
-                    // do not quote on windows
-                    writer.println("set " + name + "=" + value);
-                } else {
-                    writer.println("export " + name + "=\"" + value + "\"");
-                }
-            }
-            writer.println();
-        } finally {
-            Closeables.closeQuietly(writer);
         }
+        List<String> lines = FilesHelper.readLines(envScriptFile);
+        // find position to insert variables, which is before first existing environment is set
+        int pos = 0;
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            if (Strings.isNullOrBlank(line)) {
+                continue;
+            }
+            line = line.trim();
+            if (line.startsWith("set ") || line.startsWith("export ")) {
+                pos = i;
+                break;
+            } else {
+                pos = i;
+            }
+        }
+
+        // insert blank line
+        lines.add(pos, "");
+
+        Set<Map.Entry<String, String>> entries = environmentVariables.entrySet();
+        for (Map.Entry<String, String> entry : entries) {
+            String name = entry.getKey();
+            String value = entry.getValue();
+
+            String line;
+            if (envScriptFile.getName().endsWith(".bat")) {
+                // do not quote on windows
+                line = "set " + name + "=" + value;
+            } else {
+                line = "export " + name + "=\"" + value + "\"";
+            }
+            lines.add(++pos, line);
+        }
+
+        // insert blank line
+        lines.add(++pos, "");
+
+        // write lines to file
+        Files.writeLines(envScriptFile, lines);
     }
 
     /**
