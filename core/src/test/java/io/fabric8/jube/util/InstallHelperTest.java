@@ -19,7 +19,11 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
-import java.nio.file.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +46,7 @@ public class InstallHelperTest {
 
         InstallHelper.writeEnvironmentVariables(env, envs);
 
-        List<String> lines = Files.readAllLines(env.toPath());
+        List<String> lines = Files.readAllLines(env.toPath(), StandardCharsets.UTF_8);
 
         // HTTP_PORT should come before KARAF_OPTS
         int pos1 = 0;
