@@ -33,3 +33,13 @@ You can configure where this folder lives on the file system using the **JUBE_PR
     export JUBE_PROCESS_DIR=/var/local/myjube/processes
 
 
+#### How do I configure HTTP port for hawtio web application?
+
+Jube embeds hawtio as the web console. By default port 8585 is used.
+
+The port number can be configured as an environment variable, for example to use port 8282:
+
+    export HTTP_PORT=8282
+
+Alternative the port number can also be configured in the `env.sh` / `env.bat` script file, which setup the environment variables.
+
