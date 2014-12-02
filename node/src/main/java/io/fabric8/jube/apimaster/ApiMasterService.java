@@ -16,6 +16,7 @@
 package io.fabric8.jube.apimaster;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -344,17 +345,26 @@ public class ApiMasterService implements KubernetesExtensions {
             if (service == null) {
                 service = createService(hostName, port);
                 service.setId(ServiceIDs.KUBERNETES_SERVICE_ID);
+                service.setSelector(createKubernetesServiceLabels());
                 createService(service);
             }
             service = serviceMap.get(ServiceIDs.KUBERNETES_RO_SERVICE_ID);
             if (service == null) {
                 service = createService(hostName, port);
                 service.setId(ServiceIDs.KUBERNETES_RO_SERVICE_ID);
+                service.setSelector(createKubernetesServiceLabels());
                 createService(service);
             }
         } catch (Exception e) {
             LOG.error("Failed to create service " + service + ". " + e, e);
         }
+    }
+
+    protected Map<String,String> createKubernetesServiceLabels() {
+        Map<String, String> answer = new HashMap<>();
+        answer.put("component", "apiserver");
+        answer.put("provider", "kubernetes");
+        return answer;
     }
 
     protected ServiceSchema createService(String hostName, String port) {
