@@ -43,3 +43,11 @@ The port number can be configured as an environment variable, for example to use
 
 Alternative the port number can also be configured in the `env.sh` / `env.bat` script file, which setup the environment variables.
 
+
+#### How do I debug the Jube process?
+
+You can enable remote debugging of the Jube process via the environment variable:
+
+    export JVM_DEBUG=TRUE
+
+You can now perform a remote debug in your IDE to connect to Jube and set breakpoints etc.
