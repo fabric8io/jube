@@ -132,9 +132,10 @@ public final class Main {
                 System.out.println("\t    Version " + version + "\n");
             }
             if (hawtioEnabled) {
-                System.out.println("\t    Web console: http://" + ApiMasterService.getHostName() + ":" + port + "/hawtio/");
+                System.out.println("\t    Web console:   http://" + ApiMasterService.getHostName() + ":" + port + "/hawtio/");
             }
-            System.out.println("\t    REST api:    http://" + ApiMasterService.getHostName() + ":" + port + "/api/");
+            System.out.println("\t    REST api:      http://" + ApiMasterService.getHostName() + ":" + port + "/api/");
+            System.out.println("\t    Documentation: http://fabric8.io/jube/goals.html");
             System.out.println("\n\n");
 
             server.join();
