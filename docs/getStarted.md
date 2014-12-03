@@ -1,15 +1,15 @@
 ## Get Started
 
-First you need to [download jube-2.0.10-image.zip](http://central.maven.org/maven2/io/fabric8/jube/images/jube/jube/2.0.10/jube-2.0.10-image.zip) and unzip it:
+First you need to [download jube-2.0.11-image.zip](http://central.maven.org/maven2/io/fabric8/jube/images/jube/jube/2.0.11/jube-2.0.11-image.zip) and unzip it:
 
-    curl -O http://central.maven.org/maven2/io/fabric8/jube/images/jube/jube/2.0.10/jube-2.0.10-image.zip
-    mkdir jube-2.0.10-image
-    cd jube-2.0.10-image
-    unzip ../jube-2.0.10-image.zip
+    curl -O http://central.maven.org/maven2/io/fabric8/jube/images/jube/jube/2.0.11/jube-2.0.11-image.zip
+    mkdir jube-2.0.11-image
+    cd jube-2.0.11-image
+    unzip ../jube-2.0.11-image.zip
 
 You can then startup Jube via:
 
-    cd jube-2.0.10-image
+    cd jube-2.0.11-image
     ./run.sh
 
 If your operating system doesn't have the executable flag set on the run script; try
