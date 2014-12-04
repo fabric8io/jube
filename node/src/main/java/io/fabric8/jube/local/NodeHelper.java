@@ -66,6 +66,8 @@ public final class NodeHelper {
     public static final String KIND_REPLICATION_CONTROLLER = "ReplicationController";
     public static final String KIND_SERVICE = "SERVICE";
 
+    private static final int TIMEOUT = 30;
+
     private static final transient Logger LOG = LoggerFactory.getLogger(NodeHelper.class);
 
     private NodeHelper() {
@@ -385,16 +387,44 @@ public final class NodeHelper {
             return;
         }
         ProcessController controller = installation.getController();
+
         // try graceful to stop first, then kill afterwards
+        // as the controller may issue a command that stops asynchronously, we need to check if the pid is alive
+        // until its graceful shutdown, before we go harder and try to kill it
         try {
             controller.stop();
         } catch (Exception e) {
             LOG.warn("Error during stopping container. Will now attempt to forcibly kill the container.", e);
         }
-        try {
-            controller.kill();
-        } catch (Exception e) {
-            LOG.warn("Error during killing container. Will now attempt to uninstall the container.", e);
+
+        // TODO: more logging, and maybe configurable timeout
+
+        boolean kill = true;
+        for (int i = 0; i < TIMEOUT; i++) {
+            Long pid;
+            try {
+                pid = installation.getActivePid();
+            } catch (IOException e) {
+                // ignore, but force a pid value so we run for the timeout duration
+                pid = 1L;
+            }
+            final boolean alive = pid != null && pid.longValue() > 0;
+
+            if (!alive) {
+                kill = false;
+                break;
+            } else {
+                // wait 1 sec
+                Thread.sleep(1000);
+            }
+        }
+
+        if (kill) {
+            try {
+                controller.kill();
+            } catch (Exception e) {
+                LOG.warn("Error during killing container. Will now attempt to uninstall the container.", e);
+            }
         }
         try {
             controller.uninstall();
