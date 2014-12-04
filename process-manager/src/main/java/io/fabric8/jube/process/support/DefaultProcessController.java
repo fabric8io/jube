@@ -115,7 +115,7 @@ public class DefaultProcessController implements ProcessController {
 
     @Override
     public int stop() throws Exception {
-        String customCommand = config.getKillCommand();
+        String customCommand = config.getStopCommand();
         if (Strings.isNullOrEmpty(customCommand)) {
             // lets just kill it
             LOG.info("No stop command configured so lets just try killing it " + this);
@@ -129,7 +129,7 @@ public class DefaultProcessController implements ProcessController {
         String customCommand = config.getKillCommand();
         if (Strings.isNullOrEmpty(customCommand)) {
             // lets stop it
-            LOG.info("No kill command configured so lets just try killing it " + this);
+            LOG.info("No kill command configured so lets just try killing it with -9 " + this);
             return Processes.killProcess(getPid(), "-9");
         }
         return runConfigCommandValueOrLaunchScriptWith(customCommand, "kill");
@@ -175,7 +175,7 @@ public class DefaultProcessController implements ProcessController {
 
     public Executor getExecutor() {
         if (executor == null) {
-            executor = newFixedThreadPool(THREADS_PER_CONTROLLER, new ThreadFactoryBuilder().setDaemon(true).setNameFormat("fuse-process-controller-%s").build());
+            executor = newFixedThreadPool(THREADS_PER_CONTROLLER, new ThreadFactoryBuilder().setDaemon(true).setNameFormat("jube-process-controller-%s").build());
         }
         return executor;
     }
