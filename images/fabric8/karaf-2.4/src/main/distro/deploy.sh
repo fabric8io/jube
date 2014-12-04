@@ -16,11 +16,11 @@
 #
 
 
-if [ -d "$APP_BASE/maven/repository" ]; then
+if [ -d "$APP_BASE/fabric8/repository" ]; then
   echo "Copying offline repo"
-  cp -rf $APP_BASE/maven/repository/* $APP_BASE/system/
+  cp -rf $APP_BASE/fabric8/repository/* $APP_BASE/system/
 fi
 
-if [ -d "$APP_BASE/maven/kars" ]; then
-  ln -s $APP_BASE/maven/kars/* $i $APP_BASE/deploy/
-fi
+echo "Deploying kars"
+ln -s $APP_BASE/*.kar $i $APP_BASE/deploy/
+

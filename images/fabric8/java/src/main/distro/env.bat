@@ -17,7 +17,7 @@ rem
 
 rem defines the default environment settings
 
-rem TODO add something like this:
+rem add something like this:
 rem
 rem set MAIN=MyClassName
 

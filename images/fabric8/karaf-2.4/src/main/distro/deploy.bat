@@ -20,7 +20,6 @@ if exist %APP_BASE%\maven\repository (
   xcopy /y %APP_BASE%\maven\repository\* %APP_BASE%\system > NUL
 )
 
-if exist %APP_BASE%\maven\kars (
-  xcopy /y %APP_BASE%\maven\kars\* %APP_BASE%\deploy > NUL
-)
+echo Deploying kars
+xcopy /y %APP_BASE%\*.kar %APP_BASE%\deploy > NUL
 
