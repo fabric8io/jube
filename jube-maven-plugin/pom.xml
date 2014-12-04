@@ -123,6 +123,12 @@
       <version>${aether.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.maven.wagon</groupId>
+      <artifactId>wagon-http-lightweight</artifactId>
+      <version>1.0</version>
+    </dependency>
+
     <!-- Testing -->
     <dependency>
       <groupId>org.mockito</groupId>
