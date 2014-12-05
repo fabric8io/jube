@@ -66,7 +66,8 @@ public final class NodeHelper {
     public static final String KIND_REPLICATION_CONTROLLER = "ReplicationController";
     public static final String KIND_SERVICE = "SERVICE";
 
-    private static final int TIMEOUT = 30;
+    // use 60 second stop timeout by default
+    private static final int STOP_TIMEOUT = 60;
 
     private static final transient Logger LOG = LoggerFactory.getLogger(NodeHelper.class);
 
@@ -220,11 +221,12 @@ public final class NodeHelper {
         OpenMavenURL mavenUrl = ImageMavenCoords.dockerImageToMavenURL(image);
         Objects.notNull(mavenUrl, "mavenUrl");
 
-        LOG.info("Creating new container " + containerName + " from: " + mavenUrl);
+        LOG.info("Creating new container: {} from url: {}", containerName, mavenUrl);
+
         Map<String, String> envVarMap = createEnvironmentVariableMap(container.getEnv());
         // now lets copy in the service env vars...
         appendServiceEnvironmentVariables(envVarMap, model);
-        LOG.info("Env variables are: " + envVarMap);
+        LOG.info("Env variables are: {}", envVarMap);
         InstallOptions.InstallOptionsBuilder builder = new InstallOptions.InstallOptionsBuilder().
                 url(mavenUrl).environment(envVarMap);
         if (Strings.isNotBlank(containerName)) {
@@ -237,7 +239,7 @@ public final class NodeHelper {
             try {
                 installation = processManager.install(installOptions, null);
             } catch (IOException ioe) {
-                LOG.debug("Couldn't find image at {} - trying with default prefix", mavenUrl);
+                LOG.debug("Cannot find image at {} - trying with default prefix", mavenUrl);
                 mavenUrl = ImageMavenCoords.dockerImageToMavenURL(image, true);
                 Objects.notNull(mavenUrl, "mavenUrl");
                 builder = new InstallOptions.InstallOptionsBuilder().
@@ -252,7 +254,7 @@ public final class NodeHelper {
 
             PodCurrentContainerInfo containerInfo = NodeHelper.getOrCreateContainerInfo(pod, containerName);
 
-            LOG.info("Installed new process at: " + installDir);
+            LOG.info("Installed new process in directory: {}", installDir);
             ProcessController controller = installation.getController();
             Map<String, String> environment = controller.getConfig().getEnvironment();
             container.setEnv(createEnvironmentVariables(environment));
@@ -260,14 +262,19 @@ public final class NodeHelper {
             model.updatePod(pod.getId(), pod);
 
             // TODO add a container to the current state
+            LOG.info("Staring container: {}", containerName);
             controller.start();
             Long pid = controller.getPid();
-            containerAlive(pod, containerName, pid != null && pid > 0);
+
+            boolean alive = pid != null && pid > 0;
+            LOG.info("Container: {} has pid: {} and is alive: {}", containerName, pid != null ? pid : "<null>", alive);
+
+            containerAlive(pod, containerName, alive);
         } catch (Exception e) {
             currentState.setStatus("Terminated: " + e);
             System.out.println("ERROR: Failed to create pod: " + pod.getId() + ". " + e);
             e.printStackTrace();
-            LOG.error("Failed to create pod: " + pod.getId() + ". " + e, e);
+            LOG.error("Failed to create pod: " + pod.getId() + ". " + e.getMessage(), e);
         }
     }
 
@@ -309,7 +316,7 @@ public final class NodeHelper {
             }
             return answer;
         } catch (IOException e) {
-            LOG.warn("Failed to load ports for installation " + installation + ". " + e, e);
+            LOG.warn("Failed to load ports for installation " + installation + ". " + e.getMessage(), e);
             return null;
         }
     }
@@ -317,7 +324,7 @@ public final class NodeHelper {
     public static Port findPortWithContainerPort(List<Port> ports, int containerPortNumber) {
         for (Port port : ports) {
             Integer containerPort = port.getContainerPort();
-            if (containerPort != null && containerPort.intValue() == containerPortNumber) {
+            if (containerPort != null && containerPort == containerPortNumber) {
                 return port;
             }
         }
@@ -349,7 +356,7 @@ public final class NodeHelper {
                 }
             }
         }
-        LOG.warn("Could not find host port for service port: " + serviceContainerPort + " pod " + pod);
+        LOG.warn("Could not find host port for service port: {} pod: {}", serviceContainerPort, pod);
         return serviceContainerPort;
     }
 
@@ -383,55 +390,79 @@ public final class NodeHelper {
         String containerName = container.getName();
         Installation installation = processManager.getInstallation(containerName);
         if (installation == null) {
-            System.out.println("No such container: " + containerName);
+            LOG.info("Cannot delete non existing container: {}", containerName);
             return;
         }
+
         ProcessController controller = installation.getController();
+
+        boolean kill = false;
 
         // try graceful to stop first, then kill afterwards
         // as the controller may issue a command that stops asynchronously, we need to check if the pid is alive
         // until its graceful shutdown, before we go harder and try to kill it
         try {
+            LOG.info("Stopping container: {}", containerName);
             controller.stop();
         } catch (Exception e) {
-            LOG.warn("Error during stopping container. Will now attempt to forcibly kill the container.", e);
+            kill = true;
+            LOG.warn("Error during stopping container: " + containerName + ". This exception is ignored", e);
         }
 
-        // TODO: more logging, and maybe configurable timeout
-
-        boolean kill = true;
-        for (int i = 0; i < TIMEOUT; i++) {
-            Long pid;
-            try {
-                pid = installation.getActivePid();
-            } catch (IOException e) {
-                // ignore, but force a pid value so we run for the timeout duration
-                pid = 1L;
+        // if the process was alive then kill is not needed
+        boolean stopped = false;
+        for (int i = 0; i < STOP_TIMEOUT; i++) {
+            if (i > 0) {
+                LOG.info("Waiting for {} seconds to graceful stop container: {}", i, containerName);
             }
-            final boolean alive = pid != null && pid.longValue() > 0;
-
-            if (!alive) {
-                kill = false;
+            // check if the process has been stopped graceful
+            if (!safeCheckIsAlive(installation)) {
+                stopped = true;
                 break;
             } else {
                 // wait 1 sec
                 Thread.sleep(1000);
             }
         }
+        if (!stopped) {
+            LOG.warn("Cannot graceful stop container: {} after {} seconds. Will now forcibly shutdown the container.", containerName, STOP_TIMEOUT);
+        }
 
-        if (kill) {
+        // if we did not stop graceful then do a kill
+        if (kill || !stopped) {
             try {
+                LOG.info("Killing container: {}", containerName);
                 controller.kill();
             } catch (Exception e) {
-                LOG.warn("Error during killing container. Will now attempt to uninstall the container.", e);
+                LOG.warn("Error during killing container: " + containerName + ". This exception is ignored", e);
             }
         }
+
+
         try {
+            LOG.info("Uninstalling container: {}", containerName);
             controller.uninstall();
         } catch (Exception e) {
-
+            LOG.warn("Error during uninstalling container: " + containerName + ". This exception is ignored", e);
         }
-        model.deletePod(pod.getId());
+
+        try {
+            LOG.info("Deleting pod: {}", pod.getId());
+            model.deletePod(pod.getId());
+        } catch (Exception e) {
+            // ignore
+            LOG.warn("Error during deleting pod: " + pod.getId() + ". This exception is ignored", e);
+        }
+    }
+
+    private static boolean safeCheckIsAlive(Installation installation) {
+        Long pid = 0L;
+        try {
+            pid = installation.getActivePid();
+        } catch (Exception e) {
+            // ignore, but force a pid value so we run for the timeout duration
+        }
+        return pid != null && pid.longValue() > 0;
     }
 
 
@@ -483,7 +514,7 @@ public final class NodeHelper {
         newContainer.setWorkingDir(container.getWorkingDir());
         newContainer.getAdditionalProperties().putAll(container.getAdditionalProperties());
         newContainer.setName(containerName);
-        System.out.println("Added new container: " + containerName);
+        LOG.info("Added new container: {}", containerName);
 
         containers.add(newContainer);
         return newContainer;
