@@ -47,6 +47,9 @@ import org.jboss.weld.environment.servlet.Listener;
  */
 public final class Main {
 
+    private static final String ENV_VAR_KUBERNETES_MASTER = "KUBERNETES_MASTER";
+    private static final String ENV_VAR_FABRIC8_CONSOLE = "FABRIC8_CONSOLE";
+
     private static final String LOGO =
             "\t________         ______\n" +
             "\t______(_)____  _____  /_ _____\n" +
@@ -56,12 +59,15 @@ public final class Main {
             "\t/___/\n";
 
     private static boolean hawtioEnabled;
+    private static boolean isWindows;
 
     private Main() {
         // run as main class
     }
 
     public static void main(final String[] args) throws Exception {
+        isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
+
         try {
             // turn off annoying WELD noise
             System.setProperty("org.jboss.weld.xml.disableValidating", "true");
@@ -138,9 +144,55 @@ public final class Main {
             System.out.println("\t    Documentation: http://fabric8.io/jube/goals.html");
             System.out.println("\n\n");
 
+            checkEnvVarsStuff(port);
+
             server.join();
         } catch (Throwable e) {
             logException(e);
+        }
+    }
+
+    protected static void checkEnvVarsStuff(String port) {
+        String master = System.getenv(ENV_VAR_KUBERNETES_MASTER);
+        String console = System.getenv(ENV_VAR_FABRIC8_CONSOLE);
+
+        String expectedMaster = "http://" + ApiMasterService.getHostName() + ":" + port;
+        String expectedConsole = "http://" + ApiMasterService.getHostName() + ":" + port + "/hawtio/";
+
+        boolean okMaster = expectedMaster.equals(master);
+        boolean okHawtio = !hawtioEnabled || expectedConsole.equals(console);
+
+        if (!okMaster || !okHawtio) {
+            System.out.println("\tEnvironment variables check: fail\n");
+            if (!okMaster) {
+                System.out.println("\t" + asEnvVariable(ENV_VAR_KUBERNETES_MASTER, expectedMaster, true));
+            }
+            if (!okHawtio) {
+                System.out.println("\t" + asEnvVariable(ENV_VAR_FABRIC8_CONSOLE, expectedConsole, true));
+            }
+        } else {
+            System.out.println("\tEnvironment variables check: ok\n");
+            System.out.println("\t    " + asEnvVariable(ENV_VAR_KUBERNETES_MASTER, expectedMaster, false));
+            if (hawtioEnabled) {
+                System.out.println("\t    " + asEnvVariable(ENV_VAR_FABRIC8_CONSOLE, expectedConsole, false));
+            }
+        }
+        System.out.println("\n\n");
+    }
+
+    protected static String asEnvVariable(String key, String value, boolean asSetter) {
+        if (asSetter) {
+            if (isWindows) {
+                return "set " + key + "=\"" + value + "\"";
+            } else {
+                return "export " + key + "=" + value;
+            }
+        } else {
+            if (isWindows) {
+                return key + "=\"" + value + "\"";
+            } else {
+                return key + "=" + value;
+            }
         }
     }
 
