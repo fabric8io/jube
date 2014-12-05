@@ -158,24 +158,26 @@ public final class Main {
         String console = System.getenv(ENV_VAR_FABRIC8_CONSOLE);
 
         String expectedMaster = "http://" + ApiMasterService.getHostName() + ":" + port;
-        String expectedConsole = "http://" + ApiMasterService.getHostName() + ":" + port + "/hawtio/";
+        String expectedConsole = "http://" + ApiMasterService.getHostName() + ":" + port + "/hawtio";
 
-        boolean okMaster = expectedMaster.equals(master);
-        boolean okHawtio = !hawtioEnabled || expectedConsole.equals(console);
+        // lets ignore last slash (but prefer its there as pointed out in the docs)
+        boolean okMaster = expectedMaster.equals(master) || (expectedMaster + "/").equals(master);
+        boolean okHawtio = !hawtioEnabled || (expectedConsole.equals(console) || (expectedConsole + "/").equals(console));
+
 
         if (!okMaster || !okHawtio) {
-            System.out.println("\tEnvironment variables check: fail\n");
+            System.out.println("Environment variables check: fail\n");
             if (!okMaster) {
-                System.out.println("\t    " + asEnvVariable(ENV_VAR_KUBERNETES_MASTER, expectedMaster, true));
+                System.out.println("\t    " + asEnvVariable(ENV_VAR_KUBERNETES_MASTER, expectedMaster + "/", true));
             }
             if (!okHawtio) {
-                System.out.println("\t    " + asEnvVariable(ENV_VAR_FABRIC8_CONSOLE, expectedConsole, true));
+                System.out.println("\t    " + asEnvVariable(ENV_VAR_FABRIC8_CONSOLE, expectedConsole + "/", true));
             }
         } else {
-            System.out.println("\tEnvironment variables check: ok\n");
-            System.out.println("\t    " + asEnvVariable(ENV_VAR_KUBERNETES_MASTER, expectedMaster, false));
+            System.out.println("Environment variables check: ok\n");
+            System.out.println("\t    " + asEnvVariable(ENV_VAR_KUBERNETES_MASTER, master, false));
             if (hawtioEnabled) {
-                System.out.println("\t    " + asEnvVariable(ENV_VAR_FABRIC8_CONSOLE, expectedConsole, false));
+                System.out.println("\t    " + asEnvVariable(ENV_VAR_FABRIC8_CONSOLE, console, false));
             }
         }
         System.out.println("\n\n");
