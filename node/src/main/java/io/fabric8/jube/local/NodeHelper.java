@@ -438,7 +438,6 @@ public final class NodeHelper {
             }
         }
 
-
         try {
             LOG.info("Uninstalling container: {}", containerName);
             controller.uninstall();
@@ -453,6 +452,8 @@ public final class NodeHelper {
             // ignore
             LOG.warn("Error during deleting pod: " + pod.getId() + ". This exception is ignored", e);
         }
+
+        LOG.info("Deleted container: {} done", containerName);
     }
 
     private static boolean safeCheckIsAlive(Installation installation) {

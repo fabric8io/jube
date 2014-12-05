@@ -280,7 +280,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     }
 
     protected String tryCreatePod(HostNode hostNode, PodSchema pod) throws Exception {
-        LOG.info("attempting to create pod on host: " + hostNode.getWebUrl());
+        LOG.info("Attempting to create pod on host: " + hostNode.getWebUrl());
         KubernetesExtensionsClient client = createClient(hostNode);
         return client.createLocalPod(pod);
     }
@@ -299,7 +299,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
 
     protected String tryDeletePod(HostNode hostNode, PodSchema pod) throws Exception {
         String id = pod.getId();
-        LOG.info("attempting to delete pod: " + id + " on host: " + hostNode.getWebUrl());
+        LOG.info("Attempting to delete pod: " + id + " on host: " + hostNode.getWebUrl());
         KubernetesExtensionsClient client = createClient(hostNode);
         return client.deleteLocalPod(id);
     }
