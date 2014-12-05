@@ -125,6 +125,7 @@ public final class Main {
             context.addEventListener(new Listener());
             context.addEventListener(new BeanManagerResourceBindingListener());
             context.addServlet(servletHolder, "/api/*");
+            context.addServlet(new ServletHolder(new RootServlet()), "/");
 
             handlers.addHandler(context);
 
