@@ -66,21 +66,18 @@
           <version>1.7</version>
           <executions>
             <execution>
-<!--
-              <phase>generate-sources</phase>
--->
               <phase>prepare-package</phase>
               <configuration>
                 <target>
                   <echo>replacing ports in ${basedir}/target/dependency/apache-karaf-${karaf.version}/etc/org.apache.karaf.shell.cfg</echo>
-
                   <replaceregexp file="${basedir}/target/dependency/apache-karaf-${karaf.version}/etc/org.apache.karaf.shell.cfg" match="(sshPort = 8101)" replace="sshPort = ${ssh.port}" byline="true" />
 
                   <echo>replacing ports in ${basedir}/target/dependency/apache-karaf-${karaf.version}/etc/org.apache.karaf.management.cfg</echo>
-
                   <replaceregexp file="${basedir}/target/dependency/apache-karaf-${karaf.version}/etc/org.apache.karaf.management.cfg" match="(rmiRegistryPort = 1099)" replace="rmiRegistryPort = ${rmi.registry.port}" byline="true" />
-
                   <replaceregexp file="${basedir}/target/dependency/apache-karaf-${karaf.version}/etc/org.apache.karaf.management.cfg" match="(rmiServerPort = 44444)" replace="rmiServerPort = ${rmi.server.port}" byline="true" />
+
+                  <echo>adjusting admin user in ${basedir}/target/dependency/apache-karaf-${karaf.version}/etc/users.properties</echo>
+                  <replaceregexp file="${basedir}/target/dependency/apache-karaf-${karaf.version}/etc/users.properties" match="(karaf = karaf)" replace="admin = admin" byline="true" />
                 </target>
               </configuration>
               <goals>

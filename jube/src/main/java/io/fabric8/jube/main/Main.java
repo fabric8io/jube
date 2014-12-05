@@ -165,10 +165,10 @@ public final class Main {
         if (!okMaster || !okHawtio) {
             System.out.println("\tEnvironment variables check: fail\n");
             if (!okMaster) {
-                System.out.println("\t" + asEnvVariable(ENV_VAR_KUBERNETES_MASTER, expectedMaster, true));
+                System.out.println("\t    " + asEnvVariable(ENV_VAR_KUBERNETES_MASTER, expectedMaster, true));
             }
             if (!okHawtio) {
-                System.out.println("\t" + asEnvVariable(ENV_VAR_FABRIC8_CONSOLE, expectedConsole, true));
+                System.out.println("\t    " + asEnvVariable(ENV_VAR_FABRIC8_CONSOLE, expectedConsole, true));
             }
         } else {
             System.out.println("\tEnvironment variables check: ok\n");
