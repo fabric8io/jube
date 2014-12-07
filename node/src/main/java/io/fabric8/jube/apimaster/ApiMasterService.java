@@ -58,6 +58,7 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
 import io.fabric8.kubernetes.api.model.ServiceListSchema;
 import io.fabric8.kubernetes.api.model.ServiceSchema;
 import io.fabric8.utils.Objects;
+import io.hawt.util.Strings;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +76,7 @@ public class ApiMasterService implements KubernetesExtensions {
 
     public static final String DEFAULT_HOSTNAME = "localhost";
     public static final String DEFAULT_HTTP_PORT = "8585";
+    public static final String DEFAULT_NAMESPACE = "default";
 
     public static String hostName = DEFAULT_HOSTNAME;
     public static String port = DEFAULT_HTTP_PORT;
@@ -194,6 +196,11 @@ public class ApiMasterService implements KubernetesExtensions {
 
     @Override
     public String updateReplicationController(@NotNull String controllerId, ReplicationControllerSchema replicationController) throws Exception {
+        // lets ensure there's a default namespace set
+        String namespace = replicationController.getNamespace();
+        if (Strings.isBlank(namespace)) {
+            replicationController.setNamespace(DEFAULT_NAMESPACE);
+        }
         model.updateReplicationController(controllerId, replicationController);
         return null;
     }
@@ -229,6 +236,12 @@ public class ApiMasterService implements KubernetesExtensions {
     public String updateService(@NotNull String id, ServiceSchema entity) throws Exception {
         // lets set the IP
         entity.setPortalIP(getHostName());
+
+        // lets ensure there's a default namespace set
+        String namespace = entity.getNamespace();
+        if (Strings.isBlank(namespace)) {
+            entity.setNamespace(DEFAULT_NAMESPACE);
+        }
         model.updateService(id, entity);
         return null;
     }
@@ -274,6 +287,12 @@ public class ApiMasterService implements KubernetesExtensions {
         System.out.println("Updating pod " + pod);
         DesiredState desiredState = pod.getDesiredState();
         Objects.notNull(desiredState, "desiredState");
+
+        // lets ensure there's a default namespace set
+        String namespace = pod.getNamespace();
+        if (Strings.isBlank(namespace)) {
+            pod.setNamespace(DEFAULT_NAMESPACE);
+        }
 
         final CurrentState currentState = getOrCreateCurrentState(pod);
         final List<ManifestContainer> containers = KubernetesHelper.getContainers(pod);
