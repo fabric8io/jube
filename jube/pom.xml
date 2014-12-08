@@ -109,6 +109,14 @@
         </exclusion>
       </exclusions>
     </dependency>
+
+    <dependency>
+      <groupId>io.hawt.swagger</groupId>
+      <artifactId>hawtio-swagger-ui</artifactId>
+      <version>${hawtio.swagger.version}</version>
+      <type>war</type>
+    </dependency>
+
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-webapp</artifactId>

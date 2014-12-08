@@ -314,7 +314,9 @@ public final class Main {
     public static String createContextPath(String uri) {
         String contextPath = trimUpToLastIndexOf(uri, '!', '.');
         contextPath = trimFromAfterLastIndexOf(contextPath, '/', '\\');
-        if (contextPath.startsWith("hawtio-") || contextPath.startsWith("console-")) {
+        if (contextPath.startsWith("hawtio-swag")) {
+            contextPath = "hawtio-swagger";
+        } else if (contextPath.startsWith("hawtio-") || contextPath.startsWith("console-")) {
             contextPath = "hawtio";
         }
         return contextPath;
