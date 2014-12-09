@@ -263,6 +263,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
             String hostName = getLocalHostName();
             int idGeneratorPort = 0;
             ss = new ServerSocket(idGeneratorPort);
+            ss.setReuseAddress(true);
             return ss.getLocalPort();
         } catch (Exception e) {
             LOGGER.warn("Failed to allocate port " + key + ". " + e, e);
