@@ -49,7 +49,6 @@ import io.fabric8.jube.process.support.DefaultProcessController;
 import io.fabric8.jube.process.support.command.Duration;
 import io.fabric8.jube.util.FilesHelper;
 import io.fabric8.jube.util.InstallHelper;
-import io.fabric8.jube.util.JubeVersionUtils;
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
 import io.fabric8.utils.Zips;
@@ -84,9 +83,6 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     private MBeanServer mbeanServer;
     private boolean isWindows;
 
-    @JmxManaged(description = "Returns the Jube version")
-    private String version;
-
     @Inject
     public ProcessManagerService(@ConfigProperty(name = "JUBE_PROCESS_DIR", defaultValue = "./processes") String storageLocation,
                                  @ConfigProperty(name = "JUBE_REMOTE_MAVEN_REPOS", defaultValue = DEFAULT_MAVEN_REPOS) String remoteRepositoryUrls,
@@ -104,7 +100,6 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
         this.remoteRepositoryUrls = remoteRepositoryUrls;
         this.isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
         this.availablePortFinder = new AvailablePortFinder(minPort);
-        this.version = JubeVersionUtils.getReleaseVersion();
 
         LOGGER.info("Using process directory: {}", this.storageLocation);
         LOGGER.info("Using port allocation range: {}-{}", minPort, AvailablePortFinder.MAX_PORT_NUMBER);
@@ -168,10 +163,6 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     @JmxManaged(description = "Returns the number of installed processes")
     public int getInstallationCount() {
         return listInstallationMap().keySet().size();
-    }
-
-    public String getVersion() {
-        return version;
     }
 
     @Override
