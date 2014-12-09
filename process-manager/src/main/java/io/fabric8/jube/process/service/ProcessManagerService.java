@@ -22,16 +22,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.management.MBeanServer;
@@ -57,7 +53,6 @@ import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
 import io.fabric8.utils.Zips;
 import io.hawt.aether.OpenMavenURL;
-import io.hawt.util.Closeables;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
 import org.apache.deltaspike.core.api.jmx.JmxManaged;
 import org.apache.deltaspike.core.api.jmx.MBean;
@@ -75,6 +70,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcessManagerService.class);
     private static final String INSTALLED_BINARY = "install.bin";
     private final String remoteRepositoryUrls;
+    private final AvailablePortFinder availablePortFinder;
 
     private Executor executor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setDaemon(true).setNameFormat("jube-process-manager-%s").build());
     private File storageLocation;
@@ -85,16 +81,16 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     private SortedMap<String, Installation> installations = Maps.newTreeMap();
 
     private MBeanServer mbeanServer;
-    private AtomicInteger fallbackPortGenerator = new AtomicInteger(30000);
     private boolean isWindows;
 
     @Inject
     public ProcessManagerService(@ConfigProperty(name = "JUBE_PROCESS_DIR", defaultValue = "./processes") String storageLocation,
-                                 @ConfigProperty(name = "JUBE_REMOTE_MAVEN_REPOS", defaultValue = DEFAULT_MAVEN_REPOS) String remoteRepositoryUrls) throws MalformedObjectNameException, IOException {
-        this(new File(storageLocation), remoteRepositoryUrls);
+                                 @ConfigProperty(name = "JUBE_REMOTE_MAVEN_REPOS", defaultValue = DEFAULT_MAVEN_REPOS) String remoteRepositoryUrls,
+                                 @ConfigProperty(name = "JUBE_PORT_START", defaultValue = "" + AvailablePortFinder.MIN_PORT_NUMBER) int minPort) throws MalformedObjectNameException, IOException {
+        this(new File(storageLocation), remoteRepositoryUrls, minPort);
     }
 
-    public ProcessManagerService(File storageLocation, String remoteRepositoryUrls) throws MalformedObjectNameException, IOException {
+    public ProcessManagerService(File storageLocation, String remoteRepositoryUrls, int minPort) throws MalformedObjectNameException, IOException {
         // make sure the install directory path is absolute and compact as there can be troubles with having foo/./bar paths
         String path = FilesHelper.compactPath(storageLocation.getAbsolutePath());
         this.storageLocation = new File(path);
@@ -103,8 +99,11 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
         }
         this.remoteRepositoryUrls = remoteRepositoryUrls;
         this.isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
+        this.availablePortFinder = new AvailablePortFinder(minPort);
 
-        LOGGER.info("Using remote maven repositories: " + remoteRepositoryUrls + " to find Jube image zips");
+        LOGGER.info("Using process directory: {}", this.storageLocation);
+        LOGGER.info("Using port allocation range: {}-{}", minPort, AvailablePortFinder.MAX_PORT_NUMBER);
+        LOGGER.info("Using remote maven repositories to find Jube image zips: {}", remoteRepositoryUrls);
 
         // lets find the largest number in the current directory as we are on startup
         lastId = 0;
@@ -258,19 +257,7 @@ public class ProcessManagerService implements ProcessManagerServiceMBean {
     }
 
     protected int allocatePortNumber(InstallOptions options, File nestedProcessDirectory, String key, String value) {
-        ServerSocket ss = null;
-        try {
-            String hostName = getLocalHostName();
-            int idGeneratorPort = 0;
-            ss = new ServerSocket(idGeneratorPort);
-            ss.setReuseAddress(true);
-            return ss.getLocalPort();
-        } catch (Exception e) {
-            LOGGER.warn("Failed to allocate port " + key + ". " + e, e);
-            return fallbackPortGenerator.incrementAndGet();
-        } finally {
-            Closeables.closeQuietly(ss);
-        }
+        return availablePortFinder.getNextAvailable();
     }
 
     protected void exportInstallDirEnvVar(InstallOptions options, File installDir, InstallContext installContext, ProcessConfig config) throws IOException {

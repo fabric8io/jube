@@ -19,6 +19,7 @@ import java.io.File;
 import java.nio.charset.Charset;
 
 import com.google.common.io.Files;
+import io.fabric8.jube.process.service.AvailablePortFinder;
 import io.fabric8.jube.process.service.ProcessManagerService;
 import io.fabric8.jube.util.JubeVersionUtils;
 import io.hawt.aether.OpenMavenURL;
@@ -51,7 +52,7 @@ public class ProcessManagerServiceTest {
         installDir = new File(basedir + "/target/processes");
         LOG.info("Installing processes to {}", installDir.getAbsolutePath());
 
-        processManagerService = new ProcessManagerService(installDir, null);
+        processManagerService = new ProcessManagerService(installDir, null, AvailablePortFinder.MIN_PORT_NUMBER);
 
         String version = JubeVersionUtils.getReleaseVersion();
 

@@ -44,6 +44,15 @@ The port number can be configured as an environment variable, for example to use
 Alternative the port number can also be configured in the `env.sh` / `env.bat` script file, which setup the environment variables.
 
 
+#### How do I configure the port range allocations for processes?
+
+Jube allocate ports to processes using port ranges starting from 48000 to 65536.
+
+The minimum starting port number can be configured, for example to start from 30000:
+
+    export JUBE_PORT_START=30000
+
+
 #### How do I debug the Jube process?
 
 You can enable remote debugging of the Jube process via the environment variable:
