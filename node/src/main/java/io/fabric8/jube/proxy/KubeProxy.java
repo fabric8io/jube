@@ -43,7 +43,7 @@ public class KubeProxy {
     private final Vertx vertx;
     private final ApiMasterKubernetesModel model;
     private Map<String, ServiceProxy> serviceMap = new ConcurrentHashMap<>();
-    private Set<String> ignoredServiceIDs = new HashSet<>(Arrays.asList(ServiceIDs.KUBERNETES_RO_SERVICE_ID, ServiceIDs.KUBERNETES_SERVICE_ID));
+    private Set<String> ignoredServiceIDs = new HashSet<>(Arrays.asList(ServiceIDs.KUBERNETES_RO_SERVICE_ID, ServiceIDs.KUBERNETES_SERVICE_ID, ServiceIDs.FABRIC8_CONSOLE_SERVICE_ID));
 
     @Singleton
     @Inject

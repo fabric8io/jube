@@ -374,9 +374,22 @@ public class ApiMasterService implements KubernetesExtensions {
                 service.setSelector(createKubernetesServiceLabels());
                 createService(service);
             }
+            service = serviceMap.get(ServiceIDs.FABRIC8_CONSOLE_SERVICE_ID);
+            if (service == null) {
+                service = createService(hostName, port);
+                service.setId(ServiceIDs.FABRIC8_CONSOLE_SERVICE_ID);
+                service.setSelector(createFabric8ConsoleServiceLabels());
+                createService(service);
+            }
         } catch (Exception e) {
             LOG.error("Failed to create service " + service + ". " + e, e);
         }
+    }
+
+    protected Map<String,String> createFabric8ConsoleServiceLabels() {
+        Map<String, String> answer = new HashMap<>();
+        answer.put("component", "fabric8Console");
+        return answer;
     }
 
     protected Map<String,String> createKubernetesServiceLabels() {
