@@ -23,7 +23,7 @@ public final class ServiceIDs {
 
     public static final String KUBERNETES_SERVICE_ID = "kubernetes";
     public static final String KUBERNETES_RO_SERVICE_ID = "kubernetes-ro";
-    public static final String FABRIC8_CONSOLE_SERVICE_ID = "fabric8-console";
+    public static final String FABRIC8_CONSOLE_SERVICE_ID = "fabric8-console-service";
 
     private ServiceIDs() {
         // no public ctr
