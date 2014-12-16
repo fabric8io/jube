@@ -26,7 +26,7 @@ import io.fabric8.jube.apimaster.ApiMasterService;
 import io.fabric8.jube.util.JubeVersionUtils;
 import io.fabric8.kubernetes.api.KubernetesClient;
 import io.fabric8.kubernetes.api.KubernetesFactory;
-import io.fabric8.kubernetes.api.KubernetesManager;
+import io.fabric8.kubernetes.api.mbeans.KubernetesManager;
 import io.fabric8.kubernetes.template.TemplateManager;
 import io.fabric8.utils.Systems;
 import io.hawt.aether.AetherFacade;
