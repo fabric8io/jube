@@ -26,6 +26,7 @@ import io.fabric8.jube.apimaster.ApiMasterService;
 import io.fabric8.jube.util.JubeVersionUtils;
 import io.fabric8.kubernetes.api.KubernetesClient;
 import io.fabric8.kubernetes.api.KubernetesFactory;
+import io.fabric8.kubernetes.api.mbeans.AppView;
 import io.fabric8.kubernetes.api.mbeans.KubernetesManager;
 import io.fabric8.kubernetes.template.TemplateManager;
 import io.fabric8.utils.Systems;
@@ -147,6 +148,8 @@ public final class Main {
 
             checkEnvVarsStuff(port);
 
+            initialiseHawtioStuffAfterStart();
+
             server.join();
         } catch (Throwable e) {
             logException(e);
@@ -220,6 +223,11 @@ public final class Main {
 
         TemplateManager templateManager = new TemplateManager();
         templateManager.init();
+    }
+
+    protected static void initialiseHawtioStuffAfterStart() throws Exception {
+        AppView appView = new AppView();
+        appView.init();
     }
 
     private static void initaliseGitStuff() throws Exception {
