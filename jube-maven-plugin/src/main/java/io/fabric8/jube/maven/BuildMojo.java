@@ -56,6 +56,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static io.fabric8.utils.PropertiesHelper.findPropertiesWithPrefix;
 
@@ -201,7 +202,16 @@ public class BuildMojo extends AbstractMojo {
             environmentVariables = new HashMap<>();
         }
         if (environmentVariables.isEmpty()) {
-            environmentVariables = findPropertiesWithPrefix(project.getProperties(), "docker.env.");
+            environmentVariables = new HashMap<>();
+
+            Map<String, String> lowerCaseProperties = findPropertiesWithPrefix(project.getProperties(), "docker.env.");
+            Set<Map.Entry<String, String>> entries = lowerCaseProperties.entrySet();
+            for (Map.Entry<String, String> entry : entries) {
+                String key = entry.getKey();
+                if (key != null) {
+                    environmentVariables.put(key.toUpperCase(), entry.getValue());
+                }
+            }
         }
         if (!environmentVariables.containsKey("SERVICE")) {
             environmentVariables.put("SERVICE", service);
