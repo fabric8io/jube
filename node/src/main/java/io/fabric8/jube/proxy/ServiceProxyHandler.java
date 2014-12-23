@@ -38,11 +38,11 @@ public class ServiceProxyHandler implements Handler<NetSocket> {
     private static final transient Logger LOG = LoggerFactory.getLogger(ServiceProxyHandler.class);
 
     private final Vertx vertx;
-    private final Service service;
+    private final ServiceInstance service;
     private final LoadBalancer loadBalancer;
     private final AtomicLong failedConnectionAttempts = new AtomicLong();
 
-    public ServiceProxyHandler(Vertx vertx, Service service, LoadBalancer loadBalancer) {
+    public ServiceProxyHandler(Vertx vertx, ServiceInstance service, LoadBalancer loadBalancer) {
         this.vertx = vertx;
         this.service = service;
         this.loadBalancer = loadBalancer;

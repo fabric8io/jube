@@ -36,15 +36,13 @@ import io.fabric8.jube.apimaster.ApiMasterService;
 import io.fabric8.jube.local.NodeHelper;
 import io.fabric8.jube.process.ProcessManager;
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.ControllerCurrentState;
-import io.fabric8.kubernetes.api.model.ControllerDesiredState;
-import io.fabric8.kubernetes.api.model.CurrentState;
-import io.fabric8.kubernetes.api.model.ManifestContainer;
-import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
-import io.fabric8.kubernetes.api.model.PodSchema;
+import io.fabric8.kubernetes.api.model.ReplicationControllerState;
+import io.fabric8.kubernetes.api.model.PodState;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplate;
-import io.fabric8.kubernetes.api.model.PodTemplateDesiredState;
-import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
+import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.utils.Closeables;
 import io.fabric8.utils.Filter;
 import io.fabric8.utils.Filters;
@@ -165,27 +163,27 @@ public class Replicator {
         if (!isMaster()) {
             return;
         }
-        ImmutableSet<Map.Entry<String, ReplicationControllerSchema>> entries = model.getReplicationControllerMap().entrySet();
-        for (Map.Entry<String, ReplicationControllerSchema> entry : entries) {
+        ImmutableSet<Map.Entry<String, ReplicationController>> entries = model.getReplicationControllerMap().entrySet();
+        for (Map.Entry<String, ReplicationController> entry : entries) {
             String rcID = entry.getKey();
-            ReplicationControllerSchema replicationController = entry.getValue();
-            PodTemplateDesiredState podTemplateDesiredState = NodeHelper.getPodTemplateDesiredState(replicationController);
-            if (podTemplateDesiredState == null) {
-                LOG.warn("Cannot instantiate replication controller: " + replicationController.getId() + " due to missing PodTemplate.DesiredState!");
+            ReplicationController replicationController = entry.getValue();
+            PodState podTemplatePodState = NodeHelper.getPodTemplateDesiredState(replicationController);
+            if (podTemplatePodState == null) {
+                LOG.warn("Cannot instantiate replication controller: " + replicationController.getId() + " due to missing PodTemplate.PodState!");
                 continue;
             }
             int replicaCount = 0;
-            ControllerDesiredState desiredState = replicationController.getDesiredState();
+            ReplicationControllerState desiredState = replicationController.getDesiredState();
             if (desiredState != null) {
                 Integer replicas = desiredState.getReplicas();
                 if (replicas != null && replicas > 0) {
                     replicaCount = replicas;
                 }
             }
-            ControllerCurrentState currentState = NodeHelper.getOrCreateCurrentState(replicationController);
+            ReplicationControllerState currentState = NodeHelper.getOrCreateCurrentState(replicationController);
             Map<String, String> replicaSelector = desiredState.getReplicaSelector();
-            ImmutableList<PodSchema> allPods = model.getPods(replicaSelector);
-            List<PodSchema> pods = Filters.filter(allPods, podHasNotTerminated());
+            ImmutableList<Pod> allPods = model.getPods(replicaSelector);
+            List<Pod> pods = Filters.filter(allPods, podHasNotTerminated());
 
             int currentSize = pods.size();
             Integer currentSizeInt = new Integer(currentSize);
@@ -195,7 +193,7 @@ public class Replicator {
             }
             int createCount = replicaCount - currentSize;
             if (createCount > 0) {
-                pods = createMissingContainers(replicationController, podTemplateDesiredState, desiredState, createCount, pods);
+                pods = createMissingContainers(replicationController, podTemplatePodState, desiredState, createCount, pods);
             } else if (createCount < 0) {
                 int deleteCount = Math.abs(createCount);
                 pods = deleteContainers(pods, deleteCount);
@@ -206,16 +204,16 @@ public class Replicator {
     /**
      * Returns a filter of all terminated pods
      */
-    public static Filter<PodSchema> podHasNotTerminated() {
-        return new Filter<PodSchema>() {
+    public static Filter<Pod> podHasNotTerminated() {
+        return new Filter<Pod>() {
             @Override
             public String toString() {
                 return "PodHasNotTerminatedFilter";
             }
 
             @Override
-            public boolean matches(PodSchema pod) {
-                CurrentState currentState = pod.getCurrentState();
+            public boolean matches(Pod pod) {
+                PodState currentState = pod.getCurrentState();
                 if (currentState != null) {
                     String status = currentState.getStatus();
                     if (status != null) {
@@ -231,10 +229,10 @@ public class Replicator {
     }
 
 
-    private ImmutableList<PodSchema> deleteContainers(List<PodSchema> pods, int deleteCount) throws Exception {
-        List<PodSchema> list = Lists.newArrayList(pods);
+    private ImmutableList<Pod> deleteContainers(List<Pod> pods, int deleteCount) throws Exception {
+        List<Pod> list = Lists.newArrayList(pods);
         for (int i = 0, size = list.size(); i < deleteCount && i < size; i++) {
-            PodSchema removePod = list.remove(size - i - 1);
+            Pod removePod = list.remove(size - i - 1);
             String id = removePod.getId();
             model.deleteRemotePod(removePod);
         }
@@ -242,24 +240,24 @@ public class Replicator {
     }
 
 
-    protected ImmutableList<PodSchema> createMissingContainers(ReplicationControllerSchema replicationController, PodTemplateDesiredState podTemplateDesiredState,
-                                                               ControllerDesiredState desiredState, int createCount, List<PodSchema> pods) throws Exception {
+    protected ImmutableList<Pod> createMissingContainers(ReplicationController replicationController, PodState podTemplateDesiredState,
+                                                               ReplicationControllerState desiredState, int createCount, List<Pod> pods) throws Exception {
         // TODO this is a hack ;) needs replacing with the real host we're creating on
         String host = ApiMasterService.getHostName();
-        List<PodSchema> list = Lists.newArrayList(pods);
+        List<Pod> list = Lists.newArrayList(pods);
         for (int i = 0; i < createCount; i++) {
-            PodSchema pod = new PodSchema();
+            Pod pod = new Pod();
             pod.setKind(NodeHelper.KIND_POD);
 
             createNewId(replicationController, pod);
             list.add(pod);
 
-            List<ManifestContainer> containers = KubernetesHelper.getContainers(podTemplateDesiredState);
-            for (ManifestContainer container : containers) {
+            List<Container> containers = KubernetesHelper.getContainers(podTemplateDesiredState);
+            for (Container container : containers) {
                 String containerName = pod.getId() + "-" + container.getName();
 
-                PodCurrentContainerInfo containerInfo = NodeHelper.getOrCreateContainerInfo(pod, containerName);
-                CurrentState currentState = pod.getCurrentState();
+                ContainerStatus containerInfo = NodeHelper.getOrCreateContainerInfo(pod, containerName);
+                PodState currentState = pod.getCurrentState();
                 Objects.notNull(currentState, "currentState");
                 currentState.setHost(host);
 
@@ -275,13 +273,13 @@ public class Replicator {
                 pod.setLabels(podTemplate.getLabels());
             }
             // TODO should we update the pod now we've updated it?
-            List<ManifestContainer> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);
+            List<Container> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);
             model.remoteCreatePod(pod);
         }
         return ImmutableList.copyOf(list);
     }
 
-    protected String createNewId(ReplicationControllerSchema replicationController, PodSchema pod) {
+    protected String createNewId(ReplicationController replicationController, Pod pod) {
         String id = replicationController.getId();
         if (Strings.isNotBlank(id)) {
             id += "-";

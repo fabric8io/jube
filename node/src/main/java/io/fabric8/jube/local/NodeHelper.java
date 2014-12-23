@@ -36,22 +36,20 @@ import io.fabric8.jube.process.ProcessManager;
 import io.fabric8.jube.util.ImageMavenCoords;
 import io.fabric8.jube.util.InstallHelper;
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.ControllerCurrentState;
-import io.fabric8.kubernetes.api.model.ControllerDesiredState;
-import io.fabric8.kubernetes.api.model.CurrentState;
-import io.fabric8.kubernetes.api.model.DesiredState;
-import io.fabric8.kubernetes.api.model.Env;
-import io.fabric8.kubernetes.api.model.Manifest;
-import io.fabric8.kubernetes.api.model.ManifestContainer;
-import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
-import io.fabric8.kubernetes.api.model.PodSchema;
+import io.fabric8.kubernetes.api.model.ContainerManifest;
+import io.fabric8.kubernetes.api.model.ContainerState;
+import io.fabric8.kubernetes.api.model.ContainerStateRunning;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.ReplicationControllerState;
+import io.fabric8.kubernetes.api.model.PodState;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplate;
-import io.fabric8.kubernetes.api.model.PodTemplateDesiredState;
 import io.fabric8.kubernetes.api.model.Port;
-import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
-import io.fabric8.kubernetes.api.model.Running;
-import io.fabric8.kubernetes.api.model.ServiceSchema;
-import io.fabric8.kubernetes.api.model.State;
+import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.ReplicationControllerState;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
 import io.hawt.aether.OpenMavenURL;
@@ -78,11 +76,11 @@ public final class NodeHelper {
     /**
      * Returns the desired state; lazily creating one if required
      */
-    public static DesiredState getOrCreateDesiredState(PodSchema pod) {
+    public static PodState getOrCreateDesiredState(Pod pod) {
         Objects.notNull(pod, "pod");
-        DesiredState desiredState = pod.getDesiredState();
+        PodState desiredState = pod.getDesiredState();
         if (desiredState == null) {
-            desiredState = new DesiredState();
+            desiredState = new PodState();
             pod.setDesiredState(desiredState);
         }
         return desiredState;
@@ -91,41 +89,41 @@ public final class NodeHelper {
     /**
      * Returns the current state of the given pod; lazily creating one if required
      */
-    public static CurrentState getOrCreateCurrentState(PodSchema pod) {
+    public static PodState getOrCreateCurrentState(Pod pod) {
         Objects.notNull(pod, "pod");
-        CurrentState currentState = pod.getCurrentState();
+        PodState currentState = pod.getCurrentState();
         if (currentState == null) {
-            currentState = new CurrentState();
+            currentState = new PodState();
             pod.setCurrentState(currentState);
         }
         return currentState;
     }
 
-    public static PodTemplateDesiredState getPodTemplateDesiredState(ReplicationControllerSchema replicationController) {
+    public static PodState getPodTemplateDesiredState(ReplicationController replicationController) {
         if (replicationController != null) {
             return getPodTemplateDesiredState(replicationController.getDesiredState());
         }
         return null;
     }
 
-    public static PodTemplateDesiredState getPodTemplateDesiredState(ControllerDesiredState desiredState) {
+    public static PodState getPodTemplateDesiredState(ReplicationControllerState desiredState) {
         PodTemplate podTemplate;
-        PodTemplateDesiredState podTemplateDesiredState = null;
+        PodState podTemplatePodState = null;
         if (desiredState != null) {
             podTemplate = desiredState.getPodTemplate();
             if (podTemplate != null) {
-                podTemplateDesiredState = podTemplate.getDesiredState();
+                podTemplatePodState = podTemplate.getDesiredState();
             }
         }
-        return podTemplateDesiredState;
+        return podTemplatePodState;
     }
 
     /**
      * Returns the current container map for the current pod state; lazily creating if required
      */
-    public static Map<String, PodCurrentContainerInfo> getOrCreateCurrentContainerInfo(PodSchema pod) {
-        CurrentState currentState = getOrCreateCurrentState(pod);
-        Map<String, PodCurrentContainerInfo> info = currentState.getInfo();
+    public static Map<String, ContainerStatus> getOrCreateCurrentContainerInfo(Pod pod) {
+        PodState currentState = getOrCreateCurrentState(pod);
+        Map<String, ContainerStatus> info = currentState.getInfo();
         if (info == null) {
             info = new HashMap<>();
             currentState.setInfo(info);
@@ -136,11 +134,11 @@ public final class NodeHelper {
     /**
      * Returns the containers state, lazily creating any objects if required.
      */
-    public static State getOrCreateContainerState(PodSchema pod, String containerName) {
-        PodCurrentContainerInfo containerInfo = getOrCreateContainerInfo(pod, containerName);
-        State state = containerInfo.getState();
+    public static ContainerState getOrCreateContainerState(Pod pod, String containerName) {
+        ContainerStatus containerInfo = getOrCreateContainerInfo(pod, containerName);
+        ContainerState state = containerInfo.getState();
         if (state == null) {
-            state = new State();
+            state = new ContainerState();
             containerInfo.setState(state);
         }
         return state;
@@ -149,11 +147,11 @@ public final class NodeHelper {
     /**
      * Returns the container information for the given pod and container name, lazily creating as required
      */
-    public static PodCurrentContainerInfo getOrCreateContainerInfo(PodSchema pod, String containerName) {
-        Map<String, PodCurrentContainerInfo> map = getOrCreateCurrentContainerInfo(pod);
-        PodCurrentContainerInfo containerInfo = map.get(containerName);
+    public static ContainerStatus getOrCreateContainerInfo(Pod pod, String containerName) {
+        Map<String, ContainerStatus> map = getOrCreateCurrentContainerInfo(pod);
+        ContainerStatus containerInfo = map.get(containerName);
         if (containerInfo == null) {
-            containerInfo = new PodCurrentContainerInfo();
+            containerInfo = new ContainerStatus();
             map.put(containerName, containerInfo);
         }
         return containerInfo;
@@ -162,11 +160,11 @@ public final class NodeHelper {
     /**
      * Creates any missing containers; updating the currentState with the new values.
      */
-    public static String createMissingContainers(final ProcessManager processManager, final KubernetesModel model, final PodSchema pod,
-                                                 final CurrentState currentState, List<ManifestContainer> containers) throws Exception {
-        Map<String, PodCurrentContainerInfo> currentContainers = KubernetesHelper.getCurrentContainers(currentState);
+    public static String createMissingContainers(final ProcessManager processManager, final KubernetesModel model, final Pod pod,
+                                                 final PodState currentState, List<Container> containers) throws Exception {
+        Map<String, ContainerStatus> currentContainers = KubernetesHelper.getCurrentContainers(currentState);
 
-        for (final ManifestContainer container : containers) {
+        for (final Container container : containers) {
             // lets update the pod model if we update the ports
             podTransaction(model, pod, new Callable<Void>() {
                 @Override
@@ -183,10 +181,10 @@ public final class NodeHelper {
     /**
      * Converts a possibly null list of Env objects into a Map of environment variables
      */
-    public static Map<String, String> createEnvironmentVariableMap(List<Env> envList) {
+    public static Map<String, String> createEnvironmentVariableMap(List<EnvVar> envList) {
         Map<String, String> answer = new HashMap<>();
         if (envList != null) {
-            for (Env env : envList) {
+            for (EnvVar env : envList) {
                 String name = env.getName();
                 String value = env.getValue();
                 if (Strings.isNotBlank(name)) {
@@ -198,14 +196,14 @@ public final class NodeHelper {
     }
 
 
-    public static List<Env> createEnvironmentVariables(Map<String, String> environment) {
-        List<Env> answer = new ArrayList<>();
+    public static List<EnvVar> createEnvironmentVariables(Map<String, String> environment) {
+        List<EnvVar> answer = new ArrayList<>();
         Set<Map.Entry<String, String>> entries = environment.entrySet();
         for (Map.Entry<String, String> entry : entries) {
             String key = entry.getKey();
             String value = entry.getValue();
             if (Strings.isNotBlank(key)) {
-                Env env = new Env();
+                EnvVar env = new EnvVar();
                 env.setName(key);
                 env.setValue(value);
                 answer.add(env);
@@ -214,7 +212,7 @@ public final class NodeHelper {
         return answer;
     }
 
-    protected static void createContainer(ProcessManager processManager, KubernetesModel model, ManifestContainer container, PodSchema pod, CurrentState currentState) throws Exception {
+    protected static void createContainer(ProcessManager processManager, KubernetesModel model, Container container, Pod pod, PodState currentState) throws Exception {
         String containerName = container.getName();
         String image = container.getImage();
         Strings.notEmpty(image);
@@ -252,7 +250,7 @@ public final class NodeHelper {
             }
             File installDir = installation.getInstallDir();
 
-            PodCurrentContainerInfo containerInfo = NodeHelper.getOrCreateContainerInfo(pod, containerName);
+            ContainerStatus containerInfo = NodeHelper.getOrCreateContainerInfo(pod, containerName);
 
             LOG.info("Installed new process in directory: {}", installDir);
             ProcessController controller = installation.getController();
@@ -278,7 +276,7 @@ public final class NodeHelper {
         }
     }
 
-    protected static List<Port> createInstallationPorts(Map<String, String> environment, Installation installation, ManifestContainer container) {
+    protected static List<Port> createInstallationPorts(Map<String, String> environment, Installation installation, Container container) {
         try {
             List<Port> answer = container.getPorts();
             if (answer == null) {
@@ -340,9 +338,9 @@ public final class NodeHelper {
         }
     }
 
-    public static int findHostPortForService(PodSchema pod, int serviceContainerPort) {
-        List<ManifestContainer> containers = KubernetesHelper.getContainers(pod);
-        for (ManifestContainer container : containers) {
+    public static int findHostPortForService(Pod pod, int serviceContainerPort) {
+        List<Container> containers = KubernetesHelper.getContainers(pod);
+        for (Container container : containers) {
             List<Port> ports = container.getPorts();
             if (ports != null) {
                 for (Port port : ports) {
@@ -361,11 +359,11 @@ public final class NodeHelper {
     }
 
     public static void appendServiceEnvironmentVariables(Map<String, String> map, KubernetesModel model) {
-        ImmutableSet<Map.Entry<String, ServiceSchema>> entries = model.getServiceMap().entrySet();
-        for (Map.Entry<String, ServiceSchema> entry : entries) {
+        ImmutableSet<Map.Entry<String, Service>> entries = model.getServiceMap().entrySet();
+        for (Map.Entry<String, Service> entry : entries) {
             String id = entry.getKey().toUpperCase().replaceAll("-", "_");
             String envVarPrefix = id + "_SERVICE_";
-            ServiceSchema service = entry.getValue();
+            Service service = entry.getValue();
 
             // TODO should we allow different service ports?
             String host = ApiMasterService.getHostName();
@@ -380,13 +378,13 @@ public final class NodeHelper {
         }
     }
 
-    public static void deleteContainers(ProcessManager processManager, KubernetesModel model, PodSchema pod, CurrentState currentState, List<ManifestContainer> desiredContainers) throws Exception {
-        for (ManifestContainer container : desiredContainers) {
+    public static void deleteContainers(ProcessManager processManager, KubernetesModel model, Pod pod, PodState currentState, List<Container> desiredContainers) throws Exception {
+        for (Container container : desiredContainers) {
             deleteContainer(processManager, model, container, pod, currentState);
         }
     }
 
-    protected static void deleteContainer(ProcessManager processManager, KubernetesModel model, ManifestContainer container, PodSchema pod, CurrentState currentState) throws Exception {
+    protected static void deleteContainer(ProcessManager processManager, KubernetesModel model, Container container, Pod pod, PodState currentState) throws Exception {
         String containerName = container.getName();
         Installation installation = processManager.getInstallation(containerName);
         if (installation == null) {
@@ -467,8 +465,8 @@ public final class NodeHelper {
     }
 
 
-    public static void containerAlive(PodSchema pod, String id, boolean alive) {
-        CurrentState currentState = getOrCreateCurrentState(pod);
+    public static void containerAlive(Pod pod, String id, boolean alive) {
+        PodState currentState = getOrCreateCurrentState(pod);
         String status = currentState.getStatus();
         if (alive) {
             currentState.setStatus(Statuses.RUNNING);
@@ -482,29 +480,29 @@ public final class NodeHelper {
         setContainerRunningState(pod, id, alive);
     }
 
-    public static void setPodStatus(PodSchema pod, String status) {
-        CurrentState currentState = getOrCreateCurrentState(pod);
+    public static void setPodStatus(Pod pod, String status) {
+        PodState currentState = getOrCreateCurrentState(pod);
         currentState.setStatus(status);
     }
 
-    public static void setContainerRunningState(PodSchema pod, String id, boolean alive) {
-        State state = getOrCreateContainerState(pod, id);
+    public static void setContainerRunningState(Pod pod, String id, boolean alive) {
+        ContainerState state = getOrCreateContainerState(pod, id);
         if (alive) {
-            Running running = new Running();
+            ContainerStateRunning running = new ContainerStateRunning();
             state.setRunning(running);
         } else {
             state.setRunning(null);
         }
     }
 
-    public static ManifestContainer addOrUpdateDesiredContainer(PodSchema pod, String containerName, ManifestContainer container) {
-        List<ManifestContainer> containers = getOrCreatePodDesiredContainers(pod);
-        ManifestContainer oldContainer = findContainer(containers, containerName);
+    public static Container addOrUpdateDesiredContainer(Pod pod, String containerName, Container container) {
+        List<Container> containers = getOrCreatePodDesiredContainers(pod);
+        Container oldContainer = findContainer(containers, containerName);
         if (oldContainer != null) {
             // lets update it just in case something changed...
             containers.remove(oldContainer);
         }
-        ManifestContainer newContainer = new ManifestContainer();
+        Container newContainer = new Container();
 
         // TODO we should use bean utils or something to copy properties in case we miss one!
         newContainer.setCommand(container.getCommand());
@@ -521,14 +519,14 @@ public final class NodeHelper {
         return newContainer;
     }
 
-    public static List<ManifestContainer> getOrCreatePodDesiredContainers(PodSchema pod) {
-        DesiredState podDesiredState = NodeHelper.getOrCreateDesiredState(pod);
-        Manifest manifest = podDesiredState.getManifest();
+    public static List<Container> getOrCreatePodDesiredContainers(Pod pod) {
+        PodState podDesiredState = NodeHelper.getOrCreateDesiredState(pod);
+        ContainerManifest manifest = podDesiredState.getManifest();
         if (manifest == null) {
-            manifest = new Manifest();
+            manifest = new ContainerManifest();
             podDesiredState.setManifest(manifest);
         }
-        List<ManifestContainer> containers = manifest.getContainers();
+        List<Container> containers = manifest.getContainers();
         if (containers == null) {
             containers = new ArrayList<>();
             manifest.setContainers(containers);
@@ -536,8 +534,8 @@ public final class NodeHelper {
         return containers;
     }
 
-    public static ManifestContainer findContainer(List<ManifestContainer> containers, String name) {
-        for (ManifestContainer container : containers) {
+    public static Container findContainer(List<Container> containers, String name) {
+        for (Container container : containers) {
             if (Objects.equal(container.getName(), name)) {
                 return container;
             }
@@ -545,19 +543,19 @@ public final class NodeHelper {
         return null;
     }
 
-    public static ControllerCurrentState getOrCreateCurrentState(ReplicationControllerSchema replicationController) {
-        ControllerCurrentState currentState = replicationController.getCurrentState();
+    public static ReplicationControllerState getOrCreateCurrentState(ReplicationController replicationController) {
+        ReplicationControllerState currentState = replicationController.getCurrentState();
         if (currentState == null) {
-            currentState = new ControllerCurrentState();
+            currentState = new ReplicationControllerState();
             replicationController.setCurrentState(currentState);
         }
         return currentState;
     }
 
     public static void deletePod(ProcessManager processManager, KubernetesModel model, String podId) throws Exception {
-        PodSchema pod = model.deletePod(podId);
+        Pod pod = model.deletePod(podId);
         if (pod != null) {
-            List<ManifestContainer> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);
+            List<Container> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);
             NodeHelper.deleteContainers(processManager, model, pod, NodeHelper.getOrCreateCurrentState(pod), desiredContainers);
         }
     }
@@ -565,7 +563,7 @@ public final class NodeHelper {
     /**
      * Performs a block of code and updates the pod model if its updated
      */
-    public static void podTransaction(KubernetesModel model, PodSchema pod, Runnable task) {
+    public static void podTransaction(KubernetesModel model, Pod pod, Runnable task) {
         String oldJson = getPodJson(pod);
         task.run();
         String newJson = getPodJson(pod);
@@ -579,7 +577,7 @@ public final class NodeHelper {
     /**
      * Performs a block of code and updates the pod model if its updated
      */
-    public static <T> T podTransaction(KubernetesModel model, PodSchema pod, Callable<T> task) throws Exception {
+    public static <T> T podTransaction(KubernetesModel model, Pod pod, Callable<T> task) throws Exception {
         String oldJson = getPodJson(pod);
         T answer = task.call();
         String newJson = getPodJson(pod);
@@ -595,7 +593,7 @@ public final class NodeHelper {
     /**
      * Performs a block of code and updates the pod model if its updated
      */
-    public static void excludeFromProcessMonitor(ProcessMonitor monitor, PodSchema pod, Runnable task) {
+    public static void excludeFromProcessMonitor(ProcessMonitor monitor, Pod pod, Runnable task) {
         String id = pod.getId();
         monitor.addExcludedPodId(id);
         try {
@@ -608,7 +606,7 @@ public final class NodeHelper {
     /**
      * Performs a block of code and updates the pod model if its updated
      */
-    public static <T> T excludeFromProcessMonitor(ProcessMonitor monitor, PodSchema pod,  Callable<T> task) throws Exception {
+    public static <T> T excludeFromProcessMonitor(ProcessMonitor monitor, Pod pod,  Callable<T> task) throws Exception {
         String id = pod.getId();
         monitor.addExcludedPodId(id);
         try {
@@ -619,7 +617,7 @@ public final class NodeHelper {
     }
 
 
-    protected static String getPodJson(PodSchema pod) {
+    protected static String getPodJson(Pod pod) {
         try {
             return KubernetesHelper.toJson(pod);
         } catch (JsonProcessingException e) {
@@ -631,7 +629,7 @@ public final class NodeHelper {
     /**
      * Returns true if there has been a change in the JSON of the given entity
      */
-    public static boolean podHasChanged(PodSchema currentEntity, PodSchema oldEntity) {
+    public static boolean podHasChanged(Pod currentEntity, Pod oldEntity) {
         if (currentEntity == null || oldEntity == null) {
             return true;
         }

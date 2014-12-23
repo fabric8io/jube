@@ -16,8 +16,8 @@
 package io.fabric8.jube.local;
 
 import io.fabric8.jube.KubernetesModel;
-import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
-import io.fabric8.kubernetes.api.model.PodSchema;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,11 +29,11 @@ public class PodCurrentContainer {
 
     private final KubernetesModel model;
     private final String podId;
-    private final PodSchema pod;
+    private final Pod pod;
     private final String containerId;
-    private final PodCurrentContainerInfo currentContainer;
+    private final ContainerStatus currentContainer;
 
-    public PodCurrentContainer(KubernetesModel model, String podId, PodSchema pod, String containerId, PodCurrentContainerInfo currentContainer) {
+    public PodCurrentContainer(KubernetesModel model, String podId, Pod pod, String containerId, ContainerStatus currentContainer) {
         this.model = model;
         this.podId = podId;
         this.pod = pod;
@@ -49,7 +49,7 @@ public class PodCurrentContainer {
         return podId;
     }
 
-    public PodSchema getPod() {
+    public Pod getPod() {
         return pod;
     }
 
@@ -57,7 +57,7 @@ public class PodCurrentContainer {
         return containerId;
     }
 
-    public PodCurrentContainerInfo getCurrentContainer() {
+    public ContainerStatus getCurrentContainer() {
         return currentContainer;
     }
 

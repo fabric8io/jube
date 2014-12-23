@@ -46,17 +46,16 @@ import io.fabric8.jube.process.Installation;
 import io.fabric8.jube.process.ProcessManager;
 import io.fabric8.jube.proxy.KubeProxy;
 import io.fabric8.jube.replicator.Replicator;
-import io.fabric8.kubernetes.api.IntOrString;
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.CurrentState;
-import io.fabric8.kubernetes.api.model.DesiredState;
-import io.fabric8.kubernetes.api.model.ManifestContainer;
-import io.fabric8.kubernetes.api.model.PodListSchema;
-import io.fabric8.kubernetes.api.model.PodSchema;
-import io.fabric8.kubernetes.api.model.ReplicationControllerListSchema;
-import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
-import io.fabric8.kubernetes.api.model.ServiceListSchema;
-import io.fabric8.kubernetes.api.model.ServiceSchema;
+import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.PodState;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.ReplicationControllerList;
+import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.ServiceList;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.utils.Objects;
 import io.hawt.util.Strings;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
@@ -129,35 +128,35 @@ public class ApiMasterService implements KubernetesExtensions {
 
 
     @Override
-    public PodListSchema getPods() {
+    public PodList getPods() {
         return model.getPods();
     }
 
     @Override
-    public PodSchema getPod(@NotNull String podId) {
-        Map<String, PodSchema> map = model.getPodMap();
+    public Pod getPod(@NotNull String podId) {
+        Map<String, Pod> map = model.getPodMap();
         return map.get(podId);
     }
 
     @Override
-    public String createPod(PodSchema entity) throws Exception {
+    public String createPod(Pod entity) throws Exception {
         return model.remoteCreatePod(entity);
     }
 
 
     @Override
-    public String updatePod(final @NotNull String podId, final PodSchema pod) throws Exception {
+    public String updatePod(final @NotNull String podId, final Pod pod) throws Exception {
         // TODO needs implementing remotely!
 
         return NodeHelper.excludeFromProcessMonitor(processMonitor, pod, new Callable<String>() {
             @Override
             public String call() throws Exception {
                 System.out.println("Updating pod " + pod);
-                DesiredState desiredState = pod.getDesiredState();
+                PodState desiredState = pod.getDesiredState();
                 Objects.notNull(desiredState, "desiredState");
 
-                CurrentState currentState = getOrCreateCurrentState(pod);
-                List<ManifestContainer> containers = KubernetesHelper.getContainers(pod);
+                PodState currentState = getOrCreateCurrentState(pod);
+                List<Container> containers = KubernetesHelper.getContainers(pod);
                 model.updatePod(podId, pod);
 
                 return NodeHelper.createMissingContainers(processManager, model, pod, currentState, containers);
@@ -177,25 +176,25 @@ public class ApiMasterService implements KubernetesExtensions {
 
 
     @Override
-    public ReplicationControllerListSchema getReplicationControllers() {
+    public ReplicationControllerList getReplicationControllers() {
         return model.getReplicationControllers();
     }
 
     @Override
-    public ReplicationControllerSchema getReplicationController(@NotNull String controllerId) {
-        Map<String, ReplicationControllerSchema> map = KubernetesHelper.getReplicationControllerMap(this);
+    public ReplicationController getReplicationController(@NotNull String controllerId) {
+        Map<String, ReplicationController> map = KubernetesHelper.getReplicationControllerMap(this);
         return map.get(controllerId);
     }
 
     @Override
-    public String createReplicationController(ReplicationControllerSchema entity) throws Exception {
+    public String createReplicationController(ReplicationController entity) throws Exception {
         String id = model.getOrCreateId(entity.getId(), NodeHelper.KIND_REPLICATION_CONTROLLER);
         entity.setId(id);
         return updateReplicationController(id, entity);
     }
 
     @Override
-    public String updateReplicationController(@NotNull String controllerId, ReplicationControllerSchema replicationController) throws Exception {
+    public String updateReplicationController(@NotNull String controllerId, ReplicationController replicationController) throws Exception {
         // lets ensure there's a default namespace set
         String namespace = replicationController.getNamespace();
         if (Strings.isBlank(namespace)) {
@@ -215,25 +214,25 @@ public class ApiMasterService implements KubernetesExtensions {
     //-------------------------------------------------------------------------
 
     @Override
-    public ServiceListSchema getServices() {
+    public ServiceList getServices() {
         return model.getServices();
     }
 
     @Override
-    public ServiceSchema getService(@NotNull String serviceId) {
-        Map<String, ServiceSchema> map = model.getServiceMap();
+    public Service getService(@NotNull String serviceId) {
+        Map<String, Service> map = model.getServiceMap();
         return map.get(serviceId);
     }
 
     @Override
-    public String createService(ServiceSchema entity) throws Exception {
+    public String createService(Service entity) throws Exception {
         String id = model.getOrCreateId(entity.getId(), NodeHelper.KIND_SERVICE);
         entity.setId(id);
         return updateService(id, entity);
     }
 
     @Override
-    public String updateService(@NotNull String id, ServiceSchema entity) throws Exception {
+    public String updateService(@NotNull String id, Service entity) throws Exception {
         // lets set the IP
         entity.setPortalIP(getHostName());
 
@@ -277,15 +276,15 @@ public class ApiMasterService implements KubernetesExtensions {
     @Path("local/pods")
     @Consumes("application/json")
     @Override
-    public String createLocalPod(PodSchema entity) throws Exception {
+    public String createLocalPod(Pod entity) throws Exception {
         String id = model.getOrCreateId(entity.getId(), NodeHelper.KIND_REPLICATION_CONTROLLER);
         entity.setId(id);
         return updateLocalPod(id, entity);
     }
 
-    public String updateLocalPod(@NotNull final String podId, final PodSchema pod) throws Exception {
+    public String updateLocalPod(@NotNull final String podId, final Pod pod) throws Exception {
         System.out.println("Updating pod " + pod);
-        DesiredState desiredState = pod.getDesiredState();
+        PodState desiredState = pod.getDesiredState();
         Objects.notNull(desiredState, "desiredState");
 
         // lets ensure there's a default namespace set
@@ -294,8 +293,8 @@ public class ApiMasterService implements KubernetesExtensions {
             pod.setNamespace(DEFAULT_NAMESPACE);
         }
 
-        final CurrentState currentState = getOrCreateCurrentState(pod);
-        final List<ManifestContainer> containers = KubernetesHelper.getContainers(pod);
+        final PodState currentState = getOrCreateCurrentState(pod);
+        final List<Container> containers = KubernetesHelper.getContainers(pod);
 
         NodeHelper.setPodStatus(pod, Statuses.WAITING);
         NodeHelper.setContainerRunningState(pod, podId, false);
@@ -335,17 +334,17 @@ public class ApiMasterService implements KubernetesExtensions {
     @Path("local/pods")
     @Consumes("application/json")
     @Override
-    public PodListSchema getLocalPods() {
+    public PodList getLocalPods() {
         ImmutableMap<String, Installation> installMap = processManager.listInstallationMap();
         ImmutableSet<String> keys = installMap.keySet();
-        List<PodSchema> pods = new ArrayList<>();
+        List<Pod> pods = new ArrayList<>();
         for (String key : keys) {
-            PodSchema pod = model.getPod(key);
+            Pod pod = model.getPod(key);
             if (pod != null) {
                 pods.add(pod);
             }
         }
-        PodListSchema answer = new PodListSchema();
+        PodList answer = new PodList();
         answer.setItems(pods);
         return answer;
 
@@ -357,8 +356,8 @@ public class ApiMasterService implements KubernetesExtensions {
      * REST API via kubernetes services
      */
     protected void ensureModelHasKubernetesServices(String hostName, String port) {
-        ImmutableMap<String, ServiceSchema> serviceMap = model.getServiceMap();
-        ServiceSchema service = null;
+        ImmutableMap<String, Service> serviceMap = model.getServiceMap();
+        Service service = null;
         try {
             service = serviceMap.get(ServiceIDs.KUBERNETES_SERVICE_ID);
             if (service == null) {
@@ -399,15 +398,15 @@ public class ApiMasterService implements KubernetesExtensions {
         return answer;
     }
 
-    protected ServiceSchema createService(String hostName, String port) {
-        ServiceSchema service = new ServiceSchema();
+    protected Service createService(String hostName, String port) {
+        Service service = new Service();
         service.setKind("Service");
         try {
             Integer portNumber = Integer.parseInt(port);
             if (portNumber != null) {
                 service.setPort(portNumber);
                 IntOrString containerPort = new IntOrString();
-                containerPort.setIntValue(portNumber);
+                containerPort.setIntVal(portNumber);
                 service.setContainerPort(containerPort);
             }
         } catch (NumberFormatException e) {

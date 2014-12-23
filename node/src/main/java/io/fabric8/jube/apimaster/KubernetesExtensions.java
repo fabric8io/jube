@@ -24,8 +24,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
 import io.fabric8.kubernetes.api.Kubernetes;
-import io.fabric8.kubernetes.api.model.PodListSchema;
-import io.fabric8.kubernetes.api.model.PodSchema;
+import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.Pod;
 
 /**
  */
@@ -33,12 +33,12 @@ public interface KubernetesExtensions extends Kubernetes {
     @GET
     @Path("local/pods")
     @Consumes("application/json")
-    PodListSchema getLocalPods();
+    PodList getLocalPods();
 
     @POST
     @Path("local/pods")
     @Consumes("application/json")
-    String createLocalPod(PodSchema entity) throws Exception;
+    String createLocalPod(Pod entity) throws Exception;
 
     @DELETE
     @Path("local/pods/{id}")

@@ -19,18 +19,18 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import io.fabric8.jube.local.NodeHelper;
-import io.fabric8.kubernetes.api.model.CurrentState;
-import io.fabric8.kubernetes.api.model.PodSchema;
+import io.fabric8.kubernetes.api.model.PodState;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.hawt.util.Strings;
 
 /**
  * Represents a single service implementation in a container
  */
 public class ContainerService {
-    private final PodSchema pod;
+    private final Pod pod;
     private final URI uri;
 
-    public ContainerService(Service service, PodSchema pod) throws URISyntaxException {
+    public ContainerService(ServiceInstance service, Pod pod) throws URISyntaxException {
         this.pod = pod;
 
         int serviceContainerPort = service.getContainerPort();
@@ -38,7 +38,7 @@ public class ContainerService {
 
         // lets get host / port of the container
         String host = null;
-        CurrentState currentState = pod.getCurrentState();
+        PodState currentState = pod.getCurrentState();
         if (currentState != null) {
             host = currentState.getHost();
             if (Strings.isBlank(host)) {

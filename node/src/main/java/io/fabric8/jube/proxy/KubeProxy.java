@@ -31,8 +31,8 @@ import io.fabric8.gateway.loadbalancer.LoadBalancer;
 import io.fabric8.jube.ServiceIDs;
 import io.fabric8.jube.apimaster.ApiMasterKubernetesModel;
 import io.fabric8.jube.local.EntityListener;
-import io.fabric8.kubernetes.api.model.PodSchema;
-import io.fabric8.kubernetes.api.model.ServiceSchema;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Service;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.impl.DefaultVertxFactory;
 
@@ -51,9 +51,9 @@ public class KubeProxy {
         this.model = model;
         this.vertx = DefaultVertxFactory.newVertx();
 
-        model.addPodListener(new EntityListener<PodSchema>() {
+        model.addPodListener(new EntityListener<Pod>() {
             @Override
-            public void entityChanged(String id, PodSchema entity) {
+            public void entityChanged(String id, Pod entity) {
                 Collection<ServiceProxy> services = getServices();
                 for (ServiceProxy service : services) {
                     service.entityChanged(id, entity);
@@ -69,9 +69,9 @@ public class KubeProxy {
             }
         });
 
-        model.addServiceListener(new EntityListener<ServiceSchema>() {
+        model.addServiceListener(new EntityListener<Service>() {
             @Override
-            public void entityChanged(String id, ServiceSchema entity) {
+            public void entityChanged(String id, Service entity) {
                 serviceChanged(id, entity);
             }
 
@@ -82,7 +82,7 @@ public class KubeProxy {
         });
     }
 
-    protected synchronized void serviceChanged(String id, ServiceSchema serviceEntity) {
+    protected synchronized void serviceChanged(String id, Service serviceEntity) {
         if (ignoredServiceIDs.contains(id)) {
             return;
         }
@@ -90,7 +90,7 @@ public class KubeProxy {
         // lets delete the old service as we may have changed the port or selector
         serviceDeleted(id);
 
-        Service service = new Service(serviceEntity);
+        ServiceInstance service = new ServiceInstance(serviceEntity);
         int port = service.getPort();
         LoadBalancer loadBalancer = service.getLoadBalancer();
         ServiceProxy serviceProxy = new ServiceProxy(vertx, service, port, loadBalancer);
@@ -98,11 +98,11 @@ public class KubeProxy {
         serviceMap.put(id, serviceProxy);
 
         // now lets populate it with the current pods
-        ImmutableMap<String, PodSchema> podMap = model.getPodMap();
-        ImmutableSet<Map.Entry<String, PodSchema>> entries = podMap.entrySet();
-        for (Map.Entry<String, PodSchema> entry : entries) {
+        ImmutableMap<String, Pod> podMap = model.getPodMap();
+        ImmutableSet<Map.Entry<String, Pod>> entries = podMap.entrySet();
+        for (Map.Entry<String, Pod> entry : entries) {
             String podId = entry.getKey();
-            PodSchema pod = entry.getValue();
+            Pod pod = entry.getValue();
             serviceProxy.entityChanged(podId, pod);
         }
         System.out.println("Service now initialised as: " + service);

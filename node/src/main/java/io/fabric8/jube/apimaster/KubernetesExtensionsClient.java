@@ -19,7 +19,7 @@ import javax.validation.constraints.NotNull;
 
 import io.fabric8.kubernetes.api.KubernetesClient;
 import io.fabric8.kubernetes.api.KubernetesFactory;
-import io.fabric8.kubernetes.api.model.PodSchema;
+import io.fabric8.kubernetes.api.model.Pod;
 
 /**
  * A simple client for working with {@link KubernetesExtensions}
@@ -49,7 +49,7 @@ public class KubernetesExtensionsClient extends KubernetesClient {
     //-------------------------------------------------------------------------
 
 
-    public String createLocalPod(PodSchema entity) throws Exception {
+    public String createLocalPod(Pod entity) throws Exception {
         return getExtensions().createLocalPod(entity);
     }
 

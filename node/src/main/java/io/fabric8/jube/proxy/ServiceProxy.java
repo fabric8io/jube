@@ -17,7 +17,7 @@ package io.fabric8.jube.proxy;
 
 import io.fabric8.gateway.loadbalancer.LoadBalancer;
 import io.fabric8.jube.local.EntityListener;
-import io.fabric8.kubernetes.api.model.PodSchema;
+import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
@@ -28,17 +28,17 @@ import org.vertx.java.core.net.NetSocket;
 /**
  * Represents a Kubernetes proxy for a single service on a single port
  */
-public class ServiceProxy implements EntityListener<PodSchema> {
+public class ServiceProxy implements EntityListener<Pod> {
     private static final transient Logger LOG = LoggerFactory.getLogger(ServiceProxy.class);
 
     private final Vertx vertx;
-    private final Service service;
+    private final ServiceInstance service;
     private final int port;
     private final Handler<NetSocket> handler;
     private String host;
     private NetServer server;
 
-    public ServiceProxy(Vertx vertx, Service service, int port, LoadBalancer loadBalancer) {
+    public ServiceProxy(Vertx vertx, ServiceInstance service, int port, LoadBalancer loadBalancer) {
         this.vertx = vertx;
         this.service = service;
         this.port = port;
@@ -73,7 +73,7 @@ public class ServiceProxy implements EntityListener<PodSchema> {
     }
 
     @Override
-    public void entityChanged(String id, PodSchema entity) {
+    public void entityChanged(String id, Pod entity) {
         service.entityChanged(id, entity);
     }
 
@@ -101,7 +101,7 @@ public class ServiceProxy implements EntityListener<PodSchema> {
         return vertx;
     }
 
-    public Service getService() {
+    public ServiceInstance getService() {
         return service;
     }
 }

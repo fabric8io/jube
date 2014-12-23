@@ -27,14 +27,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import io.fabric8.jube.KubernetesModel;
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.ManifestContainer;
-import io.fabric8.kubernetes.api.model.PodCurrentContainerInfo;
-import io.fabric8.kubernetes.api.model.PodListSchema;
-import io.fabric8.kubernetes.api.model.PodSchema;
-import io.fabric8.kubernetes.api.model.ReplicationControllerListSchema;
-import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
-import io.fabric8.kubernetes.api.model.ServiceListSchema;
-import io.fabric8.kubernetes.api.model.ServiceSchema;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.ReplicationControllerList;
+import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.ServiceList;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.utils.Filter;
 import io.fabric8.utils.Filters;
 import io.hawt.util.Strings;
@@ -43,9 +43,9 @@ import io.hawt.util.Strings;
  * A pure in memory implementation of the {@link KubernetesModel}
  */
 public class LocalKubernetesModel implements KubernetesModel {
-    private ConcurrentHashMap<String, PodSchema> podMap = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<String, ReplicationControllerSchema> replicationControllerMap = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<String, ServiceSchema> serviceMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Pod> podMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, ReplicationController> replicationControllerMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Service> serviceMap = new ConcurrentHashMap<>();
 
     public LocalKubernetesModel() {
     }
@@ -54,46 +54,46 @@ public class LocalKubernetesModel implements KubernetesModel {
     //-------------------------------------------------------------------------
 
     @Override
-    public ImmutableMap<String, PodSchema> getPodMap() {
+    public ImmutableMap<String, Pod> getPodMap() {
         return ImmutableMap.copyOf(podMap);
     }
 
     @Override
-    public PodListSchema getPods() {
-        PodListSchema answer = new PodListSchema();
+    public PodList getPods() {
+        PodList answer = new PodList();
         answer.setItems(Lists.newArrayList(podMap.values()));
         return answer;
     }
 
     @Override
-    public ImmutableList<PodSchema> getPods(Map<String, String> replicaSelector) {
+    public ImmutableList<Pod> getPods(Map<String, String> replicaSelector) {
         return getPods(KubernetesHelper.createPodFilter(replicaSelector));
     }
 
     @Override
-    public ImmutableList<PodSchema> getPods(Filter<PodSchema> podFilter) {
+    public ImmutableList<Pod> getPods(Filter<Pod> podFilter) {
         return ImmutableList.copyOf(Filters.filter(getPodMap().values(), podFilter));
     }
 
     @Override
-    public PodSchema getPod(String id) {
+    public Pod getPod(String id) {
         return podMap.get(id);
     }
 
     @Override
-    public void updatePod(String id, PodSchema pod) {
+    public void updatePod(String id, Pod pod) {
         id = getOrCreateId(id, NodeHelper.KIND_POD);
 
         // lets make sure that for each container we have a current container created
-        Map<String, PodCurrentContainerInfo> info = NodeHelper.getOrCreateCurrentContainerInfo(pod);
+        Map<String, ContainerStatus> info = NodeHelper.getOrCreateCurrentContainerInfo(pod);
 
-        List<ManifestContainer> containers = KubernetesHelper.getContainers(pod);
-        for (ManifestContainer container : containers) {
+        List<Container> containers = KubernetesHelper.getContainers(pod);
+        for (Container container : containers) {
             String name = getOrCreateId(container.getName(), NodeHelper.KIND_POD);
             container.setName(name);
-            PodCurrentContainerInfo containerInfo = info.get(name);
+            ContainerStatus containerInfo = info.get(name);
             if (containerInfo == null) {
-                containerInfo = new PodCurrentContainerInfo();
+                containerInfo = new ContainerStatus();
                 info.put(name, containerInfo);
             }
         }
@@ -112,8 +112,8 @@ public class LocalKubernetesModel implements KubernetesModel {
      * Updates the pod if one does not already exist
      */
     @Override
-    public boolean updatePodIfNotExist(String id, PodSchema pod) {
-        PodSchema oldValue = podMap.putIfAbsent(id, pod);
+    public boolean updatePodIfNotExist(String id, Pod pod) {
+        Pod oldValue = podMap.putIfAbsent(id, pod);
         return oldValue == null;
     }
 
@@ -123,7 +123,7 @@ public class LocalKubernetesModel implements KubernetesModel {
      * <b>Note</b> you should make sure to delete any container processes too!
      */
     @Override
-    public PodSchema deletePod(String podId) {
+    public Pod deletePod(String podId) {
         if (Strings.isBlank(podId)) {
             return null;
         }
@@ -136,13 +136,13 @@ public class LocalKubernetesModel implements KubernetesModel {
     @Override
     public ImmutableMap<String, PodCurrentContainer> getPodRunningContainers(KubernetesModel model) {
         Map<String, PodCurrentContainer> answer = new HashMap<>();
-        for (Map.Entry<String, PodSchema> entry : podMap.entrySet()) {
+        for (Map.Entry<String, Pod> entry : podMap.entrySet()) {
             String podId = entry.getKey();
-            PodSchema podSchema = entry.getValue();
-            Map<String, PodCurrentContainerInfo> currentContainers = KubernetesHelper.getCurrentContainers(podSchema);
-            for (Map.Entry<String, PodCurrentContainerInfo> containerEntry : currentContainers.entrySet()) {
+            Pod podSchema = entry.getValue();
+            Map<String, ContainerStatus> currentContainers = KubernetesHelper.getCurrentContainers(podSchema);
+            for (Map.Entry<String, ContainerStatus> containerEntry : currentContainers.entrySet()) {
                 String containerId = containerEntry.getKey();
-                PodCurrentContainerInfo currentContainer = containerEntry.getValue();
+                ContainerStatus currentContainer = containerEntry.getValue();
                 PodCurrentContainer podCurrentContainer = new PodCurrentContainer(model, podId, podSchema, containerId, currentContainer);
                 answer.put(containerId, podCurrentContainer);
             }
@@ -155,24 +155,24 @@ public class LocalKubernetesModel implements KubernetesModel {
     //-------------------------------------------------------------------------
 
     @Override
-    public ReplicationControllerSchema getReplicationController(String id) {
+    public ReplicationController getReplicationController(String id) {
         return replicationControllerMap.get(id);
     }
 
     @Override
-    public ReplicationControllerListSchema getReplicationControllers() {
-        ReplicationControllerListSchema answer = new ReplicationControllerListSchema();
+    public ReplicationControllerList getReplicationControllers() {
+        ReplicationControllerList answer = new ReplicationControllerList();
         answer.setItems(Lists.newArrayList(replicationControllerMap.values()));
         return answer;
     }
 
     @Override
-    public ImmutableMap<String, ReplicationControllerSchema> getReplicationControllerMap() {
+    public ImmutableMap<String, ReplicationController> getReplicationControllerMap() {
         return ImmutableMap.copyOf(replicationControllerMap);
     }
 
     @Override
-    public void updateReplicationController(String id, ReplicationControllerSchema replicationController) {
+    public void updateReplicationController(String id, ReplicationController replicationController) {
         id = getOrCreateId(id, NodeHelper.KIND_REPLICATION_CONTROLLER);
         replicationControllerMap.put(id, replicationController);
     }
@@ -188,24 +188,24 @@ public class LocalKubernetesModel implements KubernetesModel {
     //-------------------------------------------------------------------------
 
     @Override
-    public ServiceListSchema getServices() {
-        ServiceListSchema answer = new ServiceListSchema();
+    public ServiceList getServices() {
+        ServiceList answer = new ServiceList();
         answer.setItems(Lists.newArrayList(serviceMap.values()));
         return answer;
     }
 
     @Override
-    public ServiceSchema getService(String id) {
+    public Service getService(String id) {
         return serviceMap.get(id);
     }
 
     @Override
-    public ImmutableMap<String, ServiceSchema> getServiceMap() {
+    public ImmutableMap<String, Service> getServiceMap() {
         return ImmutableMap.copyOf(serviceMap);
     }
 
     @Override
-    public void updateService(String id, ServiceSchema entity) {
+    public void updateService(String id, Service entity) {
         id = getOrCreateId(id, NodeHelper.KIND_SERVICE);
         serviceMap.put(id, entity);
     }

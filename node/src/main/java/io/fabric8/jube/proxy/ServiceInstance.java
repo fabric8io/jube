@@ -24,8 +24,8 @@ import io.fabric8.gateway.loadbalancer.LoadBalancer;
 import io.fabric8.gateway.loadbalancer.RoundRobinLoadBalancer;
 import io.fabric8.jube.local.EntityListener;
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.PodSchema;
-import io.fabric8.kubernetes.api.model.ServiceSchema;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.utils.Filter;
 import io.fabric8.utils.Objects;
 import org.slf4j.Logger;
@@ -34,29 +34,29 @@ import org.slf4j.LoggerFactory;
 /**
  * Represents a running service
  */
-public class Service implements EntityListener<PodSchema> {
-    private static final transient Logger LOG = LoggerFactory.getLogger(Service.class);
+public class ServiceInstance implements EntityListener<Pod> {
+    private static final transient Logger LOG = LoggerFactory.getLogger(ServiceInstance.class);
 
-    private final ServiceSchema service;
+    private final Service service;
     private final String id;
     private final Map<String, String> selector;
-    private final Filter<PodSchema> filter;
+    private final Filter<Pod> filter;
     private final int port;
     private final int containerPort;
     private final LoadBalancer loadBalancer;
     private final Map<String, ContainerService> containerServices = new ConcurrentHashMap<>();
 
-    public Service(ServiceSchema service) {
+    public ServiceInstance(Service service) {
         this.service = service;
-        this.id = service.getId();
-        Integer portInt = service.getPort();
+        this.id = KubernetesHelper.getId(service);
+        Integer portInt = KubernetesHelper.getPort(service);
         Objects.notNull(portInt, "port for service " + id);
-        this.port = portInt;
+        this.port = portInt.intValue();
         if (this.port <= 0) {
             throw new IllegalArgumentException("Invalid port number " + this.port + " for service " + id);
         }
         this.containerPort = KubernetesHelper.getContainerPort(service);
-        this.selector = service.getSelector();
+        this.selector = KubernetesHelper.getSelector(service);
         Objects.notNull(this.selector, "No selector for service " + id);
         if (selector.isEmpty()) {
             throw new IllegalArgumentException("Empty selector for service " + id);
@@ -81,7 +81,7 @@ public class Service implements EntityListener<PodSchema> {
     }
 
     @Override
-    public void entityChanged(String podId, PodSchema pod) {
+    public void entityChanged(String podId, Pod pod) {
         if (filter.matches(pod)) {
             try {
                 ContainerService containerService = new ContainerService(this, pod);
@@ -97,7 +97,7 @@ public class Service implements EntityListener<PodSchema> {
         containerServices.remove(podId);
     }
 
-    public Filter<PodSchema> getFilter() {
+    public Filter<Pod> getFilter() {
         return filter;
     }
 
@@ -105,7 +105,7 @@ public class Service implements EntityListener<PodSchema> {
         return selector;
     }
 
-    public ServiceSchema getService() {
+    public Service getService() {
         return service;
     }
 

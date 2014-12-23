@@ -35,13 +35,13 @@ import io.fabric8.jube.local.PodCurrentContainer;
 import io.fabric8.jube.model.HostNode;
 import io.fabric8.jube.model.HostNodeModel;
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.CurrentState;
-import io.fabric8.kubernetes.api.model.PodListSchema;
-import io.fabric8.kubernetes.api.model.PodSchema;
-import io.fabric8.kubernetes.api.model.ReplicationControllerListSchema;
-import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
-import io.fabric8.kubernetes.api.model.ServiceListSchema;
-import io.fabric8.kubernetes.api.model.ServiceSchema;
+import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodState;
+import io.fabric8.kubernetes.api.model.ReplicationControllerList;
+import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.ServiceList;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.utils.Filter;
 import io.fabric8.utils.Strings;
 import io.fabric8.zookeeper.ZkPath;
@@ -76,9 +76,9 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     private final TreeCache treeCache;
     private final String zkPath;
 
-    private final EntityListenerList<PodSchema> podListeners = new EntityListenerList<>();
-    private final EntityListenerList<ReplicationControllerSchema> replicationControllerListeners = new EntityListenerList<>();
-    private final EntityListenerList<ServiceSchema> serviceListeners = new EntityListenerList<>();
+    private final EntityListenerList<Pod> podListeners = new EntityListenerList<>();
+    private final EntityListenerList<ReplicationController> replicationControllerListeners = new EntityListenerList<>();
+    private final EntityListenerList<Service> serviceListeners = new EntityListenerList<>();
 
     @Singleton
     @Inject
@@ -94,36 +94,36 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     // Add and remove listeners
     //-------------------------------------------------------------------------
 
-    public void addPodListener(EntityListener<PodSchema> listener) {
+    public void addPodListener(EntityListener<Pod> listener) {
         podListeners.addListener(listener);
     }
 
-    public void removePodListener(EntityListener<PodSchema> listener) {
+    public void removePodListener(EntityListener<Pod> listener) {
         podListeners.removeListener(listener);
     }
 
-    public void addReplicationControllerListener(EntityListener<ReplicationControllerSchema> listener) {
+    public void addReplicationControllerListener(EntityListener<ReplicationController> listener) {
         replicationControllerListeners.addListener(listener);
     }
 
-    public void removeReplicationControllerListener(EntityListener<ReplicationControllerSchema> listener) {
+    public void removeReplicationControllerListener(EntityListener<ReplicationController> listener) {
         replicationControllerListeners.removeListener(listener);
     }
 
-    public void addServiceListener(EntityListener<ServiceSchema> listener) {
+    public void addServiceListener(EntityListener<Service> listener) {
         serviceListeners.addListener(listener);
     }
 
-    public void removeServiceListener(EntityListener<ServiceSchema> listener) {
+    public void removeServiceListener(EntityListener<Service> listener) {
         serviceListeners.removeListener(listener);
     }
 
     // Updating API which just writes to ZK and waits for ZK watches to update in memory
     // -------------------------------------------------------------------------
     @Override
-    public PodSchema deletePod(String podId) {
+    public Pod deletePod(String podId) {
         if (Strings.isNotBlank(podId)) {
-            PodSchema answer = memoryModel.deletePod(podId);
+            Pod answer = memoryModel.deletePod(podId);
             deleteEntity(zkPathForPod(podId));
             return answer;
         } else {
@@ -132,13 +132,13 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     }
 
     @Override
-    public void updatePod(String id, PodSchema entity) {
+    public void updatePod(String id, Pod entity) {
         writeEntity(zkPathForPod(id), entity);
         // memoryModel.updatePod(id, entity);
     }
 
     @Override
-    public boolean updatePodIfNotExist(String id, PodSchema entity) {
+    public boolean updatePodIfNotExist(String id, Pod entity) {
         if (memoryModel.updatePodIfNotExist(id, entity)) {
             // lets not write it yet - we're just doing this to set a unique ID
             return true;
@@ -147,7 +147,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     }
 
     @Override
-    public void updateService(String id, ServiceSchema entity) {
+    public void updateService(String id, Service entity) {
         writeEntity(zkPathForService(id), entity);
         // memoryModel.updateService(id, entity);
     }
@@ -159,7 +159,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     }
 
     @Override
-    public void updateReplicationController(String id, ReplicationControllerSchema entity) {
+    public void updateReplicationController(String id, ReplicationController entity) {
         writeEntity(zkPathForReplicationController(id), entity);
         //memoryModel.updateReplicationController(id, entity);
     }
@@ -179,27 +179,27 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     }
 
     @Override
-    public ImmutableMap<String, PodSchema> getPodMap() {
+    public ImmutableMap<String, Pod> getPodMap() {
         return memoryModel.getPodMap();
     }
 
     @Override
-    public PodListSchema getPods() {
+    public PodList getPods() {
         return memoryModel.getPods();
     }
 
     @Override
-    public ImmutableList<PodSchema> getPods(Map<String, String> replicaSelector) {
+    public ImmutableList<Pod> getPods(Map<String, String> replicaSelector) {
         return memoryModel.getPods(replicaSelector);
     }
 
     @Override
-    public ImmutableList<PodSchema> getPods(Filter<PodSchema> podFilter) {
+    public ImmutableList<Pod> getPods(Filter<Pod> podFilter) {
         return memoryModel.getPods(podFilter);
     }
 
     @Override
-    public PodSchema getPod(String id) {
+    public Pod getPod(String id) {
         return memoryModel.getPod(id);
     }
 
@@ -209,32 +209,32 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     }
 
     @Override
-    public ReplicationControllerSchema getReplicationController(String id) {
+    public ReplicationController getReplicationController(String id) {
         return memoryModel.getReplicationController(id);
     }
 
     @Override
-    public ReplicationControllerListSchema getReplicationControllers() {
+    public ReplicationControllerList getReplicationControllers() {
         return memoryModel.getReplicationControllers();
     }
 
     @Override
-    public ImmutableMap<String, ReplicationControllerSchema> getReplicationControllerMap() {
+    public ImmutableMap<String, ReplicationController> getReplicationControllerMap() {
         return memoryModel.getReplicationControllerMap();
     }
 
     @Override
-    public ServiceListSchema getServices() {
+    public ServiceList getServices() {
         return memoryModel.getServices();
     }
 
     @Override
-    public ServiceSchema getService(String id) {
+    public Service getService(String id) {
         return memoryModel.getService(id);
     }
 
     @Override
-    public ImmutableMap<String, ServiceSchema> getServiceMap() {
+    public ImmutableMap<String, Service> getServiceMap() {
         return memoryModel.getServiceMap();
     }
 
@@ -246,7 +246,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     // Load balancing API
     //-------------------------------------------------------------------------
 
-    public String remoteCreatePod(PodSchema pod) {
+    public String remoteCreatePod(Pod pod) {
         Exception failed = null;
         List<HostNode> hosts = new ArrayList<>(hostNodeModel.getMap().values());
 
@@ -274,18 +274,18 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
                 }
             }
         }
-        CurrentState currentState = NodeHelper.getOrCreateCurrentState(pod);
+        PodState currentState = NodeHelper.getOrCreateCurrentState(pod);
         currentState.setStatus("Terminated: " + failed);
         return null;
     }
 
-    protected String tryCreatePod(HostNode hostNode, PodSchema pod) throws Exception {
+    protected String tryCreatePod(HostNode hostNode, Pod pod) throws Exception {
         LOG.info("Attempting to create pod on host: " + hostNode.getWebUrl());
         KubernetesExtensionsClient client = createClient(hostNode);
         return client.createLocalPod(pod);
     }
 
-    public String deleteRemotePod(PodSchema pod) {
+    public String deleteRemotePod(Pod pod) {
         List<HostNode> hosts = new ArrayList<>(hostNodeModel.getMap().values());
         for (HostNode hostNode : hosts) {
             try {
@@ -297,7 +297,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         return null;
     }
 
-    protected String tryDeletePod(HostNode hostNode, PodSchema pod) throws Exception {
+    protected String tryDeletePod(HostNode hostNode, Pod pod) throws Exception {
         String id = pod.getId();
         LOG.info("Attempting to delete pod: " + id + " on host: " + hostNode.getWebUrl());
         KubernetesExtensionsClient client = createClient(hostNode);
@@ -387,18 +387,18 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     }
 
     protected void updateLocalModel(Object dto, boolean remove) {
-        if (dto instanceof PodSchema) {
-            podChanged((PodSchema) dto, remove);
-        } else if (dto instanceof ReplicationControllerSchema) {
-            replicationControllerChanged((ReplicationControllerSchema) dto, remove);
-        } else if (dto instanceof ServiceSchema) {
-            serviceChanged((ServiceSchema) dto, remove);
+        if (dto instanceof Pod) {
+            podChanged((Pod) dto, remove);
+        } else if (dto instanceof ReplicationController) {
+            replicationControllerChanged((ReplicationController) dto, remove);
+        } else if (dto instanceof Service) {
+            serviceChanged((Service) dto, remove);
         } else {
             LOG.warn("Unrecognised DTO: " + dto);
         }
     }
 
-    protected void podChanged(PodSchema entity, boolean remove) {
+    protected void podChanged(Pod entity, boolean remove) {
         if (remove) {
             String id = entity.getId();
             if (Strings.isNotBlank(id)) {
@@ -408,7 +408,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
             }
         } else {
             String id = memoryModel.getOrCreateId(entity.getId(), NodeHelper.KIND_POD);
-            PodSchema old = memoryModel.getPod(id);
+            Pod old = memoryModel.getPod(id);
             // lets only replace the Pod if it really has changed to avoid overwriting
             // pods which are being installed
             if (NodeHelper.podHasChanged(entity, old)) {
@@ -418,7 +418,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         }
     }
 
-    protected void replicationControllerChanged(ReplicationControllerSchema entity, boolean remove) {
+    protected void replicationControllerChanged(ReplicationController entity, boolean remove) {
         if (remove) {
             String id = entity.getId();
             if (Strings.isNotBlank(id)) {
@@ -432,7 +432,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         }
     }
 
-    protected void serviceChanged(ServiceSchema entity, boolean remove) {
+    protected void serviceChanged(Service entity, boolean remove) {
         if (remove) {
             String id = entity.getId();
             if (Strings.isNotBlank(id)) {

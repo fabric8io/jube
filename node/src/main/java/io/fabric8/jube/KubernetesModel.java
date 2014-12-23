@@ -20,54 +20,54 @@ import java.util.Map;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.fabric8.jube.local.PodCurrentContainer;
-import io.fabric8.kubernetes.api.model.PodListSchema;
-import io.fabric8.kubernetes.api.model.PodSchema;
-import io.fabric8.kubernetes.api.model.ReplicationControllerListSchema;
-import io.fabric8.kubernetes.api.model.ReplicationControllerSchema;
-import io.fabric8.kubernetes.api.model.ServiceListSchema;
-import io.fabric8.kubernetes.api.model.ServiceSchema;
+import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.ReplicationControllerList;
+import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.ServiceList;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.utils.Filter;
 
 /**
  */
 public interface KubernetesModel {
-    ImmutableMap<String, PodSchema> getPodMap();
+    ImmutableMap<String, Pod> getPodMap();
 
-    PodListSchema getPods();
+    PodList getPods();
 
-    ImmutableList<PodSchema> getPods(Map<String, String> replicaSelector);
+    ImmutableList<Pod> getPods(Map<String, String> replicaSelector);
 
-    ImmutableList<PodSchema> getPods(Filter<PodSchema> podFilter);
+    ImmutableList<Pod> getPods(Filter<Pod> podFilter);
 
-    PodSchema getPod(String id);
+    Pod getPod(String id);
 
-    void updatePod(String id, PodSchema pod);
+    void updatePod(String id, Pod pod);
 
     String getOrCreateId(String id, String kind);
 
-    boolean updatePodIfNotExist(String id, PodSchema pod);
+    boolean updatePodIfNotExist(String id, Pod pod);
 
-    PodSchema deletePod(String podId);
+    Pod deletePod(String podId);
 
     ImmutableMap<String, PodCurrentContainer> getPodRunningContainers(KubernetesModel model);
 
-    ReplicationControllerSchema getReplicationController(String id);
+    ReplicationController getReplicationController(String id);
 
-    ReplicationControllerListSchema getReplicationControllers();
+    ReplicationControllerList getReplicationControllers();
 
-    ImmutableMap<String, ReplicationControllerSchema> getReplicationControllerMap();
+    ImmutableMap<String, ReplicationController> getReplicationControllerMap();
 
-    void updateReplicationController(String id, ReplicationControllerSchema replicationController);
+    void updateReplicationController(String id, ReplicationController replicationController);
 
     void deleteReplicationController(String controllerId);
 
-    ServiceListSchema getServices();
+    ServiceList getServices();
 
-    ServiceSchema getService(String id);
+    Service getService(String id);
 
-    ImmutableMap<String, ServiceSchema> getServiceMap();
+    ImmutableMap<String, Service> getServiceMap();
 
-    void updateService(String id, ServiceSchema entity);
+    void updateService(String id, Service entity);
 
     void deleteService(String serviceId);
 

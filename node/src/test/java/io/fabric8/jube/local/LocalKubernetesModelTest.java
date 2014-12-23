@@ -15,7 +15,7 @@
  */
 package io.fabric8.jube.local;
 
-import io.fabric8.kubernetes.api.model.PodSchema;
+import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ public class LocalKubernetesModelTest {
     public void testUpdatePodIfNotExist() throws Exception {
         String a = "a";
         String b = "b";
-        PodSchema podA = new PodSchema();
+        Pod podA = new Pod();
         podA.setId("a");
 
         // first time should create it for "a"
@@ -44,7 +44,7 @@ public class LocalKubernetesModelTest {
         assertEquals("should have created an 'a'", podA, model.getPod(a));
         assertTrue("should have created an 'a'", podA == model.getPod(a));
 
-        PodSchema podB = new PodSchema();
+        Pod podB = new Pod();
         podB.setId("b");
         // if we try and use 'a' we should not change the map
         assertFalse(model.updatePodIfNotExist(a, podB));
