@@ -16,6 +16,7 @@
 package io.fabric8.jube.apimaster;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +48,11 @@ import io.fabric8.jube.process.ProcessManager;
 import io.fabric8.jube.proxy.KubeProxy;
 import io.fabric8.jube.replicator.Replicator;
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.Endpoints;
+import io.fabric8.kubernetes.api.model.EndpointsList;
 import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.Minion;
+import io.fabric8.kubernetes.api.model.MinionList;
 import io.fabric8.kubernetes.api.model.PodState;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.PodList;
@@ -63,6 +68,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static io.fabric8.jube.local.NodeHelper.getOrCreateCurrentState;
+import static io.fabric8.utils.Lists.notNullList;
 
 /**
  * Implements the local node controller
@@ -248,6 +254,100 @@ public class ApiMasterService implements KubernetesExtensions {
     @Override
     public String deleteService(@NotNull String serviceId) throws Exception {
         model.deleteService(serviceId);
+        return null;
+    }
+
+    @Override
+    public Endpoints endpointsForService(@NotNull String serviceId, String namespace) {
+        List<Pod> pods = podList();
+        Service service = getService(serviceId);
+        return createEndpointsForService(service, pods);
+    }
+
+    protected List<Pod> podList() {
+        PodList podList = getPods();
+        return notNullList(podList.getItems());
+    }
+
+    protected static Endpoints createEndpointsForService(Service service, List<Pod> pods) {
+        if (service == null) {
+            return null;
+        }
+        Endpoints answer = new Endpoints();
+        answer.setId(service.getId());
+        List<String> urls = new ArrayList<>();
+        answer.setEndpoints(urls);
+        IntOrString containerPort = service.getContainerPort();
+        if (containerPort != null) {
+            String strVal = containerPort.getStrVal();
+            if (strVal == null) {
+                Integer intVal = containerPort.getIntVal();
+                if (intVal != null) {
+                    strVal = intVal.toString();
+                }
+            }
+            if (strVal != null) {
+                String containerPortText = ":" + strVal;
+                List<Pod> podsForService = KubernetesHelper.getPodsForService(service, pods);
+                for (Pod pod : podsForService) {
+                    PodState currentState = pod.getCurrentState();
+                    if (currentState != null) {
+                        String podIP = currentState.getPodIP();
+                        if (podIP != null) {
+                            String url = podIP + containerPortText;
+                        }
+                    }
+                }
+            }
+        }
+        return answer;
+    }
+
+    @Override
+    public EndpointsList getEndpoints() {
+        EndpointsList answer = new EndpointsList();
+        List<Endpoints> list = new ArrayList<>();
+        answer.setItems(list);
+
+        ServiceList services = getServices();
+        if (services != null) {
+            List<Pod> pods = podList();
+            List<Service> items = notNullList(services.getItems());
+            for (Service service : items) {
+                Endpoints endpoints = createEndpointsForService(service, pods);
+                if (endpoints != null) {
+                    list.add(endpoints);
+                }
+            }
+        }
+        return answer;
+    }
+
+    @Override
+    public MinionList getMinions() {
+        // TODO we should replace HostNode with Minion...
+        MinionList answer = new MinionList();
+        List<Minion> items = new ArrayList<>();
+        answer.setItems(items);
+        Collection<HostNode> values = getHostNodes().values();
+        for (HostNode value : values) {
+            Minion minion = new Minion();
+            minion.setId(value.getId());
+            minion.setHostIP(value.getHostName());
+            items.add(minion);
+        }
+        return answer;
+    }
+
+    @Override
+    public Minion minion(@NotNull String name) {
+        MinionList minionList = getMinions();
+        List<Minion> minions = notNullList(minionList.getItems());
+        for (Minion minion : minions) {
+            if (Objects.equal(minion.getId(), name)) {
+                return minion;
+            }
+        }
         return null;
     }
 
