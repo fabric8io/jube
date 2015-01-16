@@ -15,19 +15,12 @@
  */
 package io.fabric8.jube.main;
 
-import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
-
 import io.fabric8.jube.apimaster.ApiMasterService;
 import io.fabric8.jube.util.JubeVersionUtils;
 import io.fabric8.kubernetes.api.KubernetesClient;
 import io.fabric8.kubernetes.api.KubernetesFactory;
-import io.fabric8.kubernetes.api.mbeans.AppView;
-import io.fabric8.kubernetes.api.mbeans.KubernetesManager;
+import io.fabric8.kubernetes.mbeans.AppView;
+import io.fabric8.kubernetes.mbeans.KubernetesManager;
 import io.fabric8.kubernetes.template.TemplateManager;
 import io.fabric8.utils.Systems;
 import io.hawt.aether.AetherFacade;
@@ -42,6 +35,13 @@ import org.eclipse.jetty.util.log.Slf4jLog;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.jboss.weld.environment.servlet.BeanManagerResourceBindingListener;
 import org.jboss.weld.environment.servlet.Listener;
+
+import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A main class to run jube.

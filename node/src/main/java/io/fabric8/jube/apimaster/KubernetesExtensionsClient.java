@@ -15,11 +15,11 @@
  */
 package io.fabric8.jube.apimaster;
 
-import javax.validation.constraints.NotNull;
-
 import io.fabric8.kubernetes.api.KubernetesClient;
 import io.fabric8.kubernetes.api.KubernetesFactory;
 import io.fabric8.kubernetes.api.model.Pod;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * A simple client for working with {@link KubernetesExtensions}
@@ -40,7 +40,7 @@ public class KubernetesExtensionsClient extends KubernetesClient {
 
     public KubernetesExtensions getExtensions() {
         if (extensions == null) {
-            extensions = getFactory().createWebClient(KubernetesExtensions.class);
+            extensions = getFactory(true).createWebClient(KubernetesExtensions.class);
         }
         return extensions;
     }
