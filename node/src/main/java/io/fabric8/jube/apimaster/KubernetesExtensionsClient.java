@@ -31,11 +31,15 @@ public class KubernetesExtensionsClient extends KubernetesClient {
     }
 
     public KubernetesExtensionsClient(String url) {
-        super(url);
+        this(createJubeFactory(url));
+    }
+
+    public static KubernetesFactory createJubeFactory(String address) {
+        return new KubernetesFactory(address, true, false);
     }
 
     public KubernetesExtensionsClient(KubernetesFactory factory) {
-        super(factory);
+        super(factory, factory);
     }
 
     public KubernetesExtensions getExtensions() {

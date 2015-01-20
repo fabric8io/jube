@@ -203,13 +203,12 @@ public final class Main {
     }
 
     protected static void initialiseHawtioStuff() throws Exception {
-        final String kubernetesAddress = "http://" + ApiMasterService.getHostName() + ":8585/";
-        KubernetesClient kubernetesClient = new KubernetesClient(new KubernetesFactory(kubernetesAddress));
+        final KubernetesClient kubernetesClient = createKubernetesClient();
 
         KubernetesService kubernetesService = new KubernetesService() {
             @Override
             public String getKubernetesAddress() {
-                return kubernetesAddress;
+                return kubernetesClient.getAddress();
             }
         };
         kubernetesService.init();
@@ -217,16 +216,22 @@ public final class Main {
         AetherFacade aetherFacade = new AetherFacade();
         aetherFacade.init();
 
-        KubernetesManager kubernetesManager = new KubernetesManager();
-        kubernetesManager.setKubernetes(kubernetesClient);
+        KubernetesManager kubernetesManager = new KubernetesManager(kubernetesClient);
         kubernetesManager.init();
 
         TemplateManager templateManager = new TemplateManager();
         templateManager.init();
     }
 
+    protected static KubernetesClient createKubernetesClient() {
+        final String kubernetesAddress = "http://" + ApiMasterService.getHostName() + ":8585/";
+        KubernetesFactory factory = new KubernetesFactory(kubernetesAddress, true, false);
+        return new KubernetesClient(factory, factory);
+    }
+
     protected static void initialiseHawtioStuffAfterStart() throws Exception {
-        AppView appView = new AppView();
+        KubernetesClient kubernetesClient = createKubernetesClient();
+        AppView appView = new AppView(kubernetesClient);
         appView.init();
     }
 
