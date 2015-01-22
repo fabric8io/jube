@@ -34,6 +34,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -95,6 +96,7 @@ public class ApiMasterService implements KubernetesExtensions {
     private final KubeProxy kubeProxy;
     private final HostNodeModel hostNodeModel;
     private final ExecutorService localCreateThreadPool = Executors.newFixedThreadPool(10);
+    private String namespace = "default";
 
     @Inject
     public ApiMasterService(ProcessManager processManager, ApiMasterKubernetesModel model, Replicator replicator, ProcessMonitor processMonitor, KubeProxy kubeProxy, HostNodeModel hostNodeModel,
@@ -129,6 +131,14 @@ public class ApiMasterService implements KubernetesExtensions {
         return port;
     }
 
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
     // Pods
     //-------------------------------------------------------------------------
 
@@ -149,6 +159,11 @@ public class ApiMasterService implements KubernetesExtensions {
         return model.remoteCreatePod(entity);
     }
 
+    @Override
+    public String createPod(Pod pod, String namespace) throws Exception {
+        pod.setNamespace(namespace);
+        return createPod(pod);
+    }
 
     @Override
     public String updatePod(final @NotNull String podId, final Pod pod) throws Exception {
@@ -172,9 +187,16 @@ public class ApiMasterService implements KubernetesExtensions {
 
     @Override
     public String deletePod(@NotNull String podId) throws Exception {
-        model.deletePod(podId);
+        model.deletePod(podId, namespace);
         return null;
     }
+
+    @Override
+    public String deletePod(@NotNull String podId, String namespace) throws Exception {
+        model.deletePod(podId, namespace);
+        return null;
+    }
+
 
 
     // Replication Controllers
@@ -200,6 +222,13 @@ public class ApiMasterService implements KubernetesExtensions {
     }
 
     @Override
+    public String createReplicationController(ReplicationController replicationController, String namespace) throws Exception {
+        replicationController.setNamespace(namespace);
+        return createReplicationController(replicationController);
+    }
+
+
+    @Override
     public String updateReplicationController(@NotNull String controllerId, ReplicationController replicationController) throws Exception {
         // lets ensure there's a default namespace set
         String namespace = replicationController.getNamespace();
@@ -212,9 +241,16 @@ public class ApiMasterService implements KubernetesExtensions {
 
     @Override
     public String deleteReplicationController(@NotNull String controllerId) throws Exception {
-        model.deleteReplicationController(controllerId);
+        model.deleteReplicationController(controllerId, namespace);
         return null;
     }
+
+    @Override
+    public String deleteReplicationController(@NotNull String controllerId, String namespace) throws Exception {
+        model.deleteReplicationController(controllerId, namespace);
+        return null;
+    }
+
 
     // Services
     //-------------------------------------------------------------------------
@@ -238,6 +274,13 @@ public class ApiMasterService implements KubernetesExtensions {
     }
 
     @Override
+    public String createService(Service service, String namespace) throws Exception {
+        service.setNamespace(namespace);
+        return createService(service);
+    }
+
+
+    @Override
     public String updateService(@NotNull String id, Service entity) throws Exception {
         // lets set the IP
         entity.setPortalIP(getHostName());
@@ -253,7 +296,13 @@ public class ApiMasterService implements KubernetesExtensions {
 
     @Override
     public String deleteService(@NotNull String serviceId) throws Exception {
-        model.deleteService(serviceId);
+        model.deleteService(serviceId, namespace);
+        return null;
+    }
+
+    @Override
+    public String deleteService(@NotNull String serviceId, String namespace) throws Exception {
+        model.deleteService(serviceId, namespace);
         return null;
     }
 
@@ -425,8 +474,8 @@ public class ApiMasterService implements KubernetesExtensions {
     @Path("local/pods/{id}")
     @Consumes("text/plain")
     @Override
-    public String deleteLocalPod(@PathParam("id") @NotNull String id) throws Exception {
-        NodeHelper.deletePod(processManager, model, id);
+    public String deleteLocalPod(@PathParam("id") @NotNull String id, @QueryParam("namespace") String namespace) throws Exception {
+        NodeHelper.deletePod(processManager, model, id, namespace);
         return null;
     }
 

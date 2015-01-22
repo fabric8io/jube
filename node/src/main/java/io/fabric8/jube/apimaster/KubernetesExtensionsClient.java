@@ -18,13 +18,18 @@ package io.fabric8.jube.apimaster;
 import io.fabric8.kubernetes.api.KubernetesClient;
 import io.fabric8.kubernetes.api.KubernetesFactory;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodList;
 
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
 
 /**
  * A simple client for working with {@link KubernetesExtensions}
  */
-public class KubernetesExtensionsClient extends KubernetesClient {
+public class KubernetesExtensionsClient extends KubernetesClient implements KubernetesExtensions {
     private KubernetesExtensions extensions;
 
     public KubernetesExtensionsClient() {
@@ -57,7 +62,17 @@ public class KubernetesExtensionsClient extends KubernetesClient {
         return getExtensions().createLocalPod(entity);
     }
 
-    public String deleteLocalPod(@NotNull String podId) throws Exception {
-        return getExtensions().deleteLocalPod(podId);
+    @GET
+    @Path("local/pods")
+    @Consumes("application/json")
+    public PodList getLocalPods() {
+        return getExtensions().getLocalPods();
+    }
+
+    @DELETE
+    @Path("local/pods/{id}")
+    @Consumes("text/plain")
+    public String deleteLocalPod(@NotNull String id, String namespace) throws Exception {
+        return getExtensions().deleteLocalPod(id, namespace);
     }
 }

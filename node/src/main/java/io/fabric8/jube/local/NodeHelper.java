@@ -445,7 +445,7 @@ public final class NodeHelper {
 
         try {
             LOG.info("Deleting pod: {}", pod.getId());
-            model.deletePod(pod.getId());
+            model.deletePod(pod.getId(), pod.getNamespace());
         } catch (Exception e) {
             // ignore
             LOG.warn("Error during deleting pod: " + pod.getId() + ". This exception is ignored", e);
@@ -552,8 +552,8 @@ public final class NodeHelper {
         return currentState;
     }
 
-    public static void deletePod(ProcessManager processManager, KubernetesModel model, String podId) throws Exception {
-        Pod pod = model.deletePod(podId);
+    public static void deletePod(ProcessManager processManager, KubernetesModel model, String podId, String namespace) throws Exception {
+        Pod pod = model.deletePod(podId, namespace);
         if (pod != null) {
             List<Container> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);
             NodeHelper.deleteContainers(processManager, model, pod, NodeHelper.getOrCreateCurrentState(pod), desiredContainers);

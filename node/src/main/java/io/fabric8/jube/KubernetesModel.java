@@ -47,7 +47,7 @@ public interface KubernetesModel {
 
     boolean updatePodIfNotExist(String id, Pod pod);
 
-    Pod deletePod(String podId);
+    Pod deletePod(String podId, String namespace);
 
     ImmutableMap<String, PodCurrentContainer> getPodRunningContainers(KubernetesModel model);
 
@@ -59,7 +59,7 @@ public interface KubernetesModel {
 
     void updateReplicationController(String id, ReplicationController replicationController);
 
-    void deleteReplicationController(String controllerId);
+    void deleteReplicationController(String controllerId, String namespace);
 
     ServiceList getServices();
 
@@ -69,7 +69,7 @@ public interface KubernetesModel {
 
     void updateService(String id, Service entity);
 
-    void deleteService(String serviceId);
+    void deleteService(String serviceId, String namespace);
 
     String createID(String kind);
 }

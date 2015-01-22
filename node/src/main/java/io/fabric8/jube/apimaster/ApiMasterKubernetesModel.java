@@ -121,9 +121,9 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     // Updating API which just writes to ZK and waits for ZK watches to update in memory
     // -------------------------------------------------------------------------
     @Override
-    public Pod deletePod(String podId) {
+    public Pod deletePod(String podId, String namespace) {
         if (Strings.isNotBlank(podId)) {
-            Pod answer = memoryModel.deletePod(podId);
+            Pod answer = memoryModel.deletePod(podId, namespace);
             deleteEntity(zkPathForPod(podId));
             return answer;
         } else {
@@ -153,20 +153,20 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     }
 
     @Override
-    public void deleteService(String id) {
+    public void deleteService(String id, String namespace) {
         deleteEntity(zkPathForService(id));
         //memoryModel.deleteService(id);
     }
 
     @Override
     public void updateReplicationController(String id, ReplicationController entity) {
-        writeEntity(zkPathForReplicationController(id), entity);
+        writeEntity(zkPathForReplicationController(id, entity.getNamespace()), entity);
         //memoryModel.updateReplicationController(id, entity);
     }
 
     @Override
-    public void deleteReplicationController(String id) {
-        deleteEntity(zkPathForReplicationController(id));
+    public void deleteReplicationController(String id, String namespace) {
+        deleteEntity(zkPathForReplicationController(id, namespace));
         // memoryModel.deleteReplicationController(id);
     }
 
@@ -301,7 +301,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         String id = pod.getId();
         LOG.info("Attempting to delete pod: " + id + " on host: " + hostNode.getWebUrl());
         KubernetesExtensionsClient client = createClient(hostNode);
-        return client.deleteLocalPod(id);
+        return client.deleteLocalPod(id, pod.getNamespace());
     }
 
 
@@ -324,8 +324,11 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         return zkPath + "/" + NodeHelper.KIND_SERVICE + "-" + id;
     }
 
-    protected String zkPathForReplicationController(String id) {
-        return zkPath + "/" + NodeHelper.KIND_REPLICATION_CONTROLLER + "-" + id;
+    protected String zkPathForReplicationController(String id, String namespace) {
+        if (Strings.isNotBlank(namespace)) {
+            namespace = "default";
+        }
+        return zkPath + "/" + NodeHelper.KIND_REPLICATION_CONTROLLER + "-" + namespace + "-" + id;
     }
 
 
@@ -402,7 +405,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         if (remove) {
             String id = entity.getId();
             if (Strings.isNotBlank(id)) {
-                memoryModel.deletePod(id);
+                memoryModel.deletePod(id, entity.getNamespace());
                 podListeners.entityDeleted(id);
 
             }
@@ -422,7 +425,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         if (remove) {
             String id = entity.getId();
             if (Strings.isNotBlank(id)) {
-                memoryModel.deleteReplicationController(id);
+                memoryModel.deleteReplicationController(id, entity.getNamespace());
                 replicationControllerListeners.entityDeleted(id);
             }
         } else {
@@ -436,7 +439,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         if (remove) {
             String id = entity.getId();
             if (Strings.isNotBlank(id)) {
-                memoryModel.deleteService(id);
+                memoryModel.deleteService(id, entity.getNamespace());
                 serviceListeners.entityDeleted(id);
             }
         } else {

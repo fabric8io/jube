@@ -22,6 +22,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 
 import io.fabric8.kubernetes.api.Kubernetes;
 import io.fabric8.kubernetes.api.model.PodList;
@@ -43,6 +44,6 @@ public interface KubernetesExtensions extends Kubernetes {
     @DELETE
     @Path("local/pods/{id}")
     @Consumes("text/plain")
-    String deleteLocalPod(@PathParam("id") @NotNull String id) throws Exception;
+    String deleteLocalPod(@PathParam("id") @NotNull String id, @QueryParam("namespace") String namespace) throws Exception;
 
 }

@@ -43,11 +43,22 @@ import io.hawt.util.Strings;
  * A pure in memory implementation of the {@link KubernetesModel}
  */
 public class LocalKubernetesModel implements KubernetesModel {
-    private ConcurrentHashMap<String, Pod> podMap = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<String, ReplicationController> replicationControllerMap = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<String, Service> serviceMap = new ConcurrentHashMap<>();
+    public static final String DEFAULT_NAMESPACE = "default";
+    private ConcurrentHashMap<String, NamespaceModel> namespaces = new ConcurrentHashMap<>();
+    private String namespace = DEFAULT_NAMESPACE;
 
     public LocalKubernetesModel() {
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    /**
+     * Sets the default namespace
+     */
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
     }
 
     // Pods
@@ -55,13 +66,21 @@ public class LocalKubernetesModel implements KubernetesModel {
 
     @Override
     public ImmutableMap<String, Pod> getPodMap() {
-        return ImmutableMap.copyOf(podMap);
+        return getPodMap(namespace);
+    }
+
+    public ImmutableMap<String, Pod> getPodMap(String namespace) {
+        return ImmutableMap.copyOf(getInternalPodMap(namespace));
     }
 
     @Override
     public PodList getPods() {
+        return getPods(namespace);
+    }
+
+    public PodList getPods(String namespace) {
         PodList answer = new PodList();
-        answer.setItems(Lists.newArrayList(podMap.values()));
+        answer.setItems(Lists.newArrayList(getInternalPodMap(namespace).values()));
         return answer;
     }
 
@@ -77,11 +96,16 @@ public class LocalKubernetesModel implements KubernetesModel {
 
     @Override
     public Pod getPod(String id) {
-        return podMap.get(id);
+        return getInternalPodMap(namespace).get(id);
+    }
+
+    public Pod getPod(String id, String namespace) {
+        return getInternalPodMap(namespace).get(id);
     }
 
     @Override
     public void updatePod(String id, Pod pod) {
+        String namespace = defaultNamespace(pod.getNamespace());
         id = getOrCreateId(id, NodeHelper.KIND_POD);
 
         // lets make sure that for each container we have a current container created
@@ -97,7 +121,7 @@ public class LocalKubernetesModel implements KubernetesModel {
                 info.put(name, containerInfo);
             }
         }
-        podMap.put(id, pod);
+        getInternalPodMap(namespace).put(id, pod);
     }
 
     @Override
@@ -113,7 +137,7 @@ public class LocalKubernetesModel implements KubernetesModel {
      */
     @Override
     public boolean updatePodIfNotExist(String id, Pod pod) {
-        Pod oldValue = podMap.putIfAbsent(id, pod);
+        Pod oldValue = getInternalPodMap(namespace).putIfAbsent(id, pod);
         return oldValue == null;
     }
 
@@ -123,11 +147,12 @@ public class LocalKubernetesModel implements KubernetesModel {
      * <b>Note</b> you should make sure to delete any container processes too!
      */
     @Override
-    public Pod deletePod(String podId) {
+    public Pod deletePod(String podId, String namespace) {
+        namespace = defaultNamespace(namespace);
         if (Strings.isBlank(podId)) {
             return null;
         }
-        return podMap.remove(podId);
+        return getInternalPodMap(namespace).remove(podId);
     }
 
     /**
@@ -136,7 +161,7 @@ public class LocalKubernetesModel implements KubernetesModel {
     @Override
     public ImmutableMap<String, PodCurrentContainer> getPodRunningContainers(KubernetesModel model) {
         Map<String, PodCurrentContainer> answer = new HashMap<>();
-        for (Map.Entry<String, Pod> entry : podMap.entrySet()) {
+        for (Map.Entry<String, Pod> entry : getInternalPodMap(namespace).entrySet()) {
             String podId = entry.getKey();
             Pod podSchema = entry.getValue();
             Map<String, ContainerStatus> currentContainers = KubernetesHelper.getCurrentContainers(podSchema);
@@ -156,31 +181,33 @@ public class LocalKubernetesModel implements KubernetesModel {
 
     @Override
     public ReplicationController getReplicationController(String id) {
-        return replicationControllerMap.get(id);
+        return getInternalReplicationControllerMap(namespace).get(id);
     }
 
     @Override
     public ReplicationControllerList getReplicationControllers() {
         ReplicationControllerList answer = new ReplicationControllerList();
-        answer.setItems(Lists.newArrayList(replicationControllerMap.values()));
+        answer.setItems(Lists.newArrayList(getInternalReplicationControllerMap(namespace).values()));
         return answer;
     }
 
     @Override
     public ImmutableMap<String, ReplicationController> getReplicationControllerMap() {
-        return ImmutableMap.copyOf(replicationControllerMap);
+        return ImmutableMap.copyOf(getInternalReplicationControllerMap(namespace));
     }
 
     @Override
     public void updateReplicationController(String id, ReplicationController replicationController) {
         id = getOrCreateId(id, NodeHelper.KIND_REPLICATION_CONTROLLER);
-        replicationControllerMap.put(id, replicationController);
+        String namespace = defaultNamespace(replicationController.getNamespace());
+        getInternalReplicationControllerMap(namespace).put(id, replicationController);
     }
 
     @Override
-    public void deleteReplicationController(String controllerId) {
-        replicationControllerMap.remove(controllerId);
-        System.out.println("Deleted replicationController " + controllerId + ". Now has " + replicationControllerMap.size() + " service(s)");
+    public void deleteReplicationController(String controllerId, String namespace) {
+        namespace = defaultNamespace(namespace);
+        getInternalReplicationControllerMap(namespace).remove(controllerId);
+        System.out.println("Deleted replicationController " + controllerId + ". Now has " + getInternalReplicationControllerMap(namespace).size() + " service(s)");
     }
 
 
@@ -190,30 +217,32 @@ public class LocalKubernetesModel implements KubernetesModel {
     @Override
     public ServiceList getServices() {
         ServiceList answer = new ServiceList();
-        answer.setItems(Lists.newArrayList(serviceMap.values()));
+        answer.setItems(Lists.newArrayList(getInternalServiceMap(namespace).values()));
         return answer;
     }
 
     @Override
     public Service getService(String id) {
-        return serviceMap.get(id);
+        return getInternalServiceMap(namespace).get(id);
     }
 
     @Override
     public ImmutableMap<String, Service> getServiceMap() {
-        return ImmutableMap.copyOf(serviceMap);
+        return ImmutableMap.copyOf(getInternalServiceMap(namespace));
     }
 
     @Override
     public void updateService(String id, Service entity) {
+        String namespace = defaultNamespace(entity.getNamespace());
         id = getOrCreateId(id, NodeHelper.KIND_SERVICE);
-        serviceMap.put(id, entity);
+        getInternalServiceMap(namespace).put(id, entity);
     }
 
     @Override
-    public void deleteService(String serviceId) {
-        serviceMap.remove(serviceId);
-        System.out.println("Deleted service " + serviceId + ". Now has " + serviceMap.size() + " service(s)");
+    public void deleteService(String serviceId, String namespace) {
+        namespace = defaultNamespace(namespace);
+        getInternalServiceMap(namespace).remove(serviceId);
+        System.out.println("Deleted service " + serviceId + ". Now has " + getInternalServiceMap(namespace).size() + " service(s)");
 
     }
 
@@ -226,6 +255,50 @@ public class LocalKubernetesModel implements KubernetesModel {
     @Override
     public String createID(String kind) {
         return kind + "-" + randomUUID().toString();
+    }
+
+    protected ConcurrentHashMap<String, Pod> getInternalPodMap(String namespace) {
+        return namespaceModel(namespace).podMap;
+    }
+
+                 
+    protected ConcurrentHashMap<String, ReplicationController> getInternalReplicationControllerMap(String namespace) {
+        return namespaceModel(namespace).replicationControllerMap;
+    }
+
+    protected ConcurrentHashMap<String, Service> getInternalServiceMap(String namespace) {
+        return namespaceModel(namespace).serviceMap;
+    }
+
+    protected class NamespaceModel {
+        public ConcurrentHashMap<String, Pod> podMap = new ConcurrentHashMap<>();
+        public ConcurrentHashMap<String, ReplicationController> replicationControllerMap = new ConcurrentHashMap<>();
+        public ConcurrentHashMap<String, Service> serviceMap = new ConcurrentHashMap<>();
+
+    }
+    
+    
+    /**
+     * Returns the namespace model for the given namespace id
+     */
+    protected NamespaceModel namespaceModel(String namespace) {
+        namespace = defaultNamespace(namespace);
+        NamespaceModel answer = namespaces.get(namespace);
+        if (answer == null) {
+            answer = new NamespaceModel();
+            namespaces.put(namespace ,answer);
+        }
+        return answer;
+    }
+
+    protected String defaultNamespace(String namespace) {
+        if (Strings.isBlank(namespace)) {
+            namespace = this.namespace;
+        }
+        if (Strings.isBlank(namespace)) {
+            namespace = DEFAULT_NAMESPACE;
+        }
+        return namespace;
     }
 
 }
