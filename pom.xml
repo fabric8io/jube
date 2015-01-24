@@ -96,8 +96,8 @@
     TODO remove the snapshot dependency after we've cut a new fabric8 release
     <fabric8.version>2.0.23</fabric8.version>
 -->
-    <fabric8.version>2.2-SNAPSHOT</fabric8.version>
-    <hawtio.version>1.4.45</hawtio.version>
+    <fabric8.version>2.0.24</fabric8.version>
+    <hawtio.version>1.4.46</hawtio.version>
     <hawtio.swagger.version>1.0.2</hawtio.swagger.version>
 <!--
     <hawtio.swagger.version>1.1.0-SNAPSHOT</hawtio.swagger.version>
