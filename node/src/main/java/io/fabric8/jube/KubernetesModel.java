@@ -31,15 +31,23 @@ import io.fabric8.utils.Filter;
 /**
  */
 public interface KubernetesModel {
+    String getNamespace();
+
+    void setNamespace(String namespace);
+
     ImmutableMap<String, Pod> getPodMap();
 
     PodList getPods();
+
+    PodList getPods(String namespace);
 
     ImmutableList<Pod> getPods(Map<String, String> replicaSelector);
 
     ImmutableList<Pod> getPods(Filter<Pod> podFilter);
 
     Pod getPod(String id);
+
+    Pod getPod(String id, String namespace);
 
     void updatePod(String id, Pod pod);
 
@@ -53,7 +61,11 @@ public interface KubernetesModel {
 
     ReplicationController getReplicationController(String id);
 
+    ReplicationController getReplicationController(String id, String namespace);
+
     ReplicationControllerList getReplicationControllers();
+
+    ReplicationControllerList getReplicationControllers(String namespace);
 
     ImmutableMap<String, ReplicationController> getReplicationControllerMap();
 
@@ -63,7 +75,11 @@ public interface KubernetesModel {
 
     ServiceList getServices();
 
+    ServiceList getServices(String namespace);
+
     Service getService(String id);
+
+    Service getService(String id, String namespace);
 
     ImmutableMap<String, Service> getServiceMap();
 

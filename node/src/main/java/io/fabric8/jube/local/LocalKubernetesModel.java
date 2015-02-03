@@ -50,6 +50,7 @@ public class LocalKubernetesModel implements KubernetesModel {
     public LocalKubernetesModel() {
     }
 
+    @Override
     public String getNamespace() {
         return namespace;
     }
@@ -57,6 +58,7 @@ public class LocalKubernetesModel implements KubernetesModel {
     /**
      * Sets the default namespace
      */
+    @Override
     public void setNamespace(String namespace) {
         this.namespace = namespace;
     }
@@ -78,6 +80,7 @@ public class LocalKubernetesModel implements KubernetesModel {
         return getPods(namespace);
     }
 
+    @Override
     public PodList getPods(String namespace) {
         PodList answer = new PodList();
         answer.setItems(Lists.newArrayList(getInternalPodMap(namespace).values()));
@@ -99,6 +102,7 @@ public class LocalKubernetesModel implements KubernetesModel {
         return getInternalPodMap(namespace).get(id);
     }
 
+    @Override
     public Pod getPod(String id, String namespace) {
         return getInternalPodMap(namespace).get(id);
     }
@@ -181,11 +185,21 @@ public class LocalKubernetesModel implements KubernetesModel {
 
     @Override
     public ReplicationController getReplicationController(String id) {
+        return getReplicationController(id, namespace);
+    }
+
+    @Override
+    public ReplicationController getReplicationController(String id, String namespace) {
         return getInternalReplicationControllerMap(namespace).get(id);
     }
 
     @Override
     public ReplicationControllerList getReplicationControllers() {
+        return getReplicationControllers(namespace);
+    }
+
+    @Override
+    public ReplicationControllerList getReplicationControllers(String namespace) {
         ReplicationControllerList answer = new ReplicationControllerList();
         answer.setItems(Lists.newArrayList(getInternalReplicationControllerMap(namespace).values()));
         return answer;
@@ -216,6 +230,11 @@ public class LocalKubernetesModel implements KubernetesModel {
 
     @Override
     public ServiceList getServices() {
+        return getServices(namespace);
+    }
+
+    @Override
+    public ServiceList getServices(String namespace) {
         ServiceList answer = new ServiceList();
         answer.setItems(Lists.newArrayList(getInternalServiceMap(namespace).values()));
         return answer;
@@ -223,6 +242,11 @@ public class LocalKubernetesModel implements KubernetesModel {
 
     @Override
     public Service getService(String id) {
+        return getService(id, namespace);
+    }
+
+    @Override
+    public Service getService(String id, String namespace) {
         return getInternalServiceMap(namespace).get(id);
     }
 

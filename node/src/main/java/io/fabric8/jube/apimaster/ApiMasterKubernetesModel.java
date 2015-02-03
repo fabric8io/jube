@@ -174,6 +174,17 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     // -------------------------------------------------------------------------
 
     @Override
+    public String getNamespace() {
+        return memoryModel.getNamespace();
+    }
+
+    @Override
+    public void setNamespace(String namespace) {
+        memoryModel.setNamespace(namespace);
+    }
+
+
+    @Override
     public String getOrCreateId(String id, String kind) {
         return memoryModel.getOrCreateId(id, kind);
     }
@@ -204,9 +215,20 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     }
 
     @Override
+    public PodList getPods(String namespace) {
+        return memoryModel.getPods(namespace);
+    }
+
+    @Override
+    public Pod getPod(String id, String namespace) {
+        return memoryModel.getPod(id, namespace);
+    }
+
+    @Override
     public ImmutableMap<String, PodCurrentContainer> getPodRunningContainers(KubernetesModel model) {
         return memoryModel.getPodRunningContainers(model);
     }
+
 
     @Override
     public ReplicationController getReplicationController(String id) {
@@ -224,6 +246,17 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     }
 
     @Override
+    public ReplicationController getReplicationController(String id, String namespace) {
+        return memoryModel.getReplicationController(id, namespace);
+    }
+
+    @Override
+    public ReplicationControllerList getReplicationControllers(String namespace) {
+        return memoryModel.getReplicationControllers(namespace);
+    }
+
+
+    @Override
     public ServiceList getServices() {
         return memoryModel.getServices();
     }
@@ -231,6 +264,16 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     @Override
     public Service getService(String id) {
         return memoryModel.getService(id);
+    }
+
+    @Override
+    public ServiceList getServices(String namespace) {
+        return memoryModel.getServices(namespace);
+    }
+
+    @Override
+    public Service getService(String id, String namespace) {
+        return memoryModel.getService(id, namespace);
     }
 
     @Override

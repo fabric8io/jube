@@ -155,6 +155,16 @@ public class ApiMasterService implements KubernetesExtensions {
     }
 
     @Override
+    public Pod getPod(@NotNull String podId, String namespace) {
+        return model.getPod(podId, namespace);
+    }
+
+    @Override
+    public PodList getPods(String namespace) {
+        return model.getPods(namespace);
+    }
+
+    @Override
     public String createPod(Pod entity) throws Exception {
         return model.remoteCreatePod(entity);
     }
@@ -197,7 +207,27 @@ public class ApiMasterService implements KubernetesExtensions {
         return null;
     }
 
+    @Override
+    public String updatePod(@NotNull String podId, Pod pod, String namespace) throws Exception {
+        pod.setNamespace(namespace);
+        return updatePod(podId, pod);
+    }
 
+    @Override
+    public ServiceList getServices(String namespace) {
+        return model.getServices(namespace);
+    }
+
+    @Override
+    public Service getService(@NotNull String serviceId, String namespace) {
+        return model.getService(serviceId, namespace);
+    }
+
+    @Override
+    public String updateService(@NotNull String serviceId, Service service, String namespace) throws Exception {
+        service.setNamespace(namespace);
+        return updateService(serviceId, service);
+    }
 
     // Replication Controllers
     //-------------------------------------------------------------------------
@@ -212,6 +242,16 @@ public class ApiMasterService implements KubernetesExtensions {
     public ReplicationController getReplicationController(@NotNull String controllerId) {
         Map<String, ReplicationController> map = KubernetesHelper.getReplicationControllerMap(this);
         return map.get(controllerId);
+    }
+
+    @Override
+    public ReplicationControllerList getReplicationControllers(String namespace) {
+        return model.getReplicationControllers(namespace);
+    }
+
+    @Override
+    public ReplicationController getReplicationController(@NotNull String replicationControllerId, String namespace) {
+        return model.getReplicationController(replicationControllerId, namespace);
     }
 
     @Override
