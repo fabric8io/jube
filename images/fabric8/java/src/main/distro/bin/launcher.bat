@@ -75,7 +75,12 @@ rem TODO
 rem set JVM_ARGS=jvmArgs
 set JVM_ARGS=%JVM_ARGS%
 set APP_ARGS=%MAIN_ARGS%
-set MAIN_JAR=%APP_BASE%\maven\main.jar
+if "%JAR%" == "" (
+  set MAIN_JAR=%APP_BASE%\maven\main.jar
+) else (
+  set MAIN_JAR="%JAR%"
+)
+
 if "%MAIN%" == "" (
   set MAIN=%MAIN%
 )
