@@ -96,7 +96,7 @@
     <maven.compiler.argument.source>${maven.compiler.source}</maven.compiler.argument.source>
 
     <maven.enforcer.version>3.1.1</maven.enforcer.version>
-    <fabric8.version>2.0.25</fabric8.version>
+    <fabric8.version>2.0.26</fabric8.version>
     <hawtio.version>1.4.47</hawtio.version>
     <hawtio.swagger.version>1.0.2</hawtio.swagger.version>
 <!--
@@ -390,6 +390,24 @@
         </plugins>
       </build>
     </profile>
-  </profiles>
 
+    <!-- enables the APT dependency so that it can be disabled in IDE builds -->
+    <profile>
+      <id>apt</id>
+      <activation>
+        <property>
+            <name>!dummy.prop.to.keep.this.profile.active.even.when.other.profiles.are.active</name>
+        </property>
+      </activation>
+
+      <dependencies>
+        <!-- enable the APT processor -->
+        <dependency>
+          <groupId>io.fabric8</groupId>
+          <artifactId>fabric8-apt</artifactId>
+          <scope>provided</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 </project>
