@@ -29,7 +29,7 @@
     <artifactId>parent-project</artifactId>
     <packaging>pom</packaging>
 
-    <name>Jube :: Images :: WildFly</name>
+    <name>Jube :: Images :: JBoss</name>
 
     <properties>
         <wildfly.version>8.2.0.Final</wildfly.version>

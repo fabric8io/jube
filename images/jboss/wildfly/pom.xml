@@ -26,11 +26,11 @@
         <version>2.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>default</artifactId>
+    <artifactId>wildfly</artifactId>
 
     <packaging>pom</packaging>
 
-    <name>Jube :: Images :: WildFly :: Default</name>
+    <name>Jube :: Images :: JBoss :: WildFly</name>
 
     <dependencies>
         <dependency>
