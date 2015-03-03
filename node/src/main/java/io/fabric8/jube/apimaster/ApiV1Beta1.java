@@ -109,7 +109,6 @@ public class ApiV1Beta1 implements KubernetesExtensions {
         return delegate.createLocalPod(entity);
     }
 
-    @Override
     public String createPod(Pod entity) throws Exception {
         return delegate.createPod(entity);
     }
@@ -119,7 +118,6 @@ public class ApiV1Beta1 implements KubernetesExtensions {
         return delegate.createPod(pod, namespace);
     }
 
-    @Override
     public String createReplicationController(ReplicationController entity) throws Exception {
         return delegate.createReplicationController(entity);
     }
@@ -130,6 +128,10 @@ public class ApiV1Beta1 implements KubernetesExtensions {
     }
 
     @Override
+    public String updateReplicationController(@NotNull String id, ReplicationController replicationController, String namespace) throws Exception {
+        return delegate.updateReplicationController(id, replicationController, namespace);
+    }
+
     public String createService(Service entity) throws Exception {
         return delegate.createService(entity);
     }
@@ -147,17 +149,14 @@ public class ApiV1Beta1 implements KubernetesExtensions {
         return delegate.deleteLocalPod(id, namespace);
     }
 
-    @Override
     public String deletePod(@NotNull String podId) throws Exception {
         return delegate.deletePod(podId);
     }
 
-    @Override
     public String deletePod(@NotNull String podId, String namespace) throws Exception {
         return delegate.deletePod(podId, namespace);
     }
 
-    @Override
     public String deleteReplicationController(@NotNull String controllerId) throws Exception {
         return delegate.deleteReplicationController(controllerId);
     }
@@ -168,6 +167,10 @@ public class ApiV1Beta1 implements KubernetesExtensions {
     }
 
     @Override
+    public EndpointsList getEndpoints(String s) {
+        return delegate.getEndpoints(s);
+    }
+
     public String deleteService(@NotNull String serviceId) throws Exception {
         return delegate.deleteService(serviceId);
     }
@@ -182,7 +185,6 @@ public class ApiV1Beta1 implements KubernetesExtensions {
         return delegate.endpointsForService(serviceId, namespace);
     }
 
-    @Override
     public EndpointsList getEndpoints() {
         return delegate.getEndpoints();
     }
@@ -200,7 +202,6 @@ public class ApiV1Beta1 implements KubernetesExtensions {
         return delegate.getMinions();
     }
 
-    @Override
     public Pod getPod(@NotNull String podId) {
         return delegate.getPod(podId);
     }
@@ -210,7 +211,6 @@ public class ApiV1Beta1 implements KubernetesExtensions {
         return delegate.getPod(podId, namespace);
     }
 
-    @Override
     public PodList getPods() {
         return delegate.getPods();
     }
@@ -220,7 +220,6 @@ public class ApiV1Beta1 implements KubernetesExtensions {
         return delegate.getPods(namespace);
     }
 
-    @Override
     public ReplicationController getReplicationController(@NotNull String controllerId) {
         return delegate.getReplicationController(controllerId);
     }
@@ -230,7 +229,6 @@ public class ApiV1Beta1 implements KubernetesExtensions {
         return delegate.getReplicationController(replicationControllerId, namespace);
     }
 
-    @Override
     public ReplicationControllerList getReplicationControllers() {
         return delegate.getReplicationControllers();
     }
@@ -240,7 +238,6 @@ public class ApiV1Beta1 implements KubernetesExtensions {
         return delegate.getReplicationControllers(namespace);
     }
 
-    @Override
     public Service getService(@NotNull String serviceId) {
         return delegate.getService(serviceId);
     }
@@ -250,7 +247,6 @@ public class ApiV1Beta1 implements KubernetesExtensions {
         return delegate.getService(serviceId, namespace);
     }
 
-    @Override
     public ServiceList getServices() {
         return delegate.getServices();
     }
@@ -265,7 +261,6 @@ public class ApiV1Beta1 implements KubernetesExtensions {
         return delegate.minion(name);
     }
 
-    @Override
     public String updatePod(@NotNull String podId, Pod pod) throws Exception {
         return delegate.updatePod(podId, pod);
     }
@@ -275,12 +270,10 @@ public class ApiV1Beta1 implements KubernetesExtensions {
         return delegate.updatePod(podId, pod, namespace);
     }
 
-    @Override
     public String updateReplicationController(@NotNull String controllerId, ReplicationController replicationController) throws Exception {
         return delegate.updateReplicationController(controllerId, replicationController);
     }
 
-    @Override
     public String updateService(@NotNull String id, Service entity) throws Exception {
         return delegate.updateService(id, entity);
     }

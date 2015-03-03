@@ -143,12 +143,10 @@ public class ApiMasterService implements KubernetesExtensions {
     //-------------------------------------------------------------------------
 
 
-    @Override
     public PodList getPods() {
         return model.getPods();
     }
 
-    @Override
     public Pod getPod(@NotNull String podId) {
         Map<String, Pod> map = model.getPodMap();
         return map.get(podId);
@@ -164,7 +162,6 @@ public class ApiMasterService implements KubernetesExtensions {
         return model.getPods(namespace);
     }
 
-    @Override
     public String createPod(Pod entity) throws Exception {
         return model.remoteCreatePod(entity);
     }
@@ -175,7 +172,6 @@ public class ApiMasterService implements KubernetesExtensions {
         return createPod(pod);
     }
 
-    @Override
     public String updatePod(final @NotNull String podId, final Pod pod) throws Exception {
         // TODO needs implementing remotely!
 
@@ -195,7 +191,6 @@ public class ApiMasterService implements KubernetesExtensions {
         });
     }
 
-    @Override
     public String deletePod(@NotNull String podId) throws Exception {
         model.deletePod(podId, namespace);
         return null;
@@ -233,12 +228,10 @@ public class ApiMasterService implements KubernetesExtensions {
     //-------------------------------------------------------------------------
 
 
-    @Override
     public ReplicationControllerList getReplicationControllers() {
         return model.getReplicationControllers();
     }
 
-    @Override
     public ReplicationController getReplicationController(@NotNull String controllerId) {
         Map<String, ReplicationController> map = KubernetesHelper.getReplicationControllerMap(this);
         return map.get(controllerId);
@@ -254,7 +247,6 @@ public class ApiMasterService implements KubernetesExtensions {
         return model.getReplicationController(replicationControllerId, namespace);
     }
 
-    @Override
     public String createReplicationController(ReplicationController entity) throws Exception {
         String id = model.getOrCreateId(entity.getId(), NodeHelper.KIND_REPLICATION_CONTROLLER);
         entity.setId(id);
@@ -267,8 +259,13 @@ public class ApiMasterService implements KubernetesExtensions {
         return createReplicationController(replicationController);
     }
 
-
     @Override
+    public String updateReplicationController(@PathParam("controllerId") @NotNull String s, ReplicationController replicationController, @QueryParam("namespace") String s1) throws Exception {
+        replicationController.setNamespace(namespace);
+        return updateReplicationController(s, replicationController);
+    }
+
+
     public String updateReplicationController(@NotNull String controllerId, ReplicationController replicationController) throws Exception {
         // lets ensure there's a default namespace set
         String namespace = replicationController.getNamespace();
@@ -279,7 +276,6 @@ public class ApiMasterService implements KubernetesExtensions {
         return null;
     }
 
-    @Override
     public String deleteReplicationController(@NotNull String controllerId) throws Exception {
         model.deleteReplicationController(controllerId, namespace);
         return null;
@@ -291,22 +287,39 @@ public class ApiMasterService implements KubernetesExtensions {
         return null;
     }
 
+    @Override
+    public EndpointsList getEndpoints(@QueryParam("namespace") String namespace) {
+        EndpointsList answer = new EndpointsList();
+        List<Endpoints> list = new ArrayList<>();
+        answer.setItems(list);
+
+        ServiceList services = getServices(namespace);
+        if (services != null) {
+            List<Pod> pods = getPods(namespace).getItems();
+            List<Service> items = notNullList(services.getItems());
+            for (Service service : items) {
+                Endpoints endpoints = createEndpointsForService(service, pods);
+                if (endpoints != null) {
+                    list.add(endpoints);
+                }
+            }
+        }
+        return answer;
+    }
+
 
     // Services
     //-------------------------------------------------------------------------
 
-    @Override
     public ServiceList getServices() {
         return model.getServices();
     }
 
-    @Override
     public Service getService(@NotNull String serviceId) {
         Map<String, Service> map = model.getServiceMap();
         return map.get(serviceId);
     }
 
-    @Override
     public String createService(Service entity) throws Exception {
         String id = model.getOrCreateId(entity.getId(), NodeHelper.KIND_SERVICE);
         entity.setId(id);
@@ -320,7 +333,6 @@ public class ApiMasterService implements KubernetesExtensions {
     }
 
 
-    @Override
     public String updateService(@NotNull String id, Service entity) throws Exception {
         // lets set the IP
         entity.setPortalIP(getHostName());
@@ -334,7 +346,6 @@ public class ApiMasterService implements KubernetesExtensions {
         return null;
     }
 
-    @Override
     public String deleteService(@NotNull String serviceId) throws Exception {
         model.deleteService(serviceId, namespace);
         return null;
@@ -392,7 +403,6 @@ public class ApiMasterService implements KubernetesExtensions {
         return answer;
     }
 
-    @Override
     public EndpointsList getEndpoints() {
         EndpointsList answer = new EndpointsList();
         List<Endpoints> list = new ArrayList<>();
