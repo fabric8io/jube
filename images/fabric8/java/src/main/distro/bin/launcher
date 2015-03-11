@@ -47,8 +47,15 @@ APP_CONSOLE_OUT="${APP_BASE}/logs/out.log"
 APP_CONSOLE_ERR="${APP_BASE}/logs/err.log"
 
 # Add the jars in the maven dir
-CLASSPATH="$APP_BASE/classes"
-CLASSPATH=$CLASSPATH:$APP_BASE/maven/*:$APP_BASE/maven
+CLASSPATH="$APP_BASE/classes:$APP_BASE/maven"
+for file in "$APP_BASE"/maven/*.jar
+do
+    CLASSPATH="$CLASSPATH:$file"
+done
+for file in "$APP_BASE"/maven/*.war
+do
+    CLASSPATH="$CLASSPATH:$file"
+done
 
 if [ -z "$JOLOKIA_PORT" ]; then
   JOLOKIA_ARGS=""
