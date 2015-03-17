@@ -30,7 +30,6 @@ import io.fabric8.utils.Zips;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.repository.ArtifactRepositoryFactory;
@@ -54,6 +53,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+import org.apache.maven.repository.RepositorySystem;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.slf4j.Logger;
@@ -147,7 +147,7 @@ public class BuildMojo extends AbstractMojo {
     private ArtifactResolver artifactResolver;
 
     @Component
-    private ArtifactFactory artifactFactory;
+    private RepositorySystem repositorySystem;
 
     @Component
     private ArtifactRepositoryFactory artifactRepositoryFactory;
@@ -318,7 +318,7 @@ public class BuildMojo extends AbstractMojo {
         ImageMavenCoords baseImageCoords = ImageMavenCoords.parse(imageName, useDefaultPrefix);
         String coords = baseImageCoords.getAetherCoords();
 
-        Artifact artifact = artifactFactory.createArtifactWithClassifier(baseImageCoords.getGroupId(),
+        Artifact artifact = repositorySystem.createArtifactWithClassifier(baseImageCoords.getGroupId(),
                 baseImageCoords.getArtifactId(), baseImageCoords.getVersion(), baseImageCoords.getType(),
                 baseImageCoords.getClassifier());
         getLog().info("Resolving Jube image: " + artifact);
