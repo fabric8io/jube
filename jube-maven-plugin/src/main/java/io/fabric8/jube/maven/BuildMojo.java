@@ -15,20 +15,28 @@
  */
 package io.fabric8.jube.maven;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import io.fabric8.jube.util.ImageMavenCoords;
 import io.fabric8.jube.util.InstallHelper;
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Zips;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.repository.ArtifactRepositoryFactory;
 import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
 import org.apache.maven.artifact.resolver.ArtifactResolutionException;
+import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
+import org.apache.maven.artifact.resolver.ArtifactResolutionResult;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -45,18 +53,11 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+import org.apache.maven.repository.RepositorySystem;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import static io.fabric8.utils.PropertiesHelper.findPropertiesWithPrefix;
 
@@ -146,7 +147,7 @@ public class BuildMojo extends AbstractMojo {
     private ArtifactResolver artifactResolver;
 
     @Component
-    private ArtifactFactory artifactFactory;
+    private RepositorySystem repositorySystem;
 
     @Component
     private ArtifactRepositoryFactory artifactRepositoryFactory;
@@ -316,14 +317,23 @@ public class BuildMojo extends AbstractMojo {
 
         ImageMavenCoords baseImageCoords = ImageMavenCoords.parse(imageName, useDefaultPrefix);
         String coords = baseImageCoords.getAetherCoords();
-        getLog().info("Looking up Jube: " + coords);
-        Artifact artifact = artifactFactory.createArtifactWithClassifier(baseImageCoords.getGroupId(),
+
+        Artifact artifact = repositorySystem.createArtifactWithClassifier(baseImageCoords.getGroupId(),
                 baseImageCoords.getArtifactId(), baseImageCoords.getVersion(), baseImageCoords.getType(),
                 baseImageCoords.getClassifier());
+        getLog().info("Resolving Jube image: " + artifact);
 
-        artifactResolver.resolve(artifact, pomRemoteRepositories, localRepository);
+        ArtifactResolutionRequest request = new ArtifactResolutionRequest();
+        request.setArtifact(artifact);
+        request.setLocalRepository(localRepository);
+        request.setRemoteRepositories(pomRemoteRepositories);
 
-        System.out.println(artifact.getFile());
+        ArtifactResolutionResult result = artifactResolver.resolve(request);
+        if (!result.isSuccess()) {
+            throw new ArtifactNotFoundException("Cannot download Jube image", artifact);
+        }
+
+        getLog().info("Resolved Jube image: " + artifact);
 
         if (artifact.getFile() != null) {
             File file = artifact.getFile();
