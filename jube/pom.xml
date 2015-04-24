@@ -73,10 +73,6 @@
       <version>${fabric8.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.fabric8</groupId>
-      <artifactId>kubernetes-template</artifactId>
-    </dependency>
-    <dependency>
       <groupId>io.fabric8.jube</groupId>
       <artifactId>process-manager</artifactId>
       <version>${project.version}</version>
