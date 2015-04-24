@@ -21,7 +21,6 @@ import io.fabric8.kubernetes.api.KubernetesClient;
 import io.fabric8.kubernetes.api.KubernetesFactory;
 import io.fabric8.kubernetes.mbeans.AppView;
 import io.fabric8.kubernetes.mbeans.KubernetesManager;
-import io.fabric8.kubernetes.template.TemplateManager;
 import io.fabric8.utils.Systems;
 import io.hawt.aether.AetherFacade;
 import io.hawt.git.GitFacade;
@@ -218,9 +217,6 @@ public final class Main {
 
         KubernetesManager kubernetesManager = new KubernetesManager(kubernetesClient);
         kubernetesManager.init();
-
-        TemplateManager templateManager = new TemplateManager();
-        templateManager.init();
     }
 
     protected static KubernetesClient createKubernetesClient() {
