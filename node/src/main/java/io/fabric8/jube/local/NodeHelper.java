@@ -46,7 +46,7 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplate;
-import io.fabric8.kubernetes.api.model.Port;
+import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerState;
 import io.fabric8.kubernetes.api.model.Service;
@@ -276,9 +276,9 @@ public final class NodeHelper {
         }
     }
 
-    protected static List<Port> createInstallationPorts(Map<String, String> environment, Installation installation, Container container) {
+    protected static List<ContainerPort> createInstallationPorts(Map<String, String> environment, Installation installation, Container container) {
         try {
-            List<Port> answer = container.getPorts();
+            List<ContainerPort> answer = container.getPorts();
             if (answer == null) {
                 answer = new ArrayList<>();
                 container.setPorts(answer);
@@ -299,9 +299,9 @@ public final class NodeHelper {
                     int hostPortNumber = toPortNumber(hostPort, key, "host");
                     if (containerPortNumber > 0) {
                         // lets find a port object for the given number
-                        Port port = findPortWithContainerPort(answer, containerPortNumber);
+                        ContainerPort port = findPortWithContainerPort(answer, containerPortNumber);
                         if (port == null) {
-                            port = new Port();
+                            port = new ContainerPort();
                             port.setContainerPort(containerPortNumber);
                             answer.add(port);
                         }
@@ -319,8 +319,8 @@ public final class NodeHelper {
         }
     }
 
-    public static Port findPortWithContainerPort(List<Port> ports, int containerPortNumber) {
-        for (Port port : ports) {
+    public static ContainerPort findPortWithContainerPort(List<ContainerPort> ports, int containerPortNumber) {
+        for (ContainerPort port : ports) {
             Integer containerPort = port.getContainerPort();
             if (containerPort != null && containerPort == containerPortNumber) {
                 return port;
@@ -341,9 +341,9 @@ public final class NodeHelper {
     public static int findHostPortForService(Pod pod, int serviceContainerPort) {
         List<Container> containers = KubernetesHelper.getContainers(pod);
         for (Container container : containers) {
-            List<Port> ports = container.getPorts();
+            List<ContainerPort> ports = container.getPorts();
             if (ports != null) {
-                for (Port port : ports) {
+                for (ContainerPort port : ports) {
                     Integer containerPort = port.getContainerPort();
                     Integer hostPort = port.getHostPort();
                     if (containerPort != null && containerPort == serviceContainerPort) {

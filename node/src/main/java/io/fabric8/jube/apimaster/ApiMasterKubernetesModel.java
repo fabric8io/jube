@@ -19,8 +19,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -44,12 +42,10 @@ import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.utils.Filter;
 import io.fabric8.utils.Strings;
-import io.fabric8.zookeeper.ZkPath;
-import io.fabric8.zookeeper.utils.ZooKeeperUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
-import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
-import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
+import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
+import org.apache.curator.framework.recipes.cache.TreeCacheListener;
 import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
@@ -59,22 +55,20 @@ import org.slf4j.LoggerFactory;
  * Mirrors ZooKeeper data into a local in memory model and all updates to the model are written directly to ZooKeeper
  */
 public class ApiMasterKubernetesModel implements KubernetesModel {
+    
     private static final transient Logger LOG = LoggerFactory.getLogger(ApiMasterKubernetesModel.class);
-
+    private static final String KUBERNETES_MODEL = "/kubernetes/model";
     private final LocalKubernetesModel memoryModel = new LocalKubernetesModel();
     private final CuratorFramework curator;
     private final HostNodeModel hostNodeModel;
-    private final ExecutorService treeCacheExecutor = Executors.newSingleThreadExecutor();
-
-    private final PathChildrenCacheListener treeListener = new PathChildrenCacheListener() {
+    private final TreeCacheListener treeListener = new TreeCacheListener() {
         @Override
-        public void childEvent(CuratorFramework curatorFramework, PathChildrenCacheEvent event) throws Exception {
+        public void childEvent(CuratorFramework curatorFramework, TreeCacheEvent event) throws Exception {
             treeCacheEvent(event);
         }
     };
 
     private final TreeCache treeCache;
-    private final String zkPath;
 
     private final EntityListenerList<Pod> podListeners = new EntityListenerList<>();
     private final EntityListenerList<ReplicationController> replicationControllerListeners = new EntityListenerList<>();
@@ -85,9 +79,8 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     public ApiMasterKubernetesModel(CuratorFramework curator, HostNodeModel hostNodeModel) throws Exception {
         this.curator = curator;
         this.hostNodeModel = hostNodeModel;
-        this.zkPath = ZkPath.KUBERNETES_MODEL.getPath();
-        this.treeCache = new TreeCache(curator, zkPath, true, false, true, treeCacheExecutor);
-        this.treeCache.start(TreeCache.StartMode.NORMAL);
+        this.treeCache = new TreeCache(curator, KUBERNETES_MODEL);
+        this.treeCache.start();
         this.treeCache.getListenable().addListener(treeListener);
     }
 
@@ -360,18 +353,18 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     // Implementation methods
     //-------------------------------------------------------------------------
     protected String zkPathForPod(String id) {
-        return zkPath + "/" + NodeHelper.KIND_POD + "-" + id;
+        return KUBERNETES_MODEL + "/" + NodeHelper.KIND_POD + "-" + id;
     }
 
     protected String zkPathForService(String id) {
-        return zkPath + "/" + NodeHelper.KIND_SERVICE + "-" + id;
+        return KUBERNETES_MODEL + "/" + NodeHelper.KIND_SERVICE + "-" + id;
     }
 
     protected String zkPathForReplicationController(String id, String namespace) {
         if (Strings.isNotBlank(namespace)) {
             namespace = "default";
         }
-        return zkPath + "/" + NodeHelper.KIND_REPLICATION_CONTROLLER + "-" + namespace + "-" + id;
+        return KUBERNETES_MODEL + "/" + NodeHelper.KIND_REPLICATION_CONTROLLER + "-" + namespace + "-" + id;
     }
 
 
@@ -381,7 +374,11 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Writing to path: " + path + " json: " + json);
             }
-            ZooKeeperUtils.setData(curator, path, json);
+            if (curator.checkExists().forPath(path) == null) {
+                curator.create().creatingParentsIfNeeded().forPath(path, json.getBytes());
+            } else {
+                curator.setData().forPath(path, json.getBytes());
+            }
             updateLocalModel(entity, false);
         } catch (Exception e) {
             throw new RuntimeException("Failed to update object at path: " + path + ". " + e, e);
@@ -392,33 +389,33 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         try {
             Stat stat = curator.checkExists().forPath(path);
             if (stat != null) {
-                ZooKeeperUtils.delete(curator, path);
+                curator.delete().deletingChildrenIfNeeded().forPath(path);
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete object at path: " + path + ". " + e, e);
         }
     }
 
-    protected void treeCacheEvent(PathChildrenCacheEvent event) {
+    protected void treeCacheEvent(TreeCacheEvent event) {
         ChildData childData = event.getData();
         if (childData == null) {
             return;
         }
         String path = childData.getPath();
-        PathChildrenCacheEvent.Type type = event.getType();
+        TreeCacheEvent.Type type = event.getType();
         byte[] data = childData.getData();
         if (data == null || data.length == 0 || path == null) {
             return;
         }
-        if (path.startsWith(zkPath)) {
-            path = path.substring(zkPath.length());
+        if (path.startsWith(KUBERNETES_MODEL)) {
+            path = path.substring(KUBERNETES_MODEL.length());
         }
         boolean remove = false;
         switch (type) {
-        case CHILD_ADDED:
-        case CHILD_UPDATED:
+        case NODE_ADDED:
+        case NODE_UPDATED:
             break;
-        case CHILD_REMOVED:
+        case NODE_REMOVED:
             remove = true;
             break;
         default:
@@ -491,5 +488,4 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
             serviceListeners.entityChanged(id, entity);
         }
     }
-
 }

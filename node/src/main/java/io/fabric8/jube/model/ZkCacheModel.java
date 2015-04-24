@@ -16,19 +16,15 @@
 package io.fabric8.jube.model;
 
 import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import io.fabric8.jube.local.EntityListener;
 import io.fabric8.jube.local.EntityListenerList;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.utils.Objects;
-import io.fabric8.zookeeper.utils.ZooKeeperUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
-import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
-import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.framework.recipes.cache.TreeCache;
+import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
+import org.apache.curator.framework.recipes.cache.TreeCacheListener;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
@@ -41,11 +37,10 @@ public class ZkCacheModel<T> {
     private static final transient Logger LOG = LoggerFactory.getLogger(ZkCacheModel.class);
 
     private final CuratorFramework curator;
-    private final ExecutorService treeCacheExecutor = Executors.newSingleThreadExecutor();
 
-    private final PathChildrenCacheListener treeListener = new PathChildrenCacheListener() {
+    private final TreeCacheListener treeListener = new TreeCacheListener() {
         @Override
-        public void childEvent(CuratorFramework curatorFramework, PathChildrenCacheEvent event) throws Exception {
+        public void childEvent(CuratorFramework curatorFramework, TreeCacheEvent event) throws Exception {
             treeCacheEvent(event);
         }
     };
@@ -61,8 +56,8 @@ public class ZkCacheModel<T> {
         this.curator = curator;
         this.zkPath = zkPath;
         this.entityModel = entityModel;
-        this.treeCache = new TreeCache(curator, zkPath, true, false, true, treeCacheExecutor);
-        this.treeCache.start(TreeCache.StartMode.NORMAL);
+        this.treeCache = new TreeCache(curator, zkPath);
+        this.treeCache.start();
         this.treeCache.getListenable().addListener(treeListener);
     }
 
@@ -121,7 +116,11 @@ public class ZkCacheModel<T> {
         try {
             String json = KubernetesHelper.toJson(entity);
             System.out.println("Writing to path: " + path + " createMode: " + createMode + " json: " + json);
-            ZooKeeperUtils.setData(curator, path, json, createMode);
+            if (curator.checkExists().forPath(path) == null) {
+                curator.create().withMode(createMode).forPath(path, json.getBytes());
+            } else {
+                curator.setData().forPath(path, json.getBytes());
+            }
         } catch (Exception e) {
             throw new RuntimeException("Failed to update object at path: " + path + ". " + e, e);
         }
@@ -131,7 +130,7 @@ public class ZkCacheModel<T> {
         try {
             Stat stat = curator.checkExists().forPath(path);
             if (stat != null) {
-                ZooKeeperUtils.delete(curator, path);
+                curator.delete().deletingChildrenIfNeeded().forPath(path);
             }
 
         } catch (Exception e) {
@@ -139,13 +138,13 @@ public class ZkCacheModel<T> {
         }
     }
 
-    protected void treeCacheEvent(PathChildrenCacheEvent event) {
+    protected void treeCacheEvent(TreeCacheEvent event) {
         ChildData childData = event.getData();
         if (childData == null) {
             return;
         }
         String path = childData.getPath();
-        PathChildrenCacheEvent.Type type = event.getType();
+        TreeCacheEvent.Type type = event.getType();
         byte[] data = childData.getData();
         if (data == null || data.length == 0 || path == null) {
             return;
@@ -156,10 +155,10 @@ public class ZkCacheModel<T> {
         String id = path;
         boolean remove = false;
         switch (type) {
-        case CHILD_ADDED:
-        case CHILD_UPDATED:
+        case NODE_ADDED:
+        case NODE_UPDATED:
             break;
-        case CHILD_REMOVED:
+        case NODE_REMOVED:
             remove = true;
             break;
         default:

@@ -47,7 +47,6 @@ import io.fabric8.utils.Closeables;
 import io.fabric8.utils.Filter;
 import io.fabric8.utils.Filters;
 import io.fabric8.utils.Objects;
-import io.fabric8.zookeeper.ZkPath;
 import io.hawt.util.Strings;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
@@ -61,6 +60,8 @@ import org.slf4j.LoggerFactory;
 public class Replicator {
     private static final transient Logger LOG = LoggerFactory.getLogger(Replicator.class);
 
+    private static final String KUBERNETES_REPLICATOR = "/kubernetes/replicator";
+    
     private final CuratorFramework curator;
     private final ApiMasterKubernetesModel model;
     private final ProcessManager processManager;
@@ -84,7 +85,7 @@ public class Replicator {
 
         System.out.println("Starting the replicator with poll time: " + pollTime);
 
-        group = new ZooKeeperGroup<ReplicatorNode>(curator, ZkPath.KUBERNETES_REPLICATOR.getPath(), ReplicatorNode.class);
+        group = new ZooKeeperGroup<ReplicatorNode>(curator, KUBERNETES_REPLICATOR, ReplicatorNode.class);
         groupListener = new GroupListener<ReplicatorNode>() {
 
             @Override
