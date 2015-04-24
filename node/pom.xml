@@ -58,20 +58,6 @@
     </dependency>
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>zookeeper-client</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.jboss.weld</groupId>
-          <artifactId>weld-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.google.guava</groupId>
-          <artifactId>guava</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>io.fabric8</groupId>
       <artifactId>gateway-model</artifactId>
     </dependency>
     <dependency>
