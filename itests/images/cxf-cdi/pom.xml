@@ -63,7 +63,7 @@
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric-cxf</artifactId>
+      <artifactId>fabric8-cxf</artifactId>
     </dependency>
 
     <dependency>
