@@ -97,7 +97,7 @@
 
     <maven.enforcer.version>3.1.1</maven.enforcer.version>
     <fabric8.version>2.0.48</fabric8.version>
-    <hawtio.version>1.5-SNAPSHOT</hawtio.version>
+    <hawtio.version>1.4.49</hawtio.version>
     <hawtio.swagger.version>1.0.2</hawtio.swagger.version>
 <!--
     <hawtio.swagger.version>1.1.0-SNAPSHOT</hawtio.swagger.version>
