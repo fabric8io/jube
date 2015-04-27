@@ -56,6 +56,9 @@ public class ZkCacheModel<T> {
         this.curator = curator;
         this.zkPath = zkPath;
         this.entityModel = entityModel;
+        if (curator.checkExists().forPath(zkPath) == null) {
+            curator.create().creatingParentsIfNeeded().forPath(zkPath);
+        }
         this.treeCache = new TreeCache(curator, zkPath);
         this.treeCache.start();
         this.treeCache.getListenable().addListener(treeListener);

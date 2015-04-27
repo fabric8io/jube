@@ -137,6 +137,7 @@
     <module>console</module>
     <module>jube</module>
     <module>itests</module>
+      <module>zookeeper</module>
   </modules>
 
   <dependencyManagement>

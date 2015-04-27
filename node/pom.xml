@@ -35,16 +35,13 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-framework</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-recipes</artifactId>
+      <groupId>io.fabric8.jube</groupId>
+      <artifactId>core</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>io.fabric8.jube</groupId>
-      <artifactId>core</artifactId>
+      <artifactId>zookeeper</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
