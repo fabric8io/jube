@@ -57,7 +57,7 @@ public class ZkCacheModel<T> {
         this.zkPath = zkPath;
         this.entityModel = entityModel;
         if (curator.checkExists().forPath(zkPath) == null) {
-            curator.create().creatingParentsIfNeeded().forPath(zkPath);
+            curator.create().creatingParentsIfNeeded().forPath(zkPath, new byte[]{});
         }
         this.treeCache = new TreeCache(curator, zkPath);
         this.treeCache.start();
@@ -156,6 +156,10 @@ public class ZkCacheModel<T> {
             path = path.substring(zkPath.length());
         }
         String id = path;
+        if (id == null || id.isEmpty()) {
+         //we just want to ignore events on the 'root' node"
+         return;
+        }
         boolean remove = false;
         switch (type) {
         case NODE_ADDED:
