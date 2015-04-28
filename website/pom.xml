@@ -38,7 +38,7 @@
     <scalate.version>1.5.3</scalate.version>
 
     <exec-maven-plugin.version>1.2.1</exec-maven-plugin.version>
-    <jetty-plugin.version>8.1.14.v20131031</jetty-plugin.version>
+    <jetty-plugin.version>8.1.16.v20140903</jetty-plugin.version>
     <slf4j.version>1.7.5</slf4j.version>
 
     <netbeans.hint.deploy.server>Tomcat60</netbeans.hint.deploy.server>
