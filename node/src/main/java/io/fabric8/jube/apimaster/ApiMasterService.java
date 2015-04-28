@@ -83,6 +83,7 @@ public class ApiMasterService implements KubernetesExtensions {
     public static final String DEFAULT_HOSTNAME = "localhost";
     public static final String DEFAULT_HTTP_PORT = "8585";
     public static final String DEFAULT_NAMESPACE = "default";
+    private static final String HEADLESS_PORTAL_IP = "None";
 
     public static String hostName = DEFAULT_HOSTNAME;
     public static String port = DEFAULT_HTTP_PORT;
@@ -335,7 +336,9 @@ public class ApiMasterService implements KubernetesExtensions {
 
     public String updateService(@NotNull String id, Service entity) throws Exception {
         // lets set the IP
-        entity.setPortalIP(getHostName());
+        if (!HEADLESS_PORTAL_IP.equals(entity.getPortalIP())) {
+            entity.setPortalIP(getHostName());
+        }
 
         // lets ensure there's a default namespace set
         String namespace = entity.getNamespace();
