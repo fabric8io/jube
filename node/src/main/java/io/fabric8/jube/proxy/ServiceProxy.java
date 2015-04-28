@@ -18,6 +18,7 @@ package io.fabric8.jube.proxy;
 import io.fabric8.gateway.loadbalancer.LoadBalancer;
 import io.fabric8.jube.local.EntityListener;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.ServicePort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
@@ -34,15 +35,17 @@ public class ServiceProxy implements EntityListener<Pod> {
     private final Vertx vertx;
     private final ServiceInstance service;
     private final int port;
+    private final ServicePort servicePort;
     private final Handler<NetSocket> handler;
     private String host;
     private NetServer server;
 
-    public ServiceProxy(Vertx vertx, ServiceInstance service, int port, LoadBalancer loadBalancer) {
+    public ServiceProxy(Vertx vertx, ServiceInstance service, ServicePort servicePort, LoadBalancer loadBalancer) {
         this.vertx = vertx;
         this.service = service;
-        this.port = port;
-        this.handler = new ServiceProxyHandler(vertx, service, loadBalancer);
+        this.servicePort = servicePort;
+        this.port = servicePort.getPort();
+        this.handler = new ServiceProxyHandler(vertx, service, servicePort, loadBalancer);
     }
 
     @Override

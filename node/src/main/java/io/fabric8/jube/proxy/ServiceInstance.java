@@ -18,16 +18,21 @@ package io.fabric8.jube.proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import io.fabric8.gateway.loadbalancer.LoadBalancer;
 import io.fabric8.gateway.loadbalancer.RoundRobinLoadBalancer;
 import io.fabric8.jube.local.EntityListener;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.util.IntOrString;
 import io.fabric8.utils.Filter;
 import io.fabric8.utils.Objects;
+import io.fabric8.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,26 +41,33 @@ import org.slf4j.LoggerFactory;
  */
 public class ServiceInstance implements EntityListener<Pod> {
     private static final transient Logger LOG = LoggerFactory.getLogger(ServiceInstance.class);
+    private static final String HEADLESS_PORTAL_IP = "None";
 
     private final Service service;
     private final String id;
     private final Map<String, String> selector;
     private final Filter<Pod> filter;
-    private final int port;
-    private final int containerPort;
+    private final List<ServicePort> servicePorts = new ArrayList<>();
     private final LoadBalancer loadBalancer;
-    private final Map<String, ContainerService> containerServices = new ConcurrentHashMap<>();
+    private final Multimap<String, ContainerService> containerServices = Multimaps.synchronizedMultimap(HashMultimap.<String, ContainerService>create());
 
     public ServiceInstance(Service service) {
         this.service = service;
         this.id = KubernetesHelper.getId(service);
-        Integer portInt = KubernetesHelper.getPort(service);
-        Objects.notNull(portInt, "port for service " + id);
-        this.port = portInt.intValue();
-        if (this.port <= 0) {
-            throw new IllegalArgumentException("Invalid port number " + this.port + " for service " + id);
+        Integer portInt = service.getPort();
+        IntOrString containerPort = service.getContainerPort();
+        if (service.getPortalIP().equals(HEADLESS_PORTAL_IP)) {
+            //do nothing service is headless
+        } else if (portInt != null && portInt.intValue() > 0 && containerPort != null && KubernetesHelper.getContainerPort(service) > 0) {
+            String name = service.getPortName() != null ? service.getPortName() : service.getId();
+            servicePorts.add(new ServicePort(service.getContainerPort(), name, service.getPort(), service.getProtocol()));
+        } else if (!service.getPorts().isEmpty()) {
+            for (ServicePort servicePort : service.getPorts()) {
+                servicePorts.add(toNamedServicePort(id, servicePort));
+            }
+        } else {
+            throw new IllegalArgumentException("Service: " + id + " doesn't have a valid port configuration.");
         }
-        this.containerPort = KubernetesHelper.getContainerPort(service);
         this.selector = KubernetesHelper.getSelector(service);
         Objects.notNull(this.selector, "No selector for service " + id);
         if (selector.isEmpty()) {
@@ -67,25 +79,31 @@ public class ServiceInstance implements EntityListener<Pod> {
         this.loadBalancer = new RoundRobinLoadBalancer();
     }
 
-    @Override
-    public String toString() {
-        return "Service{"
-                + "id='" + id + '\''
-                + ", selector=" + selector
-                + ", containerServices=" + containerServices.values()
-                + '}';
+    private static ServicePort toNamedServicePort(String serviceId, ServicePort servicePort) {
+        String name = !Strings.isNullOrBlank(servicePort.getName()) ? servicePort.getName() : serviceId + "-" + servicePort.getPort().toString();
+        return new ServicePort(servicePort.getContainerPort(), name, servicePort.getPort(), servicePort.getProtocol());
     }
 
-    public List<ContainerService> getContainerServices() {
-        return new ArrayList<ContainerService>(containerServices.values());
+    public List<ContainerService> getContainerServices(String name) {
+        List<ContainerService> services = new ArrayList<>();
+        for (ContainerService s : containerServices.values()) {
+            if (s.getName().equals(name)) {
+                services.add(s);
+            }
+        }
+        return services;
     }
 
     @Override
     public void entityChanged(String podId, Pod pod) {
         if (filter.matches(pod)) {
             try {
-                ContainerService containerService = new ContainerService(this, pod);
-                containerServices.put(podId, containerService);
+                List<ContainerService> services = new ArrayList<>();
+                for (ServicePort port : servicePorts) {
+                    ContainerService containerService = new ContainerService(port, pod);
+                    services.add(containerService);
+                }
+                containerServices.replaceValues(podId, services);
             } catch (Exception e) {
                 LOG.info("Ignored bad pod: " + podId + ". " + e, e);
             }
@@ -94,7 +112,7 @@ public class ServiceInstance implements EntityListener<Pod> {
 
     @Override
     public void entityDeleted(String podId) {
-        containerServices.remove(podId);
+        containerServices.removeAll(podId);
     }
 
     public Filter<Pod> getFilter() {
@@ -113,15 +131,21 @@ public class ServiceInstance implements EntityListener<Pod> {
         return id;
     }
 
-    public int getPort() {
-        return port;
-    }
-
-    public int getContainerPort() {
-        return containerPort;
+    public List<ServicePort> getPorts() {
+        return servicePorts;
     }
 
     public LoadBalancer getLoadBalancer() {
         return loadBalancer;
     }
+
+    @Override
+    public String toString() {
+        return "Service{"
+                + "id='" + id + '\''
+                + ", selector=" + selector
+                + ", containerServices=" + containerServices.values()
+                + '}';
+    }
+
 }

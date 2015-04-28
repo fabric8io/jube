@@ -18,6 +18,7 @@ package io.fabric8.jube.proxy;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -33,6 +34,7 @@ import io.fabric8.jube.apimaster.ApiMasterKubernetesModel;
 import io.fabric8.jube.local.EntityListener;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServicePort;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.impl.DefaultVertxFactory;
 
@@ -91,11 +93,13 @@ public class KubeProxy {
         serviceDeleted(id);
 
         ServiceInstance service = new ServiceInstance(serviceEntity);
-        int port = service.getPort();
-        LoadBalancer loadBalancer = service.getLoadBalancer();
-        ServiceProxy serviceProxy = new ServiceProxy(vertx, service, port, loadBalancer);
-        serviceProxy.init();
-        serviceMap.put(id, serviceProxy);
+        for (ServicePort servicePort : service.getPorts()) {
+            LoadBalancer loadBalancer = service.getLoadBalancer();
+            ServiceProxy serviceProxy = new ServiceProxy(vertx, service, servicePort, loadBalancer);
+            serviceProxy.init();
+            serviceMap.put(id, serviceProxy);
+        }
+
 
         // now lets populate it with the current pods
         ImmutableMap<String, Pod> podMap = model.getPodMap();
@@ -103,7 +107,7 @@ public class KubeProxy {
         for (Map.Entry<String, Pod> entry : entries) {
             String podId = entry.getKey();
             Pod pod = entry.getValue();
-            serviceProxy.entityChanged(podId, pod);
+            service.entityChanged(podId, pod);
         }
         System.out.println("Service now initialised as: " + service);
     }

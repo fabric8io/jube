@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import io.fabric8.gateway.loadbalancer.LoadBalancer;
+import io.fabric8.kubernetes.api.model.ServicePort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.AsyncResult;
@@ -39,12 +40,14 @@ public class ServiceProxyHandler implements Handler<NetSocket> {
 
     private final Vertx vertx;
     private final ServiceInstance service;
+    private final ServicePort servicePort;
     private final LoadBalancer loadBalancer;
     private final AtomicLong failedConnectionAttempts = new AtomicLong();
 
-    public ServiceProxyHandler(Vertx vertx, ServiceInstance service, LoadBalancer loadBalancer) {
+    public ServiceProxyHandler(Vertx vertx, ServiceInstance service, ServicePort servicePort, LoadBalancer loadBalancer) {
         this.vertx = vertx;
         this.service = service;
+        this.servicePort = servicePort;
         this.loadBalancer = loadBalancer;
     }
 
@@ -65,7 +68,7 @@ public class ServiceProxyHandler implements Handler<NetSocket> {
         clientSocket.pause();
 
         TcpClientRequestFacade requestFacade = new TcpClientRequestFacade(clientSocket);
-        List<ContainerService> services = service.getContainerServices();
+        List<ContainerService> services = service.getContainerServices(servicePort.getName());
         if (!services.isEmpty()) {
             ContainerService containerService = loadBalancer.choose(services, requestFacade);
             if (containerService != null) {
