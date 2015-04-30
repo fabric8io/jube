@@ -24,6 +24,7 @@ import javax.ws.rs.core.Application;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import io.fabric8.jube.apimaster.ApiMasterService;
+import io.fabric8.jube.apimaster.ApiV1Beta1;
 import io.fabric8.jube.apimaster.ApiV1Beta2;
 import org.apache.cxf.feature.LoggingFeature;
 import org.apache.cxf.jaxrs.swagger.SwaggerFeature;
@@ -39,6 +40,9 @@ public class NodeApplication extends Application {
     private ApiMasterService apiMasterService;
 
     @Inject
+    private ApiV1Beta1 v1beta1;
+
+    @Inject
     private ApiV1Beta2 v1beta2;
 
     @Inject
@@ -49,6 +53,7 @@ public class NodeApplication extends Application {
     public Set<Object> getSingletons() {
         Set<Object> answer = new HashSet<Object>();
         answer.add(apiMasterService);
+        answer.add(v1beta1);
         answer.add(v1beta2);
         answer.add(jacksonJsonProvider);
         answer.add(new SwaggerFeature());

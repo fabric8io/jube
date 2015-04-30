@@ -27,6 +27,7 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import io.fabric8.cxf.endpoint.EnableJMXFeature;
 import io.fabric8.jube.apimaster.ApiMasterService;
 
+import io.fabric8.jube.apimaster.ApiV1Beta1;
 import io.fabric8.jube.apimaster.ApiV1Beta2;
 import org.apache.cxf.feature.LoggingFeature;
 
@@ -40,6 +41,9 @@ public class NodeApplication extends Application {
     private ApiMasterService apiMasterService;
 
     @Inject
+    private ApiV1Beta1 v1beta1;
+
+    @Inject
     private ApiV1Beta2 v1beta2;
 
     public NodeApplication() {
@@ -51,6 +55,7 @@ public class NodeApplication extends Application {
         return new HashSet<Object>(
                 Arrays.asList(
                         apiMasterService,
+                        v1beta1,
                         v1beta2,
                         jacksonJsonProvider,
                         // TODO
