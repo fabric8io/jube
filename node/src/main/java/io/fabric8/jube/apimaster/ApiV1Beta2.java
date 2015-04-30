@@ -44,14 +44,14 @@ import java.util.Map;
 /**
  */
 @Singleton
-@Path("v1beta1")
+@Path("v1beta2")
 @Produces("application/json")
 @Consumes("application/json")
-public class ApiV1Beta1 implements KubernetesExtensions {
+public class ApiV1Beta2 implements KubernetesExtensions {
     private final ApiMasterService delegate;
 
     @Inject
-    public ApiV1Beta1(ApiMasterService delegate) {
+    public ApiV1Beta2(ApiMasterService delegate) {
         this.delegate = delegate;
     }
 
