@@ -169,7 +169,7 @@
         <version>2.1</version>
         <configuration>
           <port>9090</port>
-          <path>/api</path>
+          <path>/kubernetes/api</path>
           <systemProperties>
           </systemProperties>
           <useTestClasspath>false</useTestClasspath>

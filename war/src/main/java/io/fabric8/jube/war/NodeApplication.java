@@ -31,7 +31,7 @@ import io.fabric8.jube.apimaster.ApiV1Beta1;
 import io.fabric8.jube.apimaster.ApiV1Beta2;
 import org.apache.cxf.feature.LoggingFeature;
 
-@ApplicationPath("/api")
+@ApplicationPath("/kubernetes/api")
 public class NodeApplication extends Application {
 
     @Produces

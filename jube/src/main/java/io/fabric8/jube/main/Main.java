@@ -124,7 +124,7 @@ public final class Main {
             context.setContextPath("/");
             context.addEventListener(new Listener());
             context.addEventListener(new BeanManagerResourceBindingListener());
-            context.addServlet(servletHolder, "/api/*");
+            context.addServlet(servletHolder, "/kubernetes/api/*");
             context.addServlet(new ServletHolder(new RootServlet()), "/");
 
             handlers.addHandler(context);
@@ -141,7 +141,7 @@ public final class Main {
             if (hawtioEnabled) {
                 System.out.println("\t    Web console:   http://" + ApiMasterService.getHostName() + ":" + port + "/hawtio/");
             }
-            System.out.println("\t    REST api:      http://" + ApiMasterService.getHostName() + ":" + port + "/api/");
+            System.out.println("\t    REST api:      http://" + ApiMasterService.getHostName() + ":" + port + "/kubernetes/api/");
             System.out.println("\t    Documentation: http://fabric8.io/jube/goals.html");
             System.out.println("\n\n");
 
