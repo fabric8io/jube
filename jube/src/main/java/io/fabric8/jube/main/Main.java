@@ -124,6 +124,7 @@ public final class Main {
             context.setContextPath("/");
             context.addEventListener(new Listener());
             context.addEventListener(new BeanManagerResourceBindingListener());
+            context.addServlet(servletHolder, "/api/*");
             context.addServlet(servletHolder, "/kubernetes/api/*");
             context.addServlet(new ServletHolder(new RootServlet()), "/");
 
