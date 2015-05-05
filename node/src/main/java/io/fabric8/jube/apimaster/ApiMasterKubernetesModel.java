@@ -35,7 +35,7 @@ import io.fabric8.jube.model.HostNodeModel;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodState;
+import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ServiceList;
@@ -50,6 +50,8 @@ import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 
 /**
  * Mirrors ZooKeeper data into a local in memory model and all updates to the model are written directly to ZooKeeper
@@ -297,7 +299,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
                 return tryCreatePod(hostNode, pod);
             } catch (Exception e) {
                 failed = e;
-                LOG.error("Failed to create pod: " + pod.getId() + " on host: " + hostNode + ". " + e, e);
+                LOG.error("Failed to create pod: " + getName(pod) + " on host: " + hostNode + ". " + e, e);
             }
         } else {
             Collections.shuffle(hosts);
@@ -306,11 +308,11 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
                     return tryCreatePod(hostNode, pod);
                 } catch (Exception e) {
                     failed = e;
-                    LOG.error("Failed to create pod: " + pod.getId() + " on host: " + hostNode + ". " + e, e);
+                    LOG.error("Failed to create pod: " + getName(pod) + " on host: " + hostNode + ". " + e, e);
                 }
             }
         }
-        PodState currentState = NodeHelper.getOrCreateCurrentState(pod);
+        PodStatus currentState = NodeHelper.getOrCreatetStatus(pod);
         currentState.setStatus("Terminated: " + failed);
         return null;
     }
@@ -334,7 +336,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     }
 
     protected String tryDeletePod(HostNode hostNode, Pod pod) throws Exception {
-        String id = pod.getId();
+        String id = getName(pod);
         LOG.info("Attempting to delete pod: " + id + " on host: " + hostNode.getWebUrl());
         KubernetesExtensionsClient client = createClient(hostNode);
         return client.deleteLocalPod(id, pod.getNamespace());
@@ -443,14 +445,14 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
 
     protected void podChanged(Pod entity, boolean remove) {
         if (remove) {
-            String id = entity.getId();
+            String id = getName(entity);
             if (Strings.isNotBlank(id)) {
                 memoryModel.deletePod(id, entity.getNamespace());
                 podListeners.entityDeleted(id);
 
             }
         } else {
-            String id = memoryModel.getOrCreateId(entity.getId(), NodeHelper.KIND_POD);
+            String id = memoryModel.getOrCreateId(getName(entity), NodeHelper.KIND_POD);
             Pod old = memoryModel.getPod(id);
             // lets only replace the Pod if it really has changed to avoid overwriting
             // pods which are being installed
@@ -463,13 +465,13 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
 
     protected void replicationControllerChanged(ReplicationController entity, boolean remove) {
         if (remove) {
-            String id = entity.getId();
+            String id = getName(entity);
             if (Strings.isNotBlank(id)) {
                 memoryModel.deleteReplicationController(id, entity.getNamespace());
                 replicationControllerListeners.entityDeleted(id);
             }
         } else {
-            String id = memoryModel.getOrCreateId(entity.getId(), NodeHelper.KIND_REPLICATION_CONTROLLER);
+            String id = memoryModel.getOrCreateId(getName(entity), NodeHelper.KIND_REPLICATION_CONTROLLER);
             memoryModel.updateReplicationController(id, entity);
             replicationControllerListeners.entityChanged(id, entity);
         }
@@ -477,13 +479,13 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
 
     protected void serviceChanged(Service entity, boolean remove) {
         if (remove) {
-            String id = entity.getId();
+            String id = getName(entity);
             if (Strings.isNotBlank(id)) {
                 memoryModel.deleteService(id, entity.getNamespace());
                 serviceListeners.entityDeleted(id);
             }
         } else {
-            String id = memoryModel.getOrCreateId(entity.getId(), NodeHelper.KIND_SERVICE);
+            String id = memoryModel.getOrCreateId(getName(entity), NodeHelper.KIND_SERVICE);
             memoryModel.updateService(id, entity);
             serviceListeners.entityChanged(id, entity);
         }

@@ -20,8 +20,8 @@ package io.fabric8.jube.apimaster;
 import io.fabric8.jube.model.HostNode;
 import io.fabric8.kubernetes.api.model.Endpoints;
 import io.fabric8.kubernetes.api.model.EndpointsList;
-import io.fabric8.kubernetes.api.model.Minion;
-import io.fabric8.kubernetes.api.model.MinionList;
+import io.fabric8.kubernetes.api.model.Node;
+import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.ReplicationController;
@@ -198,8 +198,8 @@ public class ApiV1Beta2 implements KubernetesExtensions {
     }
 
     @Override
-    public MinionList getMinions() {
-        return delegate.getMinions();
+    public NodeList getNodes() {
+        return delegate.getNodes();
     }
 
     public Pod getPod(@NotNull String podId) {
@@ -257,7 +257,7 @@ public class ApiV1Beta2 implements KubernetesExtensions {
     }
 
     @Override
-    public Minion minion(@NotNull String name) {
+    public Node minion(@NotNull String name) {
         return delegate.minion(name);
     }
 

@@ -51,9 +51,11 @@ import io.fabric8.jube.replicator.Replicator;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Endpoints;
 import io.fabric8.kubernetes.api.model.EndpointsList;
-import io.fabric8.kubernetes.api.model.Minion;
-import io.fabric8.kubernetes.api.model.MinionList;
-import io.fabric8.kubernetes.api.model.PodState;
+import io.fabric8.kubernetes.api.model.Node;
+import io.fabric8.kubernetes.api.model.NodeList;
+import io.fabric8.kubernetes.api.model.NodeSpec;
+import io.fabric8.kubernetes.api.model.PodSpec;
+import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -61,6 +63,8 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.fabric8.kubernetes.api.model.util.IntOrString;
 import io.fabric8.utils.Objects;
 import io.hawt.util.Strings;
@@ -69,6 +73,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static io.fabric8.jube.local.NodeHelper.getOrCreateCurrentState;
+import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateSpec;
+import static io.fabric8.kubernetes.api.KubernetesHelper.setName;
+import static io.fabric8.kubernetes.api.KubernetesHelper.setSelector;
 import static io.fabric8.utils.Lists.notNullList;
 
 /**
@@ -180,10 +188,10 @@ public class ApiMasterService implements KubernetesExtensions {
             @Override
             public String call() throws Exception {
                 System.out.println("Updating pod " + pod);
-                PodState desiredState = pod.getDesiredState();
+                PodSpec desiredState = pod.getSpec();
                 Objects.notNull(desiredState, "desiredState");
 
-                PodState currentState = getOrCreateCurrentState(pod);
+                PodStatus currentState = NodeHelper.getOrCreatetStatus(pod);
                 List<Container> containers = KubernetesHelper.getContainers(pod);
                 model.updatePod(podId, pod);
 
@@ -249,8 +257,8 @@ public class ApiMasterService implements KubernetesExtensions {
     }
 
     public String createReplicationController(ReplicationController entity) throws Exception {
-        String id = model.getOrCreateId(entity.getId(), NodeHelper.KIND_REPLICATION_CONTROLLER);
-        entity.setId(id);
+        String id = model.getOrCreateId(getName(entity), NodeHelper.KIND_REPLICATION_CONTROLLER);
+        setName(entity, id);
         return updateReplicationController(id, entity);
     }
 
@@ -322,8 +330,8 @@ public class ApiMasterService implements KubernetesExtensions {
     }
 
     public String createService(Service entity) throws Exception {
-        String id = model.getOrCreateId(entity.getId(), NodeHelper.KIND_SERVICE);
-        entity.setId(id);
+        String id = model.getOrCreateId(getName(entity), NodeHelper.KIND_SERVICE);
+        setName(entity, id);
         return updateService(id, entity);
     }
 
@@ -336,8 +344,13 @@ public class ApiMasterService implements KubernetesExtensions {
 
     public String updateService(@NotNull String id, Service entity) throws Exception {
         // lets set the IP
-        if (!HEADLESS_PORTAL_IP.equals(entity.getPortalIP())) {
-            entity.setPortalIP(getHostName());
+        ServiceSpec spec = entity.getSpec();
+        if (spec == null) {
+            spec = new ServiceSpec();
+            entity.setSpec(spec);
+        }
+        if (!HEADLESS_PORTAL_IP.equals(spec.getPortalIP())) {
+            spec.setPortalIP(getHostName());
         }
 
         // lets ensure there's a default namespace set
@@ -376,11 +389,15 @@ public class ApiMasterService implements KubernetesExtensions {
         if (service == null) {
             return null;
         }
+        ServiceSpec serviceSpec = service.getSpec();
+        if (serviceSpec == null) {
+            return null;
+        }
         Endpoints answer = new Endpoints();
-        answer.setId(service.getId());
+        answer.setName(getName(service));
         List<String> urls = new ArrayList<>();
         answer.setEndpoints(urls);
-        IntOrString containerPort = service.getContainerPort();
+        IntOrString containerPort = serviceSpec.getContainerPort();
         if (containerPort != null) {
             String strVal = containerPort.getStrVal();
             if (strVal == null) {
@@ -393,7 +410,7 @@ public class ApiMasterService implements KubernetesExtensions {
                 String containerPortText = ":" + strVal;
                 List<Pod> podsForService = KubernetesHelper.getPodsForService(service, pods);
                 for (Pod pod : podsForService) {
-                    PodState currentState = pod.getCurrentState();
+                    PodStatus currentState = pod.getStatus();
                     if (currentState != null) {
                         String podIP = currentState.getPodIP();
                         if (podIP != null) {
@@ -426,27 +443,30 @@ public class ApiMasterService implements KubernetesExtensions {
     }
 
     @Override
-    public MinionList getMinions() {
-        // TODO we should replace HostNode with Minion...
-        MinionList answer = new MinionList();
-        List<Minion> items = new ArrayList<>();
+    public NodeList getNodes() {
+        // TODO we should replace HostNode with Node...
+        NodeList answer = new NodeList();
+        List<Node> items = new ArrayList<>();
         answer.setItems(items);
         Collection<HostNode> values = getHostNodes().values();
         for (HostNode value : values) {
-            Minion minion = new Minion();
-            minion.setId(value.getId());
-            minion.setHostIP(value.getHostName());
+            Node minion = new Node();
+            NodeSpec nodeSpec = new NodeSpec();
+            minion.setSpec(nodeSpec);
+            minion.setName(value.getId());
+            // TODO no hostName on a minion
+            //minion.setHostIP(value.getHostName());
             items.add(minion);
         }
         return answer;
     }
 
     @Override
-    public Minion minion(@NotNull String name) {
-        MinionList minionList = getMinions();
-        List<Minion> minions = notNullList(minionList.getItems());
-        for (Minion minion : minions) {
-            if (Objects.equal(minion.getId(), name)) {
+    public Node minion(@NotNull String name) {
+        NodeList minionList = getNodes();
+        List<Node> minions = notNullList(minionList.getItems());
+        for (Node minion : minions) {
+            if (Objects.equal(getName(minion), name)) {
                 return minion;
             }
         }
@@ -479,14 +499,14 @@ public class ApiMasterService implements KubernetesExtensions {
     @Consumes("application/json")
     @Override
     public String createLocalPod(Pod entity) throws Exception {
-        String id = model.getOrCreateId(entity.getId(), NodeHelper.KIND_REPLICATION_CONTROLLER);
-        entity.setId(id);
+        String id = model.getOrCreateId(getName(entity), NodeHelper.KIND_REPLICATION_CONTROLLER);
+        setName(entity, id);
         return updateLocalPod(id, entity);
     }
 
     public String updateLocalPod(@NotNull final String podId, final Pod pod) throws Exception {
         System.out.println("Updating pod " + pod);
-        PodState desiredState = pod.getDesiredState();
+        PodSpec desiredState = pod.getSpec();
         Objects.notNull(desiredState, "desiredState");
 
         // lets ensure there's a default namespace set
@@ -495,7 +515,7 @@ public class ApiMasterService implements KubernetesExtensions {
             pod.setNamespace(DEFAULT_NAMESPACE);
         }
 
-        final PodState currentState = getOrCreateCurrentState(pod);
+        final PodStatus currentState = NodeHelper.getOrCreatetStatus(pod);
         final List<Container> containers = KubernetesHelper.getContainers(pod);
 
         NodeHelper.setPodStatus(pod, Statuses.WAITING);
@@ -519,7 +539,7 @@ public class ApiMasterService implements KubernetesExtensions {
                 NodeHelper.excludeFromProcessMonitor(processMonitor, pod, task);
             }
         });
-        return pod.getId();
+        return getName(pod);
     }
 
 
@@ -564,22 +584,22 @@ public class ApiMasterService implements KubernetesExtensions {
             service = serviceMap.get(ServiceIDs.KUBERNETES_SERVICE_ID);
             if (service == null) {
                 service = createService(hostName, port);
-                service.setId(ServiceIDs.KUBERNETES_SERVICE_ID);
-                service.setSelector(createKubernetesServiceLabels());
+                setName(service, ServiceIDs.KUBERNETES_SERVICE_ID);
+                setSelector(service, createKubernetesServiceLabels());
                 createService(service);
             }
             service = serviceMap.get(ServiceIDs.KUBERNETES_RO_SERVICE_ID);
             if (service == null) {
                 service = createService(hostName, port);
-                service.setId(ServiceIDs.KUBERNETES_RO_SERVICE_ID);
-                service.setSelector(createKubernetesServiceLabels());
+                setName(service, ServiceIDs.KUBERNETES_RO_SERVICE_ID);
+                setSelector(service, createKubernetesServiceLabels());
                 createService(service);
             }
             service = serviceMap.get(ServiceIDs.FABRIC8_CONSOLE_SERVICE_ID);
             if (service == null) {
                 service = createService(hostName, port);
-                service.setId(ServiceIDs.FABRIC8_CONSOLE_SERVICE_ID);
-                service.setSelector(createFabric8ConsoleServiceLabels());
+                setName(service, ServiceIDs.FABRIC8_CONSOLE_SERVICE_ID);
+                setSelector(service, createFabric8ConsoleServiceLabels());
                 createService(service);
             }
         } catch (Exception e) {
@@ -602,19 +622,24 @@ public class ApiMasterService implements KubernetesExtensions {
 
     protected Service createService(String hostName, String port) {
         Service service = new Service();
-        service.setKind("Service");
+        ServiceSpec spec = getOrCreateSpec(service);
         try {
             Integer portNumber = Integer.parseInt(port);
             if (portNumber != null) {
-                service.setPort(portNumber);
+                List<ServicePort> ports = new ArrayList<>();
+                ServicePort servicePort = new ServicePort();
+                servicePort.setPort(portNumber);
                 IntOrString containerPort = new IntOrString();
                 containerPort.setIntVal(portNumber);
-                service.setContainerPort(containerPort);
+                servicePort.setTargetPort(containerPort);
+
+                ports.add(servicePort);
+                spec.setPorts(ports);
             }
         } catch (NumberFormatException e) {
             LOG.warn("Failed to parse port text: " + port + ". " + e, e);
         }
-        service.setPortalIP(hostName);
+        spec.setPortalIP(hostName);
         return service;
     }
 

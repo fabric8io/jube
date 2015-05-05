@@ -36,12 +36,15 @@ import io.fabric8.jube.apimaster.ApiMasterService;
 import io.fabric8.jube.local.NodeHelper;
 import io.fabric8.jube.process.ProcessManager;
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.ReplicationControllerState;
-import io.fabric8.kubernetes.api.model.PodState;
+import io.fabric8.kubernetes.api.PodStatusType;
+import io.fabric8.kubernetes.api.model.PodSpec;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
+import io.fabric8.kubernetes.api.model.ReplicationControllerStatus;
+import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodTemplate;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.utils.Closeables;
 import io.fabric8.utils.Filter;
@@ -52,6 +55,10 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+import static io.fabric8.kubernetes.api.KubernetesHelper.getPodStatus;
+import static io.fabric8.kubernetes.api.KubernetesHelper.setName;
 
 /**
  * Monitors the status of the current replication controllers and pods and chooses to start new pods if there are not enough replicas
@@ -168,21 +175,21 @@ public class Replicator {
         for (Map.Entry<String, ReplicationController> entry : entries) {
             String rcID = entry.getKey();
             ReplicationController replicationController = entry.getValue();
-            PodState podTemplatePodState = NodeHelper.getPodTemplateDesiredState(replicationController);
-            if (podTemplatePodState == null) {
-                LOG.warn("Cannot instantiate replication controller: " + replicationController.getId() + " due to missing PodTemplate.PodState!");
+            PodTemplateSpec podTemplateSpec = NodeHelper.getPodTemplateSpec(replicationController);
+            if (podTemplateSpec == null) {
+                LOG.warn("Cannot instantiate replication controller: " + getName(replicationController) + " due to missing PodTemplate.PodStatus!");
                 continue;
             }
             int replicaCount = 0;
-            ReplicationControllerState desiredState = replicationController.getDesiredState();
-            if (desiredState != null) {
-                Integer replicas = desiredState.getReplicas();
+            ReplicationControllerSpec spec = replicationController.getSpec();
+            if (spec != null) {
+                Integer replicas = spec.getReplicas();
                 if (replicas != null && replicas > 0) {
                     replicaCount = replicas;
                 }
             }
-            ReplicationControllerState currentState = NodeHelper.getOrCreateCurrentState(replicationController);
-            Map<String, String> replicaSelector = desiredState.getReplicaSelector();
+            ReplicationControllerStatus currentState = NodeHelper.getOrCreatetStatus(replicationController);
+            Map<String, String> replicaSelector = spec.getSelector();
             ImmutableList<Pod> allPods = model.getPods(replicaSelector);
             List<Pod> pods = Filters.filter(allPods, podHasNotTerminated());
 
@@ -194,7 +201,7 @@ public class Replicator {
             }
             int createCount = replicaCount - currentSize;
             if (createCount > 0) {
-                pods = createMissingContainers(replicationController, podTemplatePodState, desiredState, createCount, pods);
+                pods = createMissingContainers(replicationController, podTemplateSpec, spec, createCount, pods);
             } else if (createCount < 0) {
                 int deleteCount = Math.abs(createCount);
                 pods = deleteContainers(pods, deleteCount);
@@ -214,8 +221,14 @@ public class Replicator {
 
             @Override
             public boolean matches(Pod pod) {
-                PodState currentState = pod.getCurrentState();
+                PodStatus currentState = pod.getStatus();
                 if (currentState != null) {
+                    PodStatusType podStatus = getPodStatus(pod);
+                    switch (podStatus) {
+                        case ERROR:
+                            return  false;
+                    }
+/*
                     String status = currentState.getStatus();
                     if (status != null) {
                         String lower = status.toLowerCase();
@@ -223,6 +236,7 @@ public class Replicator {
                             return false;
                         }
                     }
+*/
                 }
                 return true;
             }
@@ -234,15 +248,15 @@ public class Replicator {
         List<Pod> list = Lists.newArrayList(pods);
         for (int i = 0, size = list.size(); i < deleteCount && i < size; i++) {
             Pod removePod = list.remove(size - i - 1);
-            String id = removePod.getId();
+            String id = getName(removePod);
             model.deleteRemotePod(removePod);
         }
         return ImmutableList.copyOf(list);
     }
 
 
-    protected ImmutableList<Pod> createMissingContainers(ReplicationController replicationController, PodState podTemplateDesiredState,
-                                                               ReplicationControllerState desiredState, int createCount, List<Pod> pods) throws Exception {
+    protected ImmutableList<Pod> createMissingContainers(ReplicationController replicationController, PodTemplateSpec podTemplateSpec,
+                                                               ReplicationControllerSpec replicationControllerSpec, int createCount, List<Pod> pods) throws Exception {
         // TODO this is a hack ;) needs replacing with the real host we're creating on
         String host = ApiMasterService.getHostName();
         List<Pod> list = Lists.newArrayList(pods);
@@ -253,14 +267,14 @@ public class Replicator {
             createNewId(replicationController, pod);
             list.add(pod);
 
-            List<Container> containers = KubernetesHelper.getContainers(podTemplateDesiredState);
+            List<Container> containers = KubernetesHelper.getContainers(podTemplateSpec);
             for (Container container : containers) {
-                String containerName = pod.getId() + "-" + container.getName();
+                String containerName = getName(pod) + "-" + container.getName();
 
                 ContainerStatus containerInfo = NodeHelper.getOrCreateContainerInfo(pod, containerName);
-                PodState currentState = pod.getCurrentState();
+                PodStatus currentState = pod.getStatus();
                 Objects.notNull(currentState, "currentState");
-                currentState.setHost(host);
+                currentState.setHostIP(host);
 
                 String image = container.getImage();
                 if (Strings.isBlank(image)) {
@@ -269,7 +283,7 @@ public class Replicator {
                 }
                 NodeHelper.addOrUpdateDesiredContainer(pod, containerName, container);
             }
-            PodTemplate podTemplate = desiredState.getPodTemplate();
+            PodTemplateSpec podTemplate = replicationControllerSpec.getTemplate();
             if (podTemplate != null) {
                 pod.setLabels(podTemplate.getLabels());
             }
@@ -281,20 +295,20 @@ public class Replicator {
     }
 
     protected String createNewId(ReplicationController replicationController, Pod pod) {
-        String id = replicationController.getId();
+        String id = getName(replicationController);
         if (Strings.isNotBlank(id)) {
             id += "-";
             int idx = 1;
             while (true) {
                 String anId = id + (idx++);
                 if (model.updatePodIfNotExist(anId, pod)) {
-                    pod.setId(anId);
+                    setName(pod, anId);
                     return null;
                 }
             }
         }
         id = model.createID(NodeHelper.KIND_POD);
-        pod.setId(id);
+        setName(pod, id);
         return null;
     }
 

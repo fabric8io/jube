@@ -19,7 +19,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import io.fabric8.jube.local.NodeHelper;
-import io.fabric8.kubernetes.api.model.PodState;
+import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.hawt.util.Strings;
@@ -41,7 +41,7 @@ public class ContainerService {
 
         // lets get host / port of the container
         String host = null;
-        PodState currentState = pod.getCurrentState();
+        PodStatus currentState = pod.getStatus();
         if (currentState != null) {
             host = currentState.getHost();
             if (Strings.isBlank(host)) {
@@ -49,7 +49,7 @@ public class ContainerService {
             }
         }
         if (Strings.isBlank(host)) {
-            throw new IllegalArgumentException("No host for pod " + pod.getId() + " so cannot use it with service port: " + servicePort.getName());
+            throw new IllegalArgumentException("No host for pod " + getName(pod) + " so cannot use it with service port: " + servicePort.getName());
         } else {
             uri = new URI("tcp://" + host + ":" + port);
         }

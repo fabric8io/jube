@@ -26,6 +26,6 @@ public class HostNodeEntityModel extends EntityModelSupport<HostNode> {
 
     @Override
     public String getId(HostNode entity) {
-        return entity.getId();
+        return getName(entity);
     }
 }
