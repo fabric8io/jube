@@ -54,7 +54,6 @@ public class ServiceInstance implements EntityListener<Pod> {
     public ServiceInstance(Service service) {
         this.service = service;
         this.id = KubernetesHelper.getName(service);
-        getOrCreateSpec()
         Integer portInt = service.getPort();
         IntOrString containerPort = service.getContainerPort();
         if (service.getPortalIP().equals(HEADLESS_PORTAL_IP)) {

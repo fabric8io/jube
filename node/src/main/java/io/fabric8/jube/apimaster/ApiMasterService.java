@@ -72,7 +72,6 @@ import org.apache.deltaspike.core.api.config.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.fabric8.jube.local.NodeHelper.getOrCreateCurrentState;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateSpec;
 import static io.fabric8.kubernetes.api.KubernetesHelper.setName;
