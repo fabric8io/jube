@@ -29,12 +29,15 @@ import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.fabric8.kubernetes.api.model.util.IntOrString;
 import io.fabric8.utils.Filter;
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 
 /**
  * Represents a running service
@@ -53,16 +56,13 @@ public class ServiceInstance implements EntityListener<Pod> {
 
     public ServiceInstance(Service service) {
         this.service = service;
-        this.id = KubernetesHelper.getName(service);
-        Integer portInt = service.getPort();
-        IntOrString containerPort = service.getContainerPort();
-        if (service.getPortalIP().equals(HEADLESS_PORTAL_IP)) {
+        this.id = getName(service);
+        ServiceSpec spec = KubernetesHelper.getOrCreateSpec(service);
+        List<ServicePort> ports = spec.getPorts();
+        if (spec.getPortalIP().equals(HEADLESS_PORTAL_IP)) {
             //do nothing service is headless
-        } else if (portInt != null && portInt.intValue() > 0 && containerPort != null && KubernetesHelper.getContainerPort(service) > 0) {
-            String name = service.getPortName() != null ? service.getPortName() : getName(service);
-            servicePorts.add(new ServicePort(service.getContainerPort(), name, service.getPort(), service.getProtocol()));
-        } else if (!service.getPorts().isEmpty()) {
-            for (ServicePort servicePort : service.getPorts()) {
+        } else if (ports != null && !ports.isEmpty()) {
+            for (ServicePort servicePort : ports) {
                 servicePorts.add(toNamedServicePort(id, servicePort));
             }
         } else {
@@ -80,8 +80,12 @@ public class ServiceInstance implements EntityListener<Pod> {
     }
 
     private static ServicePort toNamedServicePort(String serviceId, ServicePort servicePort) {
-        String name = !Strings.isNullOrBlank(servicePort.getName()) ? servicePort.getName() : serviceId + "-" + servicePort.getPort().toString();
-        return new ServicePort(servicePort.getContainerPort(), name, servicePort.getPort(), servicePort.getProtocol());
+        String portName = servicePort.getName();
+        String protocol = servicePort.getProtocol();
+        IntOrString targetPort = servicePort.getTargetPort();
+        String name = !Strings.isNullOrBlank(portName) ? portName : serviceId + "-" + targetPort.toString();
+        int port = KubernetesHelper.intOrStringToInteger(targetPort, "service: " + name);
+        return new ServicePort(name, port, protocol, targetPort);
     }
 
     public List<ContainerService> getContainerServices(String name) {
