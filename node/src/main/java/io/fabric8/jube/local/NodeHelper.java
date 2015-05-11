@@ -464,7 +464,7 @@ public final class NodeHelper {
 
         try {
             LOG.info("Deleting pod: {}", getName(pod));
-            model.deletePod(getName(pod), pod.getNamespace());
+            model.deletePod(getName(pod), KubernetesHelper.getNamespace(pod));
         } catch (Exception e) {
             // ignore
             LOG.warn("Error during deleting pod: " + getName(pod) + ". This exception is ignored", e);

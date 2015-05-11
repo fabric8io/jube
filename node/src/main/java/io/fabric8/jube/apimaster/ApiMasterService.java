@@ -48,6 +48,7 @@ import io.fabric8.jube.process.Installation;
 import io.fabric8.jube.process.ProcessManager;
 import io.fabric8.jube.proxy.KubeProxy;
 import io.fabric8.jube.replicator.Replicator;
+import io.fabric8.kubernetes.api.Kubernetes;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Endpoints;
 import io.fabric8.kubernetes.api.model.EndpointsList;
@@ -73,6 +74,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateMetadata;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateSpec;
 import static io.fabric8.kubernetes.api.KubernetesHelper.setName;
 import static io.fabric8.kubernetes.api.KubernetesHelper.setSelector;
@@ -176,7 +178,7 @@ public class ApiMasterService implements KubernetesExtensions {
 
     @Override
     public String createPod(Pod pod, String namespace) throws Exception {
-        pod.setNamespace(namespace);
+        getOrCreateMetadata(pod).setNamespace(namespace);
         return createPod(pod);
     }
 
@@ -212,7 +214,7 @@ public class ApiMasterService implements KubernetesExtensions {
 
     @Override
     public String updatePod(@NotNull String podId, Pod pod, String namespace) throws Exception {
-        pod.setNamespace(namespace);
+        getOrCreateMetadata(pod).setNamespace(namespace);
         return updatePod(podId, pod);
     }
 
@@ -228,7 +230,7 @@ public class ApiMasterService implements KubernetesExtensions {
 
     @Override
     public String updateService(@NotNull String serviceId, Service service, String namespace) throws Exception {
-        service.setNamespace(namespace);
+        getOrCreateMetadata(service).setNamespace(namespace);
         return updateService(serviceId, service);
     }
 
@@ -263,22 +265,22 @@ public class ApiMasterService implements KubernetesExtensions {
 
     @Override
     public String createReplicationController(ReplicationController replicationController, String namespace) throws Exception {
-        replicationController.setNamespace(namespace);
+        getOrCreateMetadata(replicationController).setNamespace(namespace);
         return createReplicationController(replicationController);
     }
 
     @Override
     public String updateReplicationController(@PathParam("controllerId") @NotNull String s, ReplicationController replicationController, @QueryParam("namespace") String s1) throws Exception {
-        replicationController.setNamespace(namespace);
+        getOrCreateMetadata(replicationController).setNamespace(namespace);
         return updateReplicationController(s, replicationController);
     }
 
 
     public String updateReplicationController(@NotNull String controllerId, ReplicationController replicationController) throws Exception {
         // lets ensure there's a default namespace set
-        String namespace = replicationController.getNamespace();
+        String namespace = KubernetesHelper.getNamespace(replicationController);
         if (Strings.isBlank(namespace)) {
-            replicationController.setNamespace(DEFAULT_NAMESPACE);
+            getOrCreateMetadata(replicationController).setNamespace(DEFAULT_NAMESPACE);
         }
         model.updateReplicationController(controllerId, replicationController);
         return null;
@@ -336,7 +338,7 @@ public class ApiMasterService implements KubernetesExtensions {
 
     @Override
     public String createService(Service service, String namespace) throws Exception {
-        service.setNamespace(namespace);
+        getOrCreateMetadata(service).setNamespace(namespace);
         return createService(service);
     }
 
@@ -353,9 +355,9 @@ public class ApiMasterService implements KubernetesExtensions {
         }
 
         // lets ensure there's a default namespace set
-        String namespace = entity.getNamespace();
+        String namespace = KubernetesHelper.getNamespace(entity);
         if (Strings.isBlank(namespace)) {
-            entity.setNamespace(DEFAULT_NAMESPACE);
+            getOrCreateMetadata(entity).setNamespace(DEFAULT_NAMESPACE);
         }
         model.updateService(id, entity);
         return null;
@@ -509,9 +511,9 @@ public class ApiMasterService implements KubernetesExtensions {
         Objects.notNull(desiredState, "desiredState");
 
         // lets ensure there's a default namespace set
-        String namespace = pod.getNamespace();
+        String namespace = KubernetesHelper.getNamespace(pod);
         if (Strings.isBlank(namespace)) {
-            pod.setNamespace(DEFAULT_NAMESPACE);
+            getOrCreateMetadata(pod).setNamespace(DEFAULT_NAMESPACE);
         }
 
         final PodStatus currentState = NodeHelper.getOrCreatetStatus(pod);

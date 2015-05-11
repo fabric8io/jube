@@ -109,7 +109,7 @@ public class LocalKubernetesModel implements KubernetesModel {
 
     @Override
     public void updatePod(String id, Pod pod) {
-        String namespace = defaultNamespace(pod.getNamespace());
+        String namespace = defaultNamespace(KubernetesHelper.getNamespace(pod));
         id = getOrCreateId(id, NodeHelper.KIND_POD);
 
         // lets make sure that for each container we have a current container created
@@ -213,7 +213,7 @@ public class LocalKubernetesModel implements KubernetesModel {
     @Override
     public void updateReplicationController(String id, ReplicationController replicationController) {
         id = getOrCreateId(id, NodeHelper.KIND_REPLICATION_CONTROLLER);
-        String namespace = defaultNamespace(replicationController.getNamespace());
+        String namespace = defaultNamespace(KubernetesHelper.getNamespace(replicationController));
         getInternalReplicationControllerMap(namespace).put(id, replicationController);
     }
 
@@ -257,7 +257,7 @@ public class LocalKubernetesModel implements KubernetesModel {
 
     @Override
     public void updateService(String id, Service entity) {
-        String namespace = defaultNamespace(entity.getNamespace());
+        String namespace = defaultNamespace(KubernetesHelper.getNamespace(entity));
         id = getOrCreateId(id, NodeHelper.KIND_SERVICE);
         getInternalServiceMap(namespace).put(id, entity);
     }

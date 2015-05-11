@@ -15,6 +15,8 @@
  */
 package io.fabric8.jube.model;
 
+import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+
 /**
  * Implements a model for working with {@link HostNode} objects
  */
@@ -26,6 +28,6 @@ public class HostNodeEntityModel extends EntityModelSupport<HostNode> {
 
     @Override
     public String getId(HostNode entity) {
-        return getName(entity);
+        return entity.getId();
     }
 }

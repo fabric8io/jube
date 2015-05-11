@@ -19,6 +19,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import io.fabric8.jube.local.NodeHelper;
+import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ServicePort;
@@ -36,20 +37,20 @@ public class ContainerService {
     public ContainerService(ServicePort servicePort, Pod pod) throws URISyntaxException {
         this.servicePort = servicePort;
         this.pod = pod;
-        int serviceContainerPort = servicePort.getContainerPort().getIntVal();
+        int serviceContainerPort = KubernetesHelper.intOrStringToInteger(servicePort.getTargetPort(), this.toString());
         int port = NodeHelper.findHostPortForService(pod, serviceContainerPort);
 
         // lets get host / port of the container
         String host = null;
         PodStatus currentState = pod.getStatus();
         if (currentState != null) {
-            host = currentState.getHost();
+            host = currentState.getHostIP();
             if (Strings.isBlank(host)) {
                 host = currentState.getPodIP();
             }
         }
         if (Strings.isBlank(host)) {
-            throw new IllegalArgumentException("No host for pod " + getName(pod) + " so cannot use it with service port: " + servicePort.getName());
+            throw new IllegalArgumentException("No host for pod " + KubernetesHelper.getName(pod) + " so cannot use it with service port: " + servicePort.getName());
         } else {
             uri = new URI("tcp://" + host + ":" + port);
         }

@@ -155,7 +155,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
 
     @Override
     public void updateReplicationController(String id, ReplicationController entity) {
-        writeEntity(zkPathForReplicationController(id, entity.getNamespace()), entity);
+        writeEntity(zkPathForReplicationController(id, KubernetesHelper.getNamespace(entity)), entity);
         //memoryModel.updateReplicationController(id, entity);
     }
 
@@ -339,7 +339,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         String id = getName(pod);
         LOG.info("Attempting to delete pod: " + id + " on host: " + hostNode.getWebUrl());
         KubernetesExtensionsClient client = createClient(hostNode);
-        return client.deleteLocalPod(id, pod.getNamespace());
+        return client.deleteLocalPod(id, KubernetesHelper.getNamespace(pod));
     }
 
 
@@ -447,7 +447,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         if (remove) {
             String id = getName(entity);
             if (Strings.isNotBlank(id)) {
-                memoryModel.deletePod(id, entity.getNamespace());
+                memoryModel.deletePod(id, KubernetesHelper.getNamespace(entity));
                 podListeners.entityDeleted(id);
 
             }
@@ -467,7 +467,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         if (remove) {
             String id = getName(entity);
             if (Strings.isNotBlank(id)) {
-                memoryModel.deleteReplicationController(id, entity.getNamespace());
+                memoryModel.deleteReplicationController(id, KubernetesHelper.getNamespace(entity));
                 replicationControllerListeners.entityDeleted(id);
             }
         } else {
@@ -481,7 +481,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
         if (remove) {
             String id = getName(entity);
             if (Strings.isNotBlank(id)) {
-                memoryModel.deleteService(id, entity.getNamespace());
+                memoryModel.deleteService(id, KubernetesHelper.getNamespace(entity));
                 serviceListeners.entityDeleted(id);
             }
         } else {

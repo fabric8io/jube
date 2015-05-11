@@ -57,6 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateMetadata;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getPodStatus;
 import static io.fabric8.kubernetes.api.KubernetesHelper.setName;
 
@@ -285,7 +286,7 @@ public class Replicator {
             }
             PodTemplateSpec podTemplate = replicationControllerSpec.getTemplate();
             if (podTemplate != null) {
-                pod.setLabels(podTemplate.getLabels());
+                getOrCreateMetadata(pod).setLabels(KubernetesHelper.getLabels(podTemplate.getMetadata()));
             }
             // TODO should we update the pod now we've updated it?
             List<Container> desiredContainers = NodeHelper.getOrCreatePodDesiredContainers(pod);
