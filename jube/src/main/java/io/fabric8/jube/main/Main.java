@@ -19,8 +19,6 @@ import io.fabric8.jube.apimaster.ApiMasterService;
 import io.fabric8.jube.util.JubeVersionUtils;
 import io.fabric8.kubernetes.api.KubernetesClient;
 import io.fabric8.kubernetes.api.KubernetesFactory;
-import io.fabric8.kubernetes.mbeans.AppView;
-import io.fabric8.kubernetes.mbeans.KubernetesManager;
 import io.fabric8.utils.Systems;
 import io.hawt.aether.AetherFacade;
 import io.hawt.git.GitFacade;
@@ -215,9 +213,6 @@ public final class Main {
 
         AetherFacade aetherFacade = new AetherFacade();
         aetherFacade.init();
-
-        KubernetesManager kubernetesManager = new KubernetesManager(kubernetesClient);
-        kubernetesManager.init();
     }
 
     protected static KubernetesClient createKubernetesClient() {
@@ -228,8 +223,6 @@ public final class Main {
 
     protected static void initialiseHawtioStuffAfterStart() throws Exception {
         KubernetesClient kubernetesClient = createKubernetesClient();
-        AppView appView = new AppView(kubernetesClient);
-        appView.init();
     }
 
     private static void initaliseGitStuff() throws Exception {

@@ -15,27 +15,6 @@
  */
 package io.fabric8.jube.apimaster;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.fabric8.jube.ServiceIDs;
@@ -48,22 +27,28 @@ import io.fabric8.jube.process.Installation;
 import io.fabric8.jube.process.ProcessManager;
 import io.fabric8.jube.proxy.KubeProxy;
 import io.fabric8.jube.replicator.Replicator;
-import io.fabric8.kubernetes.api.Kubernetes;
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.EndpointAddress;
+import io.fabric8.kubernetes.api.model.EndpointSubset;
 import io.fabric8.kubernetes.api.model.Endpoints;
+import io.fabric8.kubernetes.api.model.EndpointsBuilder;
 import io.fabric8.kubernetes.api.model.EndpointsList;
+import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.NamespaceList;
 import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.api.model.NodeSpec;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.ObjectReference;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodStatus;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.ServiceList;
+import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.fabric8.kubernetes.api.model.util.IntOrString;
@@ -72,6 +57,27 @@ import io.hawt.util.Strings;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateMetadata;
@@ -394,34 +400,42 @@ public class ApiMasterService implements KubernetesExtensions {
         if (serviceSpec == null) {
             return null;
         }
-        Endpoints answer = new Endpoints();
-        answer.setName(getName(service));
-        List<String> urls = new ArrayList<>();
-        answer.setEndpoints(urls);
-        IntOrString containerPort = serviceSpec.getContainerPort();
-        if (containerPort != null) {
-            String strVal = containerPort.getStrVal();
-            if (strVal == null) {
-                Integer intVal = containerPort.getIntVal();
-                if (intVal != null) {
-                    strVal = intVal.toString();
-                }
-            }
-            if (strVal != null) {
-                String containerPortText = ":" + strVal;
+        List<EndpointAddress> addresses = new ArrayList<>();
+        String namespace = KubernetesHelper.getNamespace(service);
+        String serviceName = getName(service);
+        String qualifiedServiceName = namespace + ":" + serviceName;
+
+        List<ServicePort> ports = serviceSpec.getPorts();
+        for (ServicePort servicePort : ports) {
+            IntOrString targetPort = servicePort.getTargetPort();
+
+            Integer portNumber = KubernetesHelper.intOrStringToInteger(targetPort, qualifiedServiceName);
+            if (portNumber != null) {
                 List<Pod> podsForService = KubernetesHelper.getPodsForService(service, pods);
                 for (Pod pod : podsForService) {
                     PodStatus currentState = pod.getStatus();
                     if (currentState != null) {
                         String podIP = currentState.getPodIP();
                         if (podIP != null) {
-                            String url = podIP + containerPortText;
+                            String url = podIP + ":" + portNumber;
+                            EndpointAddress address = new EndpointAddress();
+                            address.setIP(podIP);
+                            ObjectReference ref = new ObjectReference();
+                            ref.setNamespace(namespace);
+                            ref.setName(getName(pod));
+                            address.setTargetRef(ref);
+                            addresses.add(address);
                         }
                     }
                 }
             }
         }
-        return answer;
+        EndpointSubset subset = new EndpointSubset();
+        subset.setAddresses(addresses);
+        return new EndpointsBuilder().
+                withNewMetadata().withName(serviceName).withNamespace(namespace).endMetadata().
+                addToSubsets(subset).
+                build();
     }
 
     public EndpointsList getEndpoints() {
@@ -454,7 +468,9 @@ public class ApiMasterService implements KubernetesExtensions {
             Node minion = new Node();
             NodeSpec nodeSpec = new NodeSpec();
             minion.setSpec(nodeSpec);
-            minion.setName(value.getId());
+            ObjectMeta metadata = new ObjectMeta();
+            metadata.setName(value.getId());
+            minion.setMetadata(metadata);
             // TODO no hostName on a minion
             //minion.setHostIP(value.getHostName());
             items.add(minion);
@@ -462,8 +478,9 @@ public class ApiMasterService implements KubernetesExtensions {
         return answer;
     }
 
+
     @Override
-    public Node minion(@NotNull String name) {
+    public Node node(@NotNull String name) {
         NodeList minionList = getNodes();
         List<Node> minions = notNullList(minionList.getItems());
         for (Node minion : minions) {
@@ -473,6 +490,7 @@ public class ApiMasterService implements KubernetesExtensions {
         }
         return null;
     }
+
 
     // Host nodes
     //-------------------------------------------------------------------------
@@ -519,7 +537,7 @@ public class ApiMasterService implements KubernetesExtensions {
         final PodStatus currentState = NodeHelper.getOrCreatetStatus(pod);
         final List<Container> containers = KubernetesHelper.getContainers(pod);
 
-        NodeHelper.setPodStatus(pod, Statuses.WAITING);
+        NodeHelper.setPodWaiting(pod);
         NodeHelper.setContainerRunningState(pod, podId, false);
 
         model.updatePod(podId, pod);
@@ -573,6 +591,65 @@ public class ApiMasterService implements KubernetesExtensions {
 
     }
 
+    @Override
+    public String createNamespace(Namespace namespace) throws Exception {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public NamespaceList getNamespaces() {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public Namespace getNamespace(@NotNull String s) {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public String updateNamespace(@NotNull String s, Namespace namespace) throws Exception {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public String deleteNamespace(@NotNull String s) throws Exception {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public io.fabric8.kubernetes.api.model.SecretList getSecrets(String s) {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public String createSecret(io.fabric8.kubernetes.api.model.Secret secret, String s) throws Exception {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public io.fabric8.kubernetes.api.model.Secret getSecret(@NotNull String s, String s1) {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public String updateSecret(@NotNull String s, io.fabric8.kubernetes.api.model.Secret secret, String s1) throws Exception {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public String deleteSecret(@NotNull String s, String s1) throws Exception {
+        // TODO
+        return null;
+    }
 
     /**
      * Lets ensure that the "kubernetes" and "kubernetes-ro" services are defined so that folks can access the core

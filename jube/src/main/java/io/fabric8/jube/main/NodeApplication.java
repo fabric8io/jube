@@ -15,20 +15,18 @@
  */
 package io.fabric8.jube.main;
 
-import java.util.HashSet;
-import java.util.Set;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import io.fabric8.jube.apimaster.ApiMasterService;
+import org.apache.cxf.feature.LoggingFeature;
+import org.apache.cxf.jaxrs.swagger.SwaggerFeature;
+import org.apache.deltaspike.core.api.config.ConfigProperty;
+
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
-
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import io.fabric8.jube.apimaster.ApiMasterService;
-import io.fabric8.jube.apimaster.ApiV1Beta1;
-import io.fabric8.jube.apimaster.ApiV1Beta2;
-import org.apache.cxf.feature.LoggingFeature;
-import org.apache.cxf.jaxrs.swagger.SwaggerFeature;
-import org.apache.deltaspike.core.api.config.ConfigProperty;
+import java.util.HashSet;
+import java.util.Set;
 
 @ApplicationPath("/")
 public class NodeApplication extends Application {
@@ -40,12 +38,6 @@ public class NodeApplication extends Application {
     private ApiMasterService apiMasterService;
 
     @Inject
-    private ApiV1Beta1 v1beta1;
-
-    @Inject
-    private ApiV1Beta2 v1beta2;
-
-    @Inject
     @ConfigProperty(name = "CXF_LOG_REQUESTS", defaultValue = "false")
     private boolean cxfLogRequests;
 
@@ -53,8 +45,6 @@ public class NodeApplication extends Application {
     public Set<Object> getSingletons() {
         Set<Object> answer = new HashSet<Object>();
         answer.add(apiMasterService);
-        answer.add(v1beta1);
-        answer.add(v1beta2);
         answer.add(jacksonJsonProvider);
         answer.add(new SwaggerFeature());
 /*

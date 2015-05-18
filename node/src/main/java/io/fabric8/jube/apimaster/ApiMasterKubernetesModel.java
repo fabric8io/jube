@@ -35,7 +35,6 @@ import io.fabric8.jube.model.HostNodeModel;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ServiceList;
@@ -312,8 +311,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
                 }
             }
         }
-        PodStatus currentState = NodeHelper.getOrCreatetStatus(pod);
-        currentState.setStatus("Terminated: " + failed);
+        NodeHelper.setPodTerminated(pod, failed);
         return null;
     }
 

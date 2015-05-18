@@ -18,6 +18,7 @@ package io.fabric8.jube.local;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,9 +37,9 @@ import io.fabric8.jube.process.ProcessManager;
 import io.fabric8.jube.util.ImageMavenCoords;
 import io.fabric8.jube.util.InstallHelper;
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.PodStatusType;
 import io.fabric8.kubernetes.api.model.ContainerState;
 import io.fabric8.kubernetes.api.model.ContainerStateRunning;
+import io.fabric8.kubernetes.api.model.ContainerStatusBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
@@ -140,14 +141,14 @@ public final class NodeHelper {
     /**
      * Returns the current container map for the current pod state; lazily creating if required
      */
-    public static Map<String, ContainerStatus> getOrCreateCurrentContainerInfo(Pod pod) {
+    public static List<ContainerStatus> getOrCreateContainerStatuses(Pod pod) {
         PodStatus currentState = getOrCreatetStatus(pod);
-        Map<String, ContainerStatus> info = currentState.getInfo();
-        if (info == null) {
-            info = new HashMap<>();
-            currentState.setInfo(info);
+        List<ContainerStatus> containerStatuses = currentState.getContainerStatuses();
+        if (containerStatuses == null) {
+            containerStatuses = new ArrayList<>();
+            currentState.setContainerStatuses(containerStatuses);
         }
-        return info;
+        return containerStatuses;
     }
 
     /**
@@ -167,13 +168,17 @@ public final class NodeHelper {
      * Returns the container information for the given pod and container name, lazily creating as required
      */
     public static ContainerStatus getOrCreateContainerInfo(Pod pod, String containerName) {
-        Map<String, ContainerStatus> map = getOrCreateCurrentContainerInfo(pod);
-        ContainerStatus containerInfo = map.get(containerName);
-        if (containerInfo == null) {
-            containerInfo = new ContainerStatus();
-            map.put(containerName, containerInfo);
+        List<ContainerStatus> containerStatuses = getOrCreateContainerStatuses(pod);
+        for (ContainerStatus containerStatus : containerStatuses) {
+            String containerID = containerStatus.getContainerID();
+            if (Objects.equal(containerName, containerID)) {
+                return containerStatus;
+            }
         }
-        return containerInfo;
+        ContainerStatus status = new ContainerStatus();
+        status.setContainerID(containerName);
+        containerStatuses.add(status);
+        return status;
     }
 
     /**
@@ -288,12 +293,13 @@ public final class NodeHelper {
 
             containerAlive(pod, containerName, alive);
         } catch (Exception e) {
-            currentState.setStatus("Terminated: " + e);
+            setPodTerminated(currentState, e);
             System.out.println("ERROR: Failed to create pod: " + getName(pod) + ". " + e);
             e.printStackTrace();
             LOG.error("Failed to create pod: " + getName(pod) + ". " + e.getMessage(), e);
         }
     }
+
 
     protected static List<ContainerPort> createInstallationPorts(Map<String, String> environment, Installation installation, Container container) {
         try {
@@ -486,22 +492,28 @@ public final class NodeHelper {
 
     public static void containerAlive(Pod pod, String id, boolean alive) {
         PodStatus currentState = getOrCreatetStatus(pod);
-        String status = currentState.getStatus();
         if (alive) {
-            currentState.setStatus(Statuses.RUNNING);
+            setPodRunning(currentState);
         } else {
-            if (Strings.isNullOrBlank(status)) {
-                currentState.setStatus(Statuses.WAITING);
-            } else if (!Objects.equal(Statuses.WAITING, status)) {
-                currentState.setStatus(Statuses.TERMINATED);
+            // lets check if we're waiting...
+            List<ContainerStatus> containerStatuses = getOrCreateContainerStatuses(pod);
+            if (containerStatuses.isEmpty() || isWaiting(containerStatuses)) {
+                setPodWaiting(currentState);
+            } else {
+                setPodTerminated(currentState, "Failed");
             }
         }
         setContainerRunningState(pod, id, alive);
     }
 
-    public static void setPodStatus(Pod pod, String status) {
-        PodStatus currentState = getOrCreatetStatus(pod);
-        currentState.setStatus(status);
+    protected static boolean isWaiting(List<ContainerStatus> containerStatuses) {
+        for (ContainerStatus status : containerStatuses) {
+            ContainerState state = status.getState();
+            if (state != null && state.getWaiting() != null) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void setContainerRunningState(Pod pod, String id, boolean alive) {
@@ -650,5 +662,69 @@ public final class NodeHelper {
         String oldJson = getPodJson(oldEntity);
         String newJson = getPodJson(currentEntity);
         return !java.util.Objects.equals(oldJson, newJson);
+    }
+
+    public static void setPodTerminated(Pod pod, Exception failed) {
+        PodStatus currentState = getOrCreatetStatus(pod);
+        setPodTerminated(currentState, failed);
+    }
+
+    public static void setPodTerminated(PodStatus podStatus, Exception exception) {
+        setPodTerminated(podStatus, exception.getMessage());
+    }
+
+    public static void setPodTerminated(PodStatus podStatus, String message) {
+        List<ContainerStatus> containerStatuses = podStatus.getContainerStatuses();
+        if (containerStatuses == null) {
+            containerStatuses = new ArrayList<ContainerStatus>();
+            podStatus.setContainerStatuses(containerStatuses);
+        }
+        containerStatuses.clear();
+        ContainerStatus status = new ContainerStatusBuilder().withNewState().
+                withNewTermination().withMessage(message).withFinishedAt(createAtString()).endTermination().endState().
+                build();
+        containerStatuses.add(status);
+        podStatus.setContainerStatuses(containerStatuses);
+    }
+
+    public static String createAtString() {
+        return new Date().toString();
+    }
+
+    public static void setPodRunning(PodStatus podStatus) {
+        List<ContainerStatus> containerStatuses = podStatus.getContainerStatuses();
+        if (containerStatuses == null) {
+            containerStatuses = new ArrayList<ContainerStatus>();
+            podStatus.setContainerStatuses(containerStatuses);
+        }
+        containerStatuses.clear();
+        ContainerStatus status = new ContainerStatusBuilder().withNewState().
+                withNewRunning().withStartedAt(createAtString()).endRunning().endState().
+                build();
+        containerStatuses.add(status);
+        podStatus.setContainerStatuses(containerStatuses);
+    }
+
+    public static void setPodWaiting(Pod pod) {
+        PodStatus podStatus = getOrCreatetStatus(pod);
+        setPodWaiting(podStatus);
+    }
+
+    public static void setPodWaiting(PodStatus podStatus) {
+        setPodWaiting(podStatus, "Waiting for download");
+    }
+
+    public static void setPodWaiting(PodStatus podStatus, String reason) {
+        List<ContainerStatus> containerStatuses = podStatus.getContainerStatuses();
+        if (containerStatuses == null) {
+            containerStatuses = new ArrayList<ContainerStatus>();
+            podStatus.setContainerStatuses(containerStatuses);
+        }
+        containerStatuses.clear();
+        ContainerStatus status = new ContainerStatusBuilder().withNewState().
+                withNewWaiting().withReason(reason).endWaiting().endState().
+                build();
+        containerStatuses.add(status);
+        podStatus.setContainerStatuses(containerStatuses);
     }
 }

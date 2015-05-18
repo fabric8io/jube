@@ -15,21 +15,18 @@
  */
 package io.fabric8.jube.war;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import io.fabric8.cxf.endpoint.EnableJMXFeature;
+import io.fabric8.jube.apimaster.ApiMasterService;
+import org.apache.cxf.feature.LoggingFeature;
+
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
-
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import io.fabric8.cxf.endpoint.EnableJMXFeature;
-import io.fabric8.jube.apimaster.ApiMasterService;
-
-import io.fabric8.jube.apimaster.ApiV1Beta1;
-import io.fabric8.jube.apimaster.ApiV1Beta2;
-import org.apache.cxf.feature.LoggingFeature;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 @ApplicationPath("/api")
 public class NodeApplication extends Application {
@@ -40,12 +37,6 @@ public class NodeApplication extends Application {
     @Inject
     private ApiMasterService apiMasterService;
 
-    @Inject
-    private ApiV1Beta1 v1beta1;
-
-    @Inject
-    private ApiV1Beta2 v1beta2;
-
     public NodeApplication() {
         System.out.println("==================== started NodeApplication");
     }
@@ -55,8 +46,6 @@ public class NodeApplication extends Application {
         return new HashSet<Object>(
                 Arrays.asList(
                         apiMasterService,
-                        v1beta1,
-                        v1beta2,
                         jacksonJsonProvider,
                         // TODO
                         // new SwaggerFeature(),

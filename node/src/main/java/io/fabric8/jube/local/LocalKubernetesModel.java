@@ -28,6 +28,7 @@ import com.google.common.collect.Lists;
 import io.fabric8.jube.KubernetesModel;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerState;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -113,17 +114,10 @@ public class LocalKubernetesModel implements KubernetesModel {
         id = getOrCreateId(id, NodeHelper.KIND_POD);
 
         // lets make sure that for each container we have a current container created
-        Map<String, ContainerStatus> info = NodeHelper.getOrCreateCurrentContainerInfo(pod);
-
         List<Container> containers = KubernetesHelper.getContainers(pod);
         for (Container container : containers) {
-            String name = getOrCreateId(container.getName(), NodeHelper.KIND_POD);
-            container.setName(name);
-            ContainerStatus containerInfo = info.get(name);
-            if (containerInfo == null) {
-                containerInfo = new ContainerStatus();
-                info.put(name, containerInfo);
-            }
+            String name =  getOrCreateId(container.getName(), NodeHelper.KIND_POD);
+            ContainerState containerState = NodeHelper.getOrCreateContainerState(pod, name);
         }
         getInternalPodMap(namespace).put(id, pod);
     }
