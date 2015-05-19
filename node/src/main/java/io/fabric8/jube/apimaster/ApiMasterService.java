@@ -90,7 +90,7 @@ import static io.fabric8.utils.Lists.notNullList;
  * Implements the local node controller
  */
 @Singleton
-@Path("v1beta2")
+@Path("v1beta3")
 @Produces("application/json")
 @Consumes("application/json")
 public class ApiMasterService implements KubernetesExtensions {
