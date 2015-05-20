@@ -115,7 +115,7 @@ public class ServiceInstance implements EntityListener<Pod> {
     }
 
     @Override
-    public void entityDeleted(String podId) {
+    public void entityDeleted(String podId, Pod entity) {
         containerServices.removeAll(podId);
     }
 

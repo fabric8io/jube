@@ -15,6 +15,8 @@
  */
 package io.fabric8.jube.local;
 
+import io.fabric8.kubernetes.api.model.Pod;
+
 /**
  * Event listener for entity events.
  */
@@ -28,5 +30,5 @@ public interface EntityListener<T> {
     /**
      * Invoked when an entity is deleted
      */
-    void entityDeleted(String id);
+    void entityDeleted(String id, T entity);
 }

@@ -172,8 +172,8 @@ public class ZkCacheModel<T> {
             return;
         }
         if (remove) {
-            entityModel.deleteEntity(id);
-            entityListeners.entityDeleted(id);
+            T entity = entityModel.deleteEntity(id);
+            entityListeners.entityDeleted(id, entity);
         } else {
             try {
                 T entity = entityModel.updateEntity(id, data);

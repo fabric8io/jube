@@ -81,8 +81,8 @@ public class ServiceProxy implements EntityListener<Pod> {
     }
 
     @Override
-    public void entityDeleted(String id) {
-        service.entityDeleted(id);
+    public void entityDeleted(String id, Pod entity) {
+        service.entityDeleted(id, entity);
     }
 
     // Properties

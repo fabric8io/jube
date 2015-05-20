@@ -18,9 +18,7 @@ package io.fabric8.jube.proxy;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.inject.Inject;
@@ -63,10 +61,10 @@ public class KubeProxy {
             }
 
             @Override
-            public void entityDeleted(String id) {
+            public void entityDeleted(String id, Pod entity) {
                 Collection<ServiceProxy> services = getServices();
                 for (ServiceProxy service : services) {
-                    service.entityDeleted(id);
+                    service.entityDeleted(id, entity);
                 }
             }
         });
@@ -78,7 +76,7 @@ public class KubeProxy {
             }
 
             @Override
-            public void entityDeleted(String id) {
+            public void entityDeleted(String id, Service entity) {
                 serviceDeleted(id);
             }
         });

@@ -109,10 +109,7 @@ public class WatchWebSocket {
                             sendAsJson(msg);
                         }
                         @Override
-                        public void entityDeleted(String id) {
-                            Pod entity = new Pod();
-                            entity.setMetadata(new ObjectMeta());
-                            KubernetesHelper.setName(entity, id);
+                        public void entityDeleted(String id, Pod entity) {
                             Map<String, Object> msg = getDeletedMessage(entity);
                             sendAsJson(msg);
                         }
@@ -134,10 +131,7 @@ public class WatchWebSocket {
                             sendAsJson(msg);
                         }
                         @Override
-                        public void entityDeleted(String id) {
-                            ReplicationController entity = new ReplicationController();
-                            entity.setMetadata(new ObjectMeta());
-                            KubernetesHelper.setName(entity, id);
+                        public void entityDeleted(String id, ReplicationController entity) {
                             Map<String, Object> msg = getDeletedMessage(entity);
                             sendAsJson(msg);
                         }
@@ -159,10 +153,7 @@ public class WatchWebSocket {
                             sendAsJson(msg);
                         }
                         @Override
-                        public void entityDeleted(String id) {
-                            Service entity = new Service();
-                            entity.setMetadata(new ObjectMeta());
-                            KubernetesHelper.setName(entity, id);
+                        public void entityDeleted(String id, Service entity) {
                             Map<String, Object> msg = getDeletedMessage(entity);
                             sendAsJson(msg);
                         }

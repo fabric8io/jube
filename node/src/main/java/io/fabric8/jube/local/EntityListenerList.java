@@ -15,6 +15,8 @@
  */
 package io.fabric8.jube.local;
 
+import io.fabric8.kubernetes.api.model.Pod;
+
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -40,9 +42,9 @@ public class EntityListenerList<T> implements EntityListener<T> {
     }
 
     @Override
-    public void entityDeleted(String id) {
+    public void entityDeleted(String id, T entity) {
         for (EntityListener<T> listener : listeners) {
-            listener.entityDeleted(id);
+            listener.entityDeleted(id, entity);
         }
     }
 }

@@ -446,7 +446,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
             String id = getName(entity);
             if (Strings.isNotBlank(id)) {
                 memoryModel.deletePod(id, KubernetesHelper.getNamespace(entity));
-                podListeners.entityDeleted(id);
+                podListeners.entityDeleted(id, entity);
 
             }
         } else {
@@ -466,7 +466,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
             String id = getName(entity);
             if (Strings.isNotBlank(id)) {
                 memoryModel.deleteReplicationController(id, KubernetesHelper.getNamespace(entity));
-                replicationControllerListeners.entityDeleted(id);
+                replicationControllerListeners.entityDeleted(id, entity);
             }
         } else {
             String id = memoryModel.getOrCreateId(getName(entity), NodeHelper.KIND_REPLICATION_CONTROLLER);
@@ -480,7 +480,7 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
             String id = getName(entity);
             if (Strings.isNotBlank(id)) {
                 memoryModel.deleteService(id, KubernetesHelper.getNamespace(entity));
-                serviceListeners.entityDeleted(id);
+                serviceListeners.entityDeleted(id, entity);
             }
         } else {
             String id = memoryModel.getOrCreateId(getName(entity), NodeHelper.KIND_SERVICE);
