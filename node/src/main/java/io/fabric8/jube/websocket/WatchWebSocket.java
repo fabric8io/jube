@@ -191,11 +191,11 @@ public class WatchWebSocket {
                 Method method = objs.getClass().getMethod("getItems", null);
                 sendAddedMessages((List)method.invoke(objs, null));
             } catch (NoSuchMethodException e) {
-                e.printStackTrace();
+                LOG.debug("Failed to send messages due to: ", e);
             } catch (InvocationTargetException e) {
-                e.printStackTrace();
+                LOG.debug("Failed to send messages due to: ", e);
             } catch (IllegalAccessException e) {
-                e.printStackTrace();
+                LOG.debug("Failed to send messages due to: ", e);
             }
         }
     }
