@@ -17,13 +17,13 @@ package io.fabric8.jube.main;
 
 import io.fabric8.jube.apimaster.ApiMasterService;
 import io.fabric8.jube.util.JubeVersionUtils;
+import io.fabric8.jube.websocket.WatchWebSocketServlet;
 import io.fabric8.kubernetes.api.KubernetesClient;
 import io.fabric8.kubernetes.api.KubernetesFactory;
 import io.fabric8.utils.Systems;
 import io.hawt.aether.AetherFacade;
 import io.hawt.git.GitFacade;
 import io.hawt.kubernetes.KubernetesService;
-import org.apache.cxf.cdi.CXFCdiServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -112,18 +112,18 @@ public final class Main {
             initialiseHawtioStuff();
 
             // Register and map the dispatcher servlet
-            final ServletHolder servletHolder = new ServletHolder(new CXFCdiServlet());
+            //final ServletHolder servletHolder = new ServletHolder(new CXFCdiServlet());
 
-            // change default service list URI
-            servletHolder.setInitParameter("service-list-path", "/cxf/servicesList");
 
             final ServletContextHandler context = new ServletContextHandler();
             context.setClassLoader(classLoader);
             context.setContextPath("/");
-            context.addEventListener(new Listener());
             context.addEventListener(new BeanManagerResourceBindingListener());
-            context.addServlet(servletHolder, "/api/*");
-            context.addServlet(servletHolder, "/kubernetes/api/*");
+            context.addEventListener(new Listener());
+            //context.addServlet(servletHolder, "/api/*");
+            //context.addServlet(servletHolder, "/kubernetes/api/*");
+            context.addServlet(WatchWebSocketServlet.class, "/api/*");
+            //context.addServlet(WatchWebSocketServlet.class, "/kubernetes/api/*");
             context.addServlet(new ServletHolder(new RootServlet()), "/");
 
             handlers.addHandler(context);

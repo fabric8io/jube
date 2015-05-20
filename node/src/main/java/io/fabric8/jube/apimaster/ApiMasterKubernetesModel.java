@@ -55,6 +55,7 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 /**
  * Mirrors ZooKeeper data into a local in memory model and all updates to the model are written directly to ZooKeeper
  */
+@Singleton
 public class ApiMasterKubernetesModel implements KubernetesModel {
     
     private static final transient Logger LOG = LoggerFactory.getLogger(ApiMasterKubernetesModel.class);
@@ -75,7 +76,6 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
     private final EntityListenerList<ReplicationController> replicationControllerListeners = new EntityListenerList<>();
     private final EntityListenerList<Service> serviceListeners = new EntityListenerList<>();
 
-    @Singleton
     @Inject
     public ApiMasterKubernetesModel(CuratorFramework curator, HostNodeModel hostNodeModel) throws Exception {
         this.curator = curator;

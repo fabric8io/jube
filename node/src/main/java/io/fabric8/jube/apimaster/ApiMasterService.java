@@ -591,6 +591,8 @@ public class ApiMasterService implements KubernetesExtensions {
 
     }
 
+    public ApiMasterKubernetesModel getModel() { return this.model; }
+
     @Override
     public String createNamespace(Namespace namespace) throws Exception {
         // TODO
@@ -599,8 +601,16 @@ public class ApiMasterService implements KubernetesExtensions {
 
     @Override
     public NamespaceList getNamespaces() {
-        // TODO
-        return null;
+        // TODO - Hacking in a quick default for now...
+        NamespaceList answer = new NamespaceList();
+        answer.setApiVersion(NamespaceList.ApiVersion.V_1_BETA_3);
+        List<Namespace> items = new ArrayList<Namespace>();
+        Namespace _default = new Namespace();
+        _default.setMetadata(new ObjectMeta());
+        _default.getMetadata().setName("default");
+        items.add(_default);
+        answer.setItems(items);
+        return answer;
     }
 
     @Override
