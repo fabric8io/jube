@@ -51,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+import static java.util.UUID.randomUUID;
 
 /**
  * Mirrors ZooKeeper data into a local in memory model and all updates to the model are written directly to ZooKeeper
@@ -455,6 +456,9 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
             // lets only replace the Pod if it really has changed to avoid overwriting
             // pods which are being installed
             if (NodeHelper.podHasChanged(entity, old)) {
+                if (entity.getMetadata().getUid() == null) {
+                    entity.getMetadata().setUid(getNamespace() + '/' + id);
+                }
                 memoryModel.updatePod(id, entity);
                 podListeners.entityChanged(id, entity);
             }
@@ -470,6 +474,9 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
             }
         } else {
             String id = memoryModel.getOrCreateId(getName(entity), NodeHelper.KIND_REPLICATION_CONTROLLER);
+            if (entity.getMetadata().getUid() == null) {
+                entity.getMetadata().setUid(getNamespace() + '/' + id);
+            }
             memoryModel.updateReplicationController(id, entity);
             replicationControllerListeners.entityChanged(id, entity);
         }
@@ -484,6 +491,9 @@ public class ApiMasterKubernetesModel implements KubernetesModel {
             }
         } else {
             String id = memoryModel.getOrCreateId(getName(entity), NodeHelper.KIND_SERVICE);
+            if (entity.getMetadata().getUid() == null) {
+                entity.getMetadata().setUid(getNamespace() + '/' + id);
+            }
             memoryModel.updateService(id, entity);
             serviceListeners.entityChanged(id, entity);
         }
