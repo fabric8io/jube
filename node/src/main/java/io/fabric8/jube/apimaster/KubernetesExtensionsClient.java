@@ -40,16 +40,16 @@ public class KubernetesExtensionsClient extends KubernetesClient implements Kube
     }
 
     public static KubernetesFactory createJubeFactory(String address) {
-        return new KubernetesFactory(address, true, false);
+        return new KubernetesFactory(address, false);
     }
 
     public KubernetesExtensionsClient(KubernetesFactory factory) {
-        super(factory, factory);
+        super(factory);
     }
 
     public KubernetesExtensions getExtensions() {
         if (extensions == null) {
-            extensions = getFactory(true).createWebClient(KubernetesExtensions.class);
+            extensions = getFactory().createWebClient(KubernetesExtensions.class);
         }
         return extensions;
     }

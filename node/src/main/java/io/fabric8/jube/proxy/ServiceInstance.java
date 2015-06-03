@@ -82,10 +82,11 @@ public class ServiceInstance implements EntityListener<Pod> {
     private static ServicePort toNamedServicePort(String serviceId, ServicePort servicePort) {
         String portName = servicePort.getName();
         String protocol = servicePort.getProtocol();
+        Integer nodePort = servicePort.getNodePort();
         IntOrString targetPort = servicePort.getTargetPort();
         String name = !Strings.isNullOrBlank(portName) ? portName : serviceId + "-" + targetPort.toString();
         int port = KubernetesHelper.intOrStringToInteger(targetPort, "service: " + name);
-        return new ServicePort(name, port, protocol, targetPort);
+        return new ServicePort(name, nodePort, port, protocol, targetPort);
     }
 
     public List<ContainerService> getContainerServices(String name) {

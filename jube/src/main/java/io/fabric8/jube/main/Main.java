@@ -217,8 +217,8 @@ public final class Main {
 
     protected static KubernetesClient createKubernetesClient() {
         final String kubernetesAddress = "http://" + ApiMasterService.getHostName() + ":8585/";
-        KubernetesFactory factory = new KubernetesFactory(kubernetesAddress, true, false);
-        return new KubernetesClient(factory, factory);
+        KubernetesFactory factory = new KubernetesFactory(kubernetesAddress, false);
+        return new KubernetesClient(factory);
     }
 
     protected static void initialiseHawtioStuffAfterStart() throws Exception {
