@@ -119,7 +119,7 @@ if "%EXTRA_JAVA_OPTS%" == "" goto :KARAF_EXTRA_JAVA_OPTS_END
 set CLASSPATH=%KARAF_HOME%\lib\bin\karaf-client.jar
 set CLASSPATH=%CLASSPATH%;%KARAF_HOME%\system\org\apache\sshd\sshd-core\0.12.0\sshd-core-0.12.0.jar
 set CLASSPATH=%CLASSPATH%;%KARAF_HOME%\system\org\apache\mina\mina-core\2.0.7\mina-core-2.0.7.jar
-set CLASSPATH=%CLASSPATH%;%KARAF_HOME%\system\org\apache\karaf\shell\org.apache.karaf.shell.console\2.4.0\org.apache.karaf.shell.console-2.4.0.jar
+set CLASSPATH=%CLASSPATH%;%KARAF_HOME%\system\org\apache\karaf\shell\org.apache.karaf.shell.console\2.4.2\org.apache.karaf.shell.console-2.4.2.jar
 
 :EXECUTE
     if "%SHIFT%" == "true" SET ARGS=%2 %3 %4 %5 %6 %7 %8 %9

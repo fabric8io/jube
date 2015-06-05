@@ -125,7 +125,7 @@ if "%KARAF_DEBUG%" == "" goto :KARAF_DEBUG_END
     call :warn Enabling Java debug options: %JAVA_DEBUG_OPTS%
 :KARAF_DEBUG_END
 
-set CLASSPATH=%KARAF_HOME%\system\org\apache\karaf\shell\org.apache.karaf.shell.console\2.4.0\org.apache.karaf.shell.console-2.4.0.jar
+set CLASSPATH=%KARAF_HOME%\system\org\apache\karaf\shell\org.apache.karaf.shell.console\2.4.2\org.apache.karaf.shell.console-2.4.2.jar
 set CLASSPATH=%CLASSPATH%;%KARAF_HOME%\system\org\ops4j\pax\logging\pax-logging-api\1.7.4\pax-logging-api-1.7.4.jar
 
 :EXECUTE
