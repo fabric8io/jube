@@ -28,7 +28,7 @@
 
   <groupId>io.fabric8.jube</groupId>
   <artifactId>parent-project</artifactId>
-  <version>2.2-SNAPSHOT</version>
+  <version>2.1.11</version>
   <packaging>pom</packaging>
 
   <name>Jube :: Parent Project</name>
@@ -58,7 +58,7 @@
     <connection>scm:git:git@github.com:fabric8io/jube.git</connection>
     <developerConnection>scm:git:git@github.com:fabric8io/jube.git</developerConnection>
     <url>https://github.com/fabric8io/jube</url>
-    <tag>HEAD</tag>
+    <tag>parent-project-2.1.11</tag>
   </scm>
 
   <!-- including A developer as it's required by the maven poms going into central -->
