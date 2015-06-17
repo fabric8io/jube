@@ -90,7 +90,7 @@ import static io.fabric8.utils.Lists.notNullList;
  * Implements the local node controller
  */
 @Singleton
-@Path("v1beta3")
+@Path("v1")
 @Produces("application/json")
 @Consumes("application/json")
 public class ApiMasterService implements KubernetesExtensions {
@@ -419,7 +419,7 @@ public class ApiMasterService implements KubernetesExtensions {
                         if (podIP != null) {
                             String url = podIP + ":" + portNumber;
                             EndpointAddress address = new EndpointAddress();
-                            address.setIP(podIP);
+                            address.setIp(podIP);
                             ObjectReference ref = new ObjectReference();
                             ref.setNamespace(namespace);
                             ref.setName(getName(pod));
@@ -603,7 +603,7 @@ public class ApiMasterService implements KubernetesExtensions {
     public NamespaceList getNamespaces() {
         // TODO - Hacking in a quick default for now...
         NamespaceList answer = new NamespaceList();
-        answer.setApiVersion(NamespaceList.ApiVersion.V_1_BETA_3);
+        answer.setApiVersion(NamespaceList.ApiVersion.V_1);
         List<Namespace> items = new ArrayList<Namespace>();
         Namespace _default = new Namespace();
         _default.setMetadata(new ObjectMeta());

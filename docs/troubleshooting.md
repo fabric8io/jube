@@ -21,9 +21,9 @@ To check on what happens after each command you can use the web console at [http
 
 Or you could view the JSON directly in your browser:
 
-* [http://localhost:8585/kubernetes/api/v1beta2/pods](http://localhost:8585/kubernetes/api/v1beta2/pods) for the pods
-* [http://localhost:8585/kubernetes/api/v1beta2/replicationControllers](http://localhost:8585/kubernetes/api/v1beta2/replicationControllers) for replication controllers
-* [http://localhost:8585/kubernetes/api/v1beta2/services](http://localhost:8585/kubernetes/api/v1beta2/services) for the services
+* [http://localhost:8585/kubernetes/api/v1/pods](http://localhost:8585/kubernetes/api/v1/pods) for the pods
+* [http://localhost:8585/kubernetes/api/v1/replicationControllers](http://localhost:8585/kubernetes/api/v1/replicationControllers) for replication controllers
+* [http://localhost:8585/kubernetes/api/v1/services](http://localhost:8585/kubernetes/api/v1/services) for the services
 
 Or you can use the [Fabric8 Forge Addon commands](http://fabric8.io/v2/forge.html):
 
