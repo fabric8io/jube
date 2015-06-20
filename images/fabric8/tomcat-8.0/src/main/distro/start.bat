@@ -1,6 +1,6 @@
 @echo off
 
-rem  Copyright 2005-2014 Red Hat, Inc.
+rem  Copyright 2005-2015 Red Hat, Inc.
 rem
 rem  Red Hat licenses this file to you under the Apache License, version
 rem  2.0 (the "License"); you may not use this file except in compliance
