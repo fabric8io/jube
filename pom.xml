@@ -96,7 +96,7 @@
     <maven.compiler.argument.source>${maven.compiler.source}</maven.compiler.argument.source>
 
     <maven.enforcer.version>3.2.3</maven.enforcer.version>
-    <fabric8.version>2.2.1</fabric8.version>
+    <fabric8.version>2.2.3</fabric8.version>
     <hawtio.version>1.4.51</hawtio.version>
     <hawtio.swagger.version>1.0.2</hawtio.swagger.version>
 <!--
@@ -106,13 +106,13 @@
     <jetty-plugin.version>8.1.16.v20140903</jetty-plugin.version>
     <karaf.version>2.4.2</karaf.version>
     <tomcat.version>8.0.23</tomcat.version>
-    <weld.version>2.2.5.Final</weld.version>
+    <weld.version>2.2.13.Final</weld.version>
 
     <!-- maven plugin versions can't be reused via BOM -->
     <buildnumber.plugin.version>1.3</buildnumber.plugin.version>
     <compiler.plugin.version>3.2</compiler.plugin.version>
     <cxf.plugin.version>3.0.4</cxf.plugin.version>
-    <docker.maven.plugin.version>0.11.5</docker.maven.plugin.version>
+    <docker.maven.plugin.version>0.12.0</docker.maven.plugin.version>
     <exec.maven.plugin.version>1.2.1</exec.maven.plugin.version>
     <maven-plugin-plugin.version>3.4</maven-plugin-plugin.version>
     <jar.plugin.version>2.5</jar.plugin.version>
