@@ -105,7 +105,7 @@
     <jetty9.version>9.2.10.v20150310</jetty9.version>
     <jetty-plugin.version>8.1.16.v20140903</jetty-plugin.version>
     <karaf.version>2.4.2</karaf.version>
-    <tomcat.version>8.0.23</tomcat.version>
+    <tomcat.version>8.0.24</tomcat.version>
     <weld.version>2.2.14.Final</weld.version>
 
     <!-- maven plugin versions can't be reused via BOM -->
