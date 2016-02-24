@@ -1,16 +1,17 @@
-## Jube
+## Deprecated - please now use [kansible](https://github.com/fabric8io/kansible)
 
-[Jube](http://fabric8.io/jube/goals.html) is a pure Java open source emulator of [Kubernetes](http://kubernetes.io/) for use on non-Linux platforms.
+**NOTE** this project is now deprecated and replaced by [kansible](https://github.com/fabric8io/kansible)!
 
-If you are using Linux we highly recommend you use [Kubernetes](http://kubernetes.io/)! However if you must run Java middleware on non-Linux platforms then Jube can help provide a kubernetes-like experience on platforms where [golang](https://golang.org/), [Kubernetes](http://kubernetes.io/) or [Docker](http://docker.com) are not supported,
+We've figured out a much simpler and cleaner way of using non-docker processes on Windows, AIX, Solaris, HPUX and old linuxes which makes it easier to mix and match native operating systems proceesses with docker containers.
 
-Jube lets you use [fabric8](http://fabric8.io/v2/index.html) on any platform that supports a JVM.
+So please take a look at [kansible](https://github.com/fabric8io/kansible) as a nicer alternative to Jube!
 
-### Documentation
+[kansible](https://github.com/fabric8io/kansible) is better than Jube because:
 
-* [Getting Started](http://fabric8.io/jube/getStarted.html)
-* [User Guide](http://fabric8.io/jube/goals.html)
-
-### Building the code
-
-Please see the [building.md](building.md) file.
+* kansible provides a single pane of glass for all your operating system processes on windows and Unix along with all your linux based docker containers
+* kansible lets you reuse all Kubernetes features for your operating system processes too:
+  * service discovery using DNS
+  * high availability and scaling manually or automatically through metrics
+  * liveness and readiness checks
+  * centralised logging and metrics
+* kansible also lets you use the power of Ansible playbooks to provision your software, install JDKs, create user accounts and so forth 
